@@ -9,7 +9,7 @@ import (
 func InitConfig() {
 	viper.SetConfigName("config") // Name of the config file (without extension)
 	viper.SetConfigType("yaml")   // File format (yaml)
-	viper.AddConfigPath(".")      // Search in the current directory
+	viper.AddConfigPath(".")      // Search in the current directory TODO: maybe establish a config dir like ~/.kthcloud
 	viper.AutomaticEnv()          // Read environment variables
 
 	// Load config file
