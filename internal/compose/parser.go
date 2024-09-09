@@ -1,18 +1,15 @@
 package compose
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 
-	"net/http"
+	log "github.com/sirupsen/logrus"
+
 	"os"
 	"strings"
 
 	"gopkg.in/yaml.v3"
 )
-
-const schemaURL = "https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json"
 
 // Service represents the structure of a service in docker-compose
 type Service struct {
@@ -29,11 +26,6 @@ type ComposeFile struct {
 	Services map[string]map[string]interface{} `yaml:"services"`
 }
 
-// Schema represents the structure of the JSON schema
-type Schema struct {
-	Definitions map[string]interface{} `json:"definitions"`
-}
-
 // ParseComposeFile reads and parses a docker-compose file
 func ParseComposeFile(filename string) (map[string]Service, error) {
 	data, err := os.ReadFile(filename)
@@ -46,17 +38,10 @@ func ParseComposeFile(filename string) (map[string]Service, error) {
 		return nil, fmt.Errorf("failed to parse YAML: %w", err)
 	}
 
-	// Load schema
-	schema, err := loadSchema()
-	if err != nil {
-		return nil, err
-	}
-
-	// Process and validate services according to schema
 	services := make(map[string]Service)
 	for name, serviceData := range composeFile.Services {
 		service := Service{}
-		if err := processService(serviceData, schema, &service); err != nil {
+		if err := processService(serviceData, &service); err != nil {
 			return nil, err
 		}
 		services[name] = service
@@ -65,33 +50,7 @@ func ParseComposeFile(filename string) (map[string]Service, error) {
 	return services, nil
 }
 
-// loadSchema fetches and parses the JSON schema
-func loadSchema() (*Schema, error) {
-	resp, err := http.Get(schemaURL)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch schema: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to fetch schema, status code: %d", resp.StatusCode)
-	}
-
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read schema data: %w", err)
-	}
-
-	var schema Schema
-	if err := json.Unmarshal(data, &schema); err != nil {
-		return nil, fmt.Errorf("failed to parse schema JSON: %w", err)
-	}
-
-	return &schema, nil
-}
-
-// processService applies schema rules to the service data
-func processService(serviceData map[string]interface{}, schema *Schema, service *Service) error {
+func processService(serviceData map[string]interface{}, service *Service) error {
 	if env, ok := serviceData["environment"]; ok {
 		service.Environment = parseEnvironment(env)
 	}
@@ -108,7 +67,7 @@ func processService(serviceData map[string]interface{}, schema *Schema, service 
 		service.Image = image
 	}
 
-	// Add more fields as needed according to schema
+	// Add more fields later
 
 	return nil
 }
@@ -151,7 +110,7 @@ func parseEnvironment(env interface{}) map[string]string {
 		}
 	default:
 		// Log unexpected types for debugging
-		fmt.Printf("Unexpected environment format: %T\n", v)
+		log.Printf("Unexpected environment format: %T\n", v)
 	}
 
 	return result
