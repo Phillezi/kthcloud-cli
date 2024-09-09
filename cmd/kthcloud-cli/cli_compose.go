@@ -32,16 +32,7 @@ var composeParseCmd = &cobra.Command{
 			log.Fatalf("Failed to parse compose file: %v", err)
 		}
 
-		// Output the parsed data
-		for name, service := range services {
-			fmt.Printf("Service: %s\n", name)
-			fmt.Printf("Image: %s\n", service.Image)
-			fmt.Printf("Environment Variables: %v\n", service.Environment)
-			fmt.Printf("Ports: %v\n", service.Ports)
-			fmt.Printf("Volumes: %v\n", service.Volumes)
-			fmt.Printf("Command: %v\n", service.Command)
-			fmt.Println("----------------------------")
-		}
+		compose.PrintServices(services)
 	},
 }
 
