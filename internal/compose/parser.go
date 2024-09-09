@@ -16,6 +16,7 @@ const schemaURL = "https://raw.githubusercontent.com/compose-spec/compose-spec/m
 
 // Service represents the structure of a service in docker-compose
 type Service struct {
+	Image       string            `yaml:"image,omitempty"`
 	Environment map[string]string `yaml:"environment,omitempty"`
 	Ports       []string          `yaml:"ports,omitempty"`
 	Volumes     []string          `yaml:"volumes,omitempty"`
@@ -98,6 +99,9 @@ func processService(serviceData map[string]interface{}, schema *Schema, service 
 	}
 	if volumes, ok := serviceData["volumes"]; ok {
 		service.Volumes = parseStringList(volumes)
+	}
+	if image, ok := serviceData["image"].(string); ok {
+		service.Image = image
 	}
 
 	// Add more fields as needed according to schema

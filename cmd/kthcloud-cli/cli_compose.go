@@ -34,6 +34,7 @@ var composeParseCmd = &cobra.Command{
 		// Output the parsed data
 		for name, service := range services {
 			fmt.Printf("Service: %s\n", name)
+			fmt.Printf("Image: %s\n", service.Image)
 			fmt.Printf("Environment Variables: %v\n", service.Environment)
 			fmt.Printf("Ports: %v\n", service.Ports)
 			fmt.Printf("Volumes: %v\n", service.Volumes)
@@ -44,19 +45,22 @@ var composeParseCmd = &cobra.Command{
 
 var composeUpCmd = &cobra.Command{
 	Use:   "up",
-	Short: "Start Docker Compose services",
+	Short: "Deploy compose configuration to cloud",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Starting Docker Compose services...")
-		// Implement logic to start Docker Compose services
+		// Look for docker-compose.yaml or docker-compose.yml
+		composeFile, err := findComposeFile()
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		compose.Up(composeFile)
 	},
 }
 
 var composeDownCmd = &cobra.Command{
 	Use:   "down",
-	Short: "Stop Docker Compose services",
+	Short: "Stop compose configuration to cloud",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Stopping Docker Compose services...")
-		// Implement logic to stop Docker Compose services
 	},
 }
 
