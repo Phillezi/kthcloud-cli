@@ -1,8 +1,8 @@
 package main
 
 import (
+	"kthcloud-cli/internal/model"
 	"kthcloud-cli/pkg/auth"
-	"kthcloud-cli/pkg/util"
 	"net/url"
 
 	log "github.com/sirupsen/logrus"
@@ -30,25 +30,20 @@ var loginCmd = &cobra.Command{
 			log.Fatalf("Failed to start local server: %v", err)
 		}
 
-		token, err := auth.GetAccessToken(code, clientID, clientSecret, tokenURL, redirectURI)
+		authSession, err := auth.GetAuthSession(code, clientID, clientSecret, tokenURL, redirectURI)
 		if err != nil {
-			log.Fatalf("Failed to get access token: %v", err)
+			log.Fatalf("Failed to get auth session: %v", err)
 		}
 
-		viper.Set("auth-token", token)
+		session := model.NewSession(authSession)
 
-		configPath := "config.yaml"
-
-		if err := util.EnsureFileExists(configPath); err != nil {
-			log.Fatalf("Error: %v", err)
-		}
-
-		viper.SetConfigFile(configPath)
-
-		// TODO: Handle this differently, we only want to update the token not save all default config to the file
-		err = viper.WriteConfig()
+		err = session.FetchUser()
 		if err != nil {
-			log.Fatalf("Failed to write token to config file: %v", err)
+			log.Fatalln(err)
+		}
+		err = session.Save(viper.GetString("session-path"))
+		if err != nil {
+			log.Fatalln("eeee", err)
 		}
 
 		log.Infoln("Login successful. Access token stored in config file.")
