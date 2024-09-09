@@ -130,7 +130,7 @@ func CreateCommandsFromSwagger(swagger *api.SwaggerDoc) map[string][]*cobra.Comm
 	for path, operations := range swagger.Paths {
 		for method, operation := range operations {
 			cmd := &cobra.Command{
-				Use:   fmt.Sprintf("%s", path),
+				Use:   path,
 				Short: operation.Summary,
 				Long:  operation.Description,
 				Run: func(cmd *cobra.Command, args []string) {
@@ -147,7 +147,7 @@ func CreateCommandsFromSwagger(swagger *api.SwaggerDoc) map[string][]*cobra.Comm
 						log.Errorf("Error: %v\n", err)
 					} else {
 						var prettyJSON bytes.Buffer
-						err = json.Indent(&prettyJSON, []byte(resp), "", "  ")
+						err = json.Indent(&prettyJSON, []byte(resp.String()), "", "  ")
 						if err != nil {
 							log.Errorf("Error formatting JSON: %v\n", err)
 							fmt.Println(resp)

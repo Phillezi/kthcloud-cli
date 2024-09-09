@@ -28,7 +28,7 @@ func NewAPIClient(apiURL, apiToken string) *Client {
 	}
 }
 
-func (c *Client) FetchResource(resource string, method string) (string, error) {
+func (c *Client) FetchResource(resource string, method string) (*resty.Response, error) {
 	client := resty.New()
 
 	request := client.R()
@@ -52,17 +52,17 @@ func (c *Client) FetchResource(resource string, method string) (string, error) {
 	case "DELETE":
 		resp, err = request.Delete(url)
 	default:
-		return "", fmt.Errorf("unsupported method: %s", method)
+		return nil, fmt.Errorf("unsupported method: %s", method)
 	}
 
 	if err != nil {
-		return "", fmt.Errorf("failed to fetch resource using %s: %w", method, err)
+		return nil, fmt.Errorf("failed to fetch resource using %s: %w", method, err)
 	}
 
-	return resp.String(), nil
+	return resp, nil
 }
 
-func (c *Client) Req(resource string, method string, body interface{}) (string, error) {
+func (c *Client) Req(resource string, method string, body interface{}) (*resty.Response, error) {
 	client := resty.New()
 
 	request := client.R()
@@ -86,12 +86,12 @@ func (c *Client) Req(resource string, method string, body interface{}) (string, 
 	case "DELETE":
 		resp, err = request.Delete(url)
 	default:
-		return "", fmt.Errorf("unsupported method: %s", method)
+		return nil, fmt.Errorf("unsupported method: %s", method)
 	}
 
 	if err != nil {
-		return "", fmt.Errorf("failed to fetch resource using %s: %w", method, err)
+		return nil, fmt.Errorf("failed to fetch resource using %s: %w", method, err)
 	}
 
-	return resp.String(), nil
+	return resp, nil
 }

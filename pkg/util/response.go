@@ -3,15 +3,34 @@ package util
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 
+	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
 )
 
-func HandleResponse(response string) error {
+func HandleResponse(response *resty.Response) error {
+	log.Infoln(response)
+	// Handle different HTTP status codes
+	switch response.StatusCode() {
+	case http.StatusOK:
+
+	case http.StatusNotFound:
+		return fmt.Errorf("resource not found: %s", response.Status())
+	case http.StatusUnauthorized:
+		return fmt.Errorf("unauthorized access: %s", response.Status())
+	case http.StatusForbidden:
+		return fmt.Errorf("forbidden access: %s", response.Status())
+	case http.StatusInternalServerError:
+		return fmt.Errorf("server error: %s", response.Status())
+	default:
+		return fmt.Errorf("unexpected status code: %d", response.StatusCode())
+	}
+
 	// Unmarshal the response to a map
 	var responseMap map[string]interface{}
-	if err := json.Unmarshal([]byte(response), &responseMap); err != nil {
+	if err := json.Unmarshal([]byte(response.String()), &responseMap); err != nil {
 		return fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
