@@ -38,6 +38,7 @@ var composeParseCmd = &cobra.Command{
 			fmt.Printf("Environment Variables: %v\n", service.Environment)
 			fmt.Printf("Ports: %v\n", service.Ports)
 			fmt.Printf("Volumes: %v\n", service.Volumes)
+			fmt.Printf("Command: %v\n", service.Command)
 			fmt.Println("----------------------------")
 		}
 	},

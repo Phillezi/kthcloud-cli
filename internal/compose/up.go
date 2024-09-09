@@ -3,32 +3,11 @@ package compose
 import (
 	"encoding/json"
 	"fmt"
-	"go-deploy/dto/v2/body"
 	"kthcloud-cli/internal/api"
-	"kthcloud-cli/pkg/util"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
-
-func serviceToDepl(service Service, name string) *body.DeploymentCreate {
-	var envs []body.Env
-	for envName, value := range service.Environment {
-		envs = append(envs, body.Env{
-			Name:  envName,
-			Value: value,
-		})
-	}
-
-	return &body.DeploymentCreate{
-		Name:     name,
-		CpuCores: util.Float64Pointer(0.2),
-		RAM:      util.Float64Pointer(0.5),
-		Replicas: util.IntPointer(1),
-		Envs:     envs,
-		Image:    &service.Image,
-	}
-}
 
 func Up(filename string) error {
 	services, err := ParseComposeFile(filename)

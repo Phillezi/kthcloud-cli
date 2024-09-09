@@ -20,6 +20,7 @@ type Service struct {
 	Environment map[string]string `yaml:"environment,omitempty"`
 	Ports       []string          `yaml:"ports,omitempty"`
 	Volumes     []string          `yaml:"volumes,omitempty"`
+	Command     []string          `yaml:"command,omitempty"`
 }
 
 // ComposeFile represents the structure of a docker-compose file
@@ -99,6 +100,9 @@ func processService(serviceData map[string]interface{}, schema *Schema, service 
 	}
 	if volumes, ok := serviceData["volumes"]; ok {
 		service.Volumes = parseStringList(volumes)
+	}
+	if command, ok := serviceData["command"]; ok {
+		service.Command = parseStringList(command)
 	}
 	if image, ok := serviceData["image"].(string); ok {
 		service.Image = image
