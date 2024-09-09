@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -14,8 +14,8 @@ func InitConfig() {
 
 	// Load config file
 	if err := viper.ReadInConfig(); err != nil {
-		logrus.Warn("Config file not found, using defaults or environment variables.")
+		log.Warn("Config file not found, using defaults or environment variables.")
 	} else {
-		logrus.Infof("Using config file: %s", viper.ConfigFileUsed())
+		log.Debugf("Using config file: %s", viper.ConfigFileUsed())
 	}
 }
