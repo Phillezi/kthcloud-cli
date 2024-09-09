@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"kthcloud-cli/internal/api"
 	"kthcloud-cli/pkg/util"
@@ -82,15 +84,15 @@ func init() {
 		// Download the swagger.json from the URL
 		err = util.DownloadFile("swagger.json", "https://raw.githubusercontent.com/kthcloud/go-deploy/main/docs/api/v2/V2_swagger.json")
 		if err != nil {
-			log.Printf("Failed to download swagger.json: %v\n", err)
+			log.Errorln("Failed to download swagger.json: %v\n", err)
 			return
 		}
 		fmt.Println("Downloaded swagger.json successfully.")
 	} else if err != nil {
-		log.Printf("Error checking file: %v\n", err)
+		log.Errorln("Error checking file: %v\n", err)
 		return
 	} else {
-		log.Println("swagger.json found.")
+		log.Debugln("swagger.json found.")
 	}
 
 	swagger, err := api.LoadSwaggerDoc("swagger.json")
@@ -148,9 +150,16 @@ func CreateCommandsFromSwagger(swagger *api.SwaggerDoc) map[string][]*cobra.Comm
 					// Call the client to fetch the resource
 					resp, err := client.FetchResource(resource, strings.ToUpper(method))
 					if err != nil {
-						fmt.Printf("Error: %v\n", err)
+						log.Errorf("Error: %v\n", err)
 					} else {
-						fmt.Println(resp)
+						var prettyJSON bytes.Buffer
+						err = json.Indent(&prettyJSON, []byte(resp), "", "  ")
+						if err != nil {
+							log.Errorf("Error formatting JSON: %v\n", err)
+							fmt.Println(resp)
+						} else {
+							fmt.Println(prettyJSON.String())
+						}
 					}
 				},
 			}

@@ -9,8 +9,12 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:   "kthcloud-cli",
-	Short: "CLI app for interacting with a REST API",
-	Long:  `CLI application that uses logrus for logging, cobra for CLI, and viper for configuration.`,
+	Short: "CLI app for interacting with kthclouds REST API",
+	Long: `   __    __    __         __                __             __   _ 
+  / /__ / /_  / /  ____  / / ___  __ __ ___/ / ____ ____  / /  (_)
+ /  '_// __/ / _ \/ __/ / / / _ \/ // // _  / /___// __/ / /  / / 
+/_/\_\ \__/ /_//_/\__/ /_/  \___/\_,_/ \_,_/       \__/ /_/  /_/  
+                                                                  `,
 }
 
 func init() {

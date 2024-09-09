@@ -12,7 +12,7 @@ import (
 
 var composeCmd = &cobra.Command{
 	Use:   "compose",
-	Short: "Manage Docker Compose files",
+	Short: "Deploy and manage Docker Compose projects on the cloud",
 }
 
 var composeParseCmd = &cobra.Command{
