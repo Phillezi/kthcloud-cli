@@ -1,0 +1,5 @@
+bin
+config.yaml
+docker-compose.yaml
+docker-compose.yml
+swagger.json
