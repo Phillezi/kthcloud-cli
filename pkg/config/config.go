@@ -18,4 +18,5 @@ func InitConfig() {
 	} else {
 		log.Debugf("Using config file: %s", viper.ConfigFileUsed())
 	}
+
 }

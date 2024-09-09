@@ -2,6 +2,7 @@ package compose
 
 import (
 	"kthcloud-cli/internal/api"
+	"kthcloud-cli/pkg/auth"
 	"kthcloud-cli/pkg/util"
 
 	log "github.com/sirupsen/logrus"
@@ -14,7 +15,12 @@ func Up(filename string) error {
 		log.Errorln(err)
 	}
 
-	client := api.NewClient(viper.GetString("api-url"), viper.GetString("auth-token"))
+	token, err := auth.GetToken()
+	if err != nil {
+		return err
+	}
+
+	client := api.NewClient(viper.GetString("api-url"), token)
 
 	for key, service := range services {
 		resp, err := client.Req("/v2/deployments", "POST", serviceToDepl(service, key))

@@ -27,4 +27,10 @@ func init() {
 
 	rootCmd.PersistentFlags().String("api-url", "https://api.cloud.cbh.kth.se/deploy", "Base URL of the API")
 	viper.BindPFlag("api-url", rootCmd.PersistentFlags().Lookup("api-url"))
+
+	rootCmd.Flags().StringP("auth-token", "i", "", "Authentication token")
+	viper.BindPFlag("auth-token", loginCmd.Flags().Lookup("auth-token"))
+
+	rootCmd.Flags().StringP("api-token", "x", "", "kthcloud api token")
+	viper.BindPFlag("api-token", loginCmd.Flags().Lookup("api-token"))
 }

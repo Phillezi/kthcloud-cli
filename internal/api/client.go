@@ -7,21 +7,36 @@ import (
 )
 
 type Client struct {
-	apiURL string
-	token  string
+	apiURL   string
+	token    string
+	apiToken string
 }
 
 func NewClient(apiURL, token string) *Client {
 	return &Client{
-		apiURL: apiURL,
-		token:  token,
+		apiURL:   apiURL,
+		token:    token,
+		apiToken: "",
+	}
+}
+
+func NewAPIClient(apiURL, apiToken string) *Client {
+	return &Client{
+		apiURL:   apiURL,
+		token:    "",
+		apiToken: apiToken,
 	}
 }
 
 func (c *Client) FetchResource(resource string, method string) (string, error) {
 	client := resty.New()
 
-	request := client.R().SetAuthToken(c.token)
+	request := client.R()
+	if c.apiToken != "" {
+		request.SetHeader("X-Api-Key", c.apiToken)
+	} else {
+		request.SetAuthToken(c.token)
+	}
 	url := fmt.Sprintf("%s/%s", c.apiURL, resource)
 
 	var resp *resty.Response
@@ -50,7 +65,12 @@ func (c *Client) FetchResource(resource string, method string) (string, error) {
 func (c *Client) Req(resource string, method string, body interface{}) (string, error) {
 	client := resty.New()
 
-	request := client.R().SetAuthToken(c.token)
+	request := client.R()
+	if c.apiToken != "" {
+		request.SetHeader("X-Api-Key", c.apiToken)
+	} else {
+		request.SetAuthToken(c.token)
+	}
 	url := fmt.Sprintf("%s/%s", c.apiURL, resource)
 
 	var resp *resty.Response

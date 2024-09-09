@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"kthcloud-cli/internal/api"
+	"kthcloud-cli/pkg/auth"
 	"kthcloud-cli/pkg/util"
 	"os"
 	"strings"
@@ -53,9 +54,9 @@ var pathCmd = &cobra.Command{
 		resource := args[0]
 		apiURL := viper.GetString("api-url")
 
-		token := viper.GetString("auth-token")
-		if token == "" {
-			log.Fatal("No authentication token found. Please log in first.")
+		token, err := auth.GetToken()
+		if err != nil {
+			return
 		}
 
 		client := api.NewClient(apiURL, token)
@@ -133,8 +134,13 @@ func CreateCommandsFromSwagger(swagger *api.SwaggerDoc) map[string][]*cobra.Comm
 				Short: operation.Summary,
 				Long:  operation.Description,
 				Run: func(cmd *cobra.Command, args []string) {
+					token, err := auth.GetToken()
+					if err != nil {
+						return
+					}
+
 					resource := path
-					client := api.NewClient(viper.GetString("api-url"), viper.GetString("auth-token"))
+					client := api.NewClient(viper.GetString("api-url"), token)
 
 					resp, err := client.FetchResource(resource, strings.ToUpper(method))
 					if err != nil {
