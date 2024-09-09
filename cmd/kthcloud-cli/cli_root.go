@@ -16,12 +16,6 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	viper.SetConfigName("config")
-	viper.AddConfigPath(".")
-	err := viper.ReadInConfig()
-	if err != nil {
-		log.Fatalf("Error reading config file: %v", err)
-	}
 
 	cobra.OnInitialize(config.InitConfig)
 
