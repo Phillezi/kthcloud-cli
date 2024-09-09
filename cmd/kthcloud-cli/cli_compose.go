@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"path/filepath"
+
+	log "github.com/sirupsen/logrus"
 
 	"kthcloud-cli/internal/compose"
 
