@@ -3,6 +3,7 @@ package compose
 import (
 	"go-deploy/dto/v2/body"
 	"kthcloud-cli/pkg/util"
+	"strings"
 )
 
 func serviceToDepl(service Service, name string) *body.DeploymentCreate {
@@ -24,13 +25,17 @@ func serviceToDepl(service Service, name string) *body.DeploymentCreate {
 		// if no ports are forwarded make the deployment private
 		visibility = "private"
 	} else {
-		// Add the PORT environment variable and set it to the first exposed port
-		if _, exists := envsMap["PORT"]; !exists {
-			envsMap["PORT"] = true
-			envs = append(envs, body.Env{
-				Name:  "PORT",
-				Value: service.Ports[0],
-			})
+		ports := strings.Split(service.Ports[0], ":")
+		if len(ports) != 0 {
+			port := ports[len(ports)-1]
+			// Add the PORT environment variable and set it to the first exposed port
+			if _, exists := envsMap["PORT"]; !exists {
+				envsMap["PORT"] = true
+				envs = append(envs, body.Env{
+					Name:  "PORT",
+					Value: port,
+				})
+			}
 		}
 	}
 
