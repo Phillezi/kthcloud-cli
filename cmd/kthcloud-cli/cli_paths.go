@@ -44,7 +44,6 @@ var pathCmd = &cobra.Command{
 	Short: "Fetch data from the API with authorization",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		// Set logging level from config
 		logLevel, err := log.ParseLevel(viper.GetString("loglevel"))
 		if err != nil {
 			log.Fatal(err)
@@ -54,13 +53,11 @@ var pathCmd = &cobra.Command{
 		resource := args[0]
 		apiURL := viper.GetString("api-url")
 
-		// Retrieve the auth token from viper
 		token := viper.GetString("auth-token")
 		if token == "" {
 			log.Fatal("No authentication token found. Please log in first.")
 		}
 
-		// Use the token in the request header
 		client := api.NewClient(apiURL, token)
 
 		resp, err := client.FetchResource(resource, "GET")
@@ -129,13 +126,6 @@ func init() {
 func CreateCommandsFromSwagger(swagger *api.SwaggerDoc) map[string][]*cobra.Command {
 	commandsByMethod := make(map[string][]*cobra.Command)
 
-	token := viper.GetString("auth-token")
-
-	if token == "" {
-		log.Warn("not logged in")
-		return commandsByMethod
-	}
-
 	for path, operations := range swagger.Paths {
 		for method, operation := range operations {
 			cmd := &cobra.Command{
@@ -143,11 +133,9 @@ func CreateCommandsFromSwagger(swagger *api.SwaggerDoc) map[string][]*cobra.Comm
 				Short: operation.Summary,
 				Long:  operation.Description,
 				Run: func(cmd *cobra.Command, args []string) {
-					// Prepare the resource request based on the method
-					resource := path // You can modify this to handle different parameters
+					resource := path
+					client := api.NewClient(viper.GetString("api-url"), viper.GetString("auth-token"))
 
-					client := api.NewClient(viper.GetString("api-url"), token)
-					// Call the client to fetch the resource
 					resp, err := client.FetchResource(resource, strings.ToUpper(method))
 					if err != nil {
 						log.Errorf("Error: %v\n", err)
@@ -164,7 +152,6 @@ func CreateCommandsFromSwagger(swagger *api.SwaggerDoc) map[string][]*cobra.Comm
 				},
 			}
 
-			// Add parameters to the command
 			for _, param := range operation.Parameters {
 				cmd.Flags().String(param.Name, "", param.Description)
 				viper.BindPFlag(param.Name, cmd.Flags().Lookup(param.Name))
