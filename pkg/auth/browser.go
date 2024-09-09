@@ -1,6 +1,7 @@
 package auth
 
 import (
+	_ "embed"
 	"fmt"
 	"net/http"
 	"os/exec"
@@ -9,6 +10,9 @@ import (
 
 	log "github.com/sirupsen/logrus"
 )
+
+//go:embed static/authenticated.html
+var authenticatedHTML string
 
 func OpenBrowser(url string) error {
 	var cmd *exec.Cmd
@@ -33,7 +37,7 @@ func StartLocalServer() (string, error) {
 		code := r.URL.Query().Get("code")
 		if code != "" {
 			codeChannel <- code
-			http.ServeFile(w, r, "static/authenticated.html")
+			fmt.Fprintln(w, authenticatedHTML)
 			return
 		}
 		fmt.Fprintln(w, "Failed to get authorization code.")
