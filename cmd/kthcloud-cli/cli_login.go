@@ -12,31 +12,15 @@ import (
 
 var loginCmd = &cobra.Command{
 	Use:   "login",
-	Short: "Log in to Keycloak and retrieve the authentication token",
+	Short: "Log in to kthcloud using Keycloak and retrieve the authentication token",
 	Run: func(cmd *cobra.Command, args []string) {
 		// Get login credentials
 		clientID := viper.GetString("client-id")
 		clientSecret := viper.GetString("client-secret")
-		//username := viper.GetString("username")
-		//password := viper.GetString("password")
+
 		authURL := viper.GetString("auth-url")
 		tokenURL := viper.GetString("token-url")
 		redirectURI := viper.GetString("redirect-uri")
-
-		/*// Call the Keycloak login function to get the token
-		token, err := auth.KeycloakLogin(authURL, clientID, clientSecret, username, password)
-		if err != nil {
-			logrus.Fatalf("Login failed: %v", err)
-		}
-
-		// Store the token using viper (or securely as needed)
-		viper.Set("auth-token", token)
-
-		fmt.Println("Login successful. Token stored for future requests.")*/
-
-		if clientID == "" || redirectURI == "" {
-			log.Fatal("Client ID, and Redirect URI must be set in config.")
-		}
 
 		// Open browser for user login
 		err := auth.OpenBrowser(authURL + "?client_id=" + clientID + "&redirect_uri=" + url.QueryEscape(redirectURI) + "&response_type=code&scope=openid")

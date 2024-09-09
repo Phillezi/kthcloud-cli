@@ -12,7 +12,69 @@ import (
 	"github.com/spf13/viper"
 )
 
+var apiCmd = &cobra.Command{
+	Use:   "api [method] [resource]",
+	Short: "Fetch the kthcloud api",
+}
+
+var getCmd = &cobra.Command{
+	Use:   "get [resource]",
+	Short: "Fetch the kthcloud api",
+}
+
+var postCmd = &cobra.Command{
+	Use:   "post [resource]",
+	Short: "Fetch the kthcloud api",
+}
+
+var putCmd = &cobra.Command{
+	Use:   "put [resource]",
+	Short: "Fetch the kthcloud api",
+}
+
+var deleteCmd = &cobra.Command{
+	Use:   "delete [resource]",
+	Short: "Fetch the kthcloud api",
+}
+
+var pathCmd = &cobra.Command{
+	Use:   "path [resource]",
+	Short: "Fetch data from the API with authorization",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		// Set logging level from config
+		logLevel, err := log.ParseLevel(viper.GetString("loglevel"))
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.SetLevel(logLevel)
+
+		resource := args[0]
+		apiURL := viper.GetString("api-url")
+
+		// Retrieve the auth token from viper
+		token := viper.GetString("auth-token")
+		if token == "" {
+			log.Fatal("No authentication token found. Please log in first.")
+		}
+
+		// Use the token in the request header
+		client := api.NewClient(apiURL, token)
+
+		resp, err := client.FetchResource(resource, "GET")
+		if err != nil {
+			log.Fatalf("Failed to fetch resource: %v", err)
+		}
+
+		log.Infof("Response: %s", resp)
+	},
+}
+
 func init() {
+
+	rootCmd.AddCommand(apiCmd)
+	getCmd.AddCommand(pathCmd)
+
 	_, err := os.Stat("swagger.json")
 	if os.IsNotExist(err) {
 		log.Println("swagger.json not found, downloading...")
@@ -38,27 +100,44 @@ func init() {
 
 	// Dynamically add commands based on the Swagger doc
 
-	// wait until login init has ben run
 	commands := CreateCommandsFromSwagger(swagger)
-	for _, cmd := range commands {
-		rootCmd.AddCommand(cmd)
+	for key, cmds := range commands {
+		for _, cmd := range cmds {
+			switch key {
+			case "GET":
+				getCmd.AddCommand(cmd)
+			case "POST":
+				postCmd.AddCommand(cmd)
+			case "PUT":
+				putCmd.AddCommand(cmd)
+			case "DELETE":
+				deleteCmd.AddCommand(cmd)
+			default:
+				log.Warnln("not supported method", key)
+				apiCmd.AddCommand(cmd)
+			}
+		}
 	}
+	apiCmd.AddCommand(getCmd)
+	apiCmd.AddCommand(postCmd)
+	apiCmd.AddCommand(putCmd)
+	apiCmd.AddCommand(deleteCmd)
 }
 
-func CreateCommandsFromSwagger(swagger *api.SwaggerDoc) []*cobra.Command {
-	var commands []*cobra.Command
+func CreateCommandsFromSwagger(swagger *api.SwaggerDoc) map[string][]*cobra.Command {
+	commandsByMethod := make(map[string][]*cobra.Command)
 
 	token := viper.GetString("auth-token")
 
 	if token == "" {
 		log.Warn("not logged in")
-		return commands
+		return commandsByMethod
 	}
 
 	for path, operations := range swagger.Paths {
 		for method, operation := range operations {
 			cmd := &cobra.Command{
-				Use:   fmt.Sprintf("%s-%s", method, path),
+				Use:   fmt.Sprintf("%s", path),
 				Short: operation.Summary,
 				Long:  operation.Description,
 				Run: func(cmd *cobra.Command, args []string) {
@@ -82,9 +161,9 @@ func CreateCommandsFromSwagger(swagger *api.SwaggerDoc) []*cobra.Command {
 				viper.BindPFlag(param.Name, cmd.Flags().Lookup(param.Name))
 			}
 
-			commands = append(commands, cmd)
+			commandsByMethod[strings.ToUpper(method)] = append(commandsByMethod[strings.ToUpper(method)], cmd)
 		}
 	}
 
-	return commands
+	return commandsByMethod
 }
