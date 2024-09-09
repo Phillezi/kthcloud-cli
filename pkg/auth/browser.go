@@ -33,7 +33,7 @@ func StartLocalServer() (string, error) {
 		code := r.URL.Query().Get("code")
 		if code != "" {
 			codeChannel <- code
-			fmt.Fprintln(w, "Authorization code received. You can close this window.")
+			http.ServeFile(w, r, "static/authenticated.html")
 			return
 		}
 		fmt.Fprintln(w, "Failed to get authorization code.")
@@ -42,7 +42,7 @@ func StartLocalServer() (string, error) {
 	go func() {
 		err := server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
-			log.Errorln("Server error: %v\n", err)
+			log.Errorf("Server error: %v\n", err)
 		}
 	}()
 
