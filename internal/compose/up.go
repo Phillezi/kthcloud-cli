@@ -1,10 +1,11 @@
 package compose
 
 import (
-	"kthcloud-cli/pkg/auth"
+	"kthcloud-cli/internal/model"
 	"kthcloud-cli/pkg/util"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 func Up(filename string) error {
@@ -13,13 +14,17 @@ func Up(filename string) error {
 		log.Errorln(err)
 	}
 
-	client, err := auth.GetClient()
+	session, err := model.Load(viper.GetString("session-path"))
 	if err != nil {
-		return err
+		log.Fatalln("No active session. Please log in")
 	}
+	if session.AuthSession.IsExpired() {
+		log.Fatalln("Session is expired. Please log in again")
+	}
+	session.SetupClient()
 
 	for key, service := range services {
-		resp, err := client.Req("/v2/deployments", "POST", serviceToDepl(service, key))
+		resp, err := session.Client.Req("/v2/deployments", "POST", serviceToDepl(service, key))
 		if err != nil {
 			log.Errorln("error: ", err, " response: ", resp)
 			return err

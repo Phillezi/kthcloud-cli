@@ -3,6 +3,8 @@ package auth
 import (
 	"encoding/json"
 	"fmt"
+	"kthcloud-cli/internal/model"
+	"kthcloud-cli/pkg/util"
 
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
@@ -80,4 +82,28 @@ func GetAccessToken(code, clientID, clientSecret, tokenURL, redirectURI string) 
 		return token, nil
 	}
 	return "", fmt.Errorf("failed to get access token from response")
+}
+
+func GetAuthSession(code, clientID, clientSecret, tokenURL, redirectURI string) (*model.AuthSession, error) {
+	client := resty.New()
+	resp, err := client.R().
+		SetFormData(map[string]string{
+			"grant_type":    "authorization_code",
+			"code":          code,
+			"redirect_uri":  redirectURI,
+			"client_id":     clientID,
+			"client_secret": clientSecret,
+		}).
+		Post(tokenURL)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get access token: %w", err)
+	}
+
+	KeycloakSession, err := util.ProcessResponse[model.KeycloakSession](string(resp.Body()))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse auth session response: %w", err)
+	}
+
+	return KeycloakSession.ToAuthSession(), nil
 }
