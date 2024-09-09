@@ -20,7 +20,7 @@
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/kthcloud-cli.git
+   git clone https://github.com/Phillezi/kthcloud-cli.git
    cd kthcloud-cli
    ```
 
