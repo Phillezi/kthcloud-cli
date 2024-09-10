@@ -90,6 +90,6 @@ func Up(filename string) error {
 	}
 	wg.Wait()
 
-	log.Info("All jobs have been tracked and completed.")
+	log.Info("All jobs have been completed.")
 	return nil
 }
