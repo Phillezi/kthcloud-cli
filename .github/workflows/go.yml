@@ -55,6 +55,10 @@ jobs:
     - uses: actions/download-artifact@v3
       with:
         name: darwin-binaries
+        
+    - name: Get current timestamp
+      id: timestamp
+      run: echo "TIMESTAMP=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
 
     - name: Create Release
       id: create_release
@@ -62,7 +66,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
       with:
-        tag_name: release-${{ github.ref }}
+        tag_name: release-${{ env.TIMESTAMP }}
         release_name: Release ${{ github.ref }}
         body: Latest release build by github actions
 
