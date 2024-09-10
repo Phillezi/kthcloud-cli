@@ -33,7 +33,7 @@ var tokenCmd = &cobra.Command{
 
 		name := "cli-access"
 
-		// check if it already is in the user.ApiKeys array
+		// Check if it already is in the user.ApiKeys array
 		if util.Contains(util.GetNames(session.User.ApiKeys), name) {
 			// TODO: check how we want to handle this, should a new name be genereated for the key
 			log.Fatalf("A token with the name '%s' already exists in the user's API keys.\n", name)
