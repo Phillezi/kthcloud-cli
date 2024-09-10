@@ -9,6 +9,7 @@ import (
 	"kthcloud-cli/internal/compose"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var composeCmd = &cobra.Command{
@@ -58,6 +59,9 @@ var composeDownCmd = &cobra.Command{
 }
 
 func init() {
+	composeUpCmd.Flags().BoolP("detached", "d", false, "doesn't do anything, just here for parity with Docker Compose up")
+	viper.BindPFlag("detatched", composeUpCmd.Flags().Lookup("detatched"))
+
 	// Register subcommands with the main compose command
 	composeCmd.AddCommand(composeParseCmd)
 	composeCmd.AddCommand(composeUpCmd)
