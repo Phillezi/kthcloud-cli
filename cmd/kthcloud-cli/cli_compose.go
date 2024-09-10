@@ -53,7 +53,7 @@ var composeDownCmd = &cobra.Command{
 	Use:   "down",
 	Short: "Stop compose configuration to cloud",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Stopping Docker Compose services...")
+		log.Fatal("not implemented yet...")
 	},
 }
 
