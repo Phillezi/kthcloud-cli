@@ -1,5 +1,8 @@
 # kthcloud-cli
 
+> [!NOTE]  
+> This project is in the very early stages of development. Features are incomplete, and things may change frequently.
+
 ## Table of Contents
 
 - [Overview](#overview)
@@ -37,7 +40,8 @@ services:
     volumes:
       - dbdata:/var/lib/postgresql/data
 ```
-***Note:** The above example is just an example to showcase what is supported. It does not provide a functional application, the database will just run sleep*
+> [!NOTE] 
+> The above example is just an example to showcase what is supported. It does not provide a functional application, the database will just run sleep
 
 The tool will create two deployments and set up their environment variables, port, start commands and persistent storage.
 
@@ -60,7 +64,11 @@ The tool will create two deployments and set up their environment variables, por
    ```bash
    ./bin/kthcloud
    ```
-   Alternatively you can add move it to a location and add it to the path to be able to use it globally. **(dont do it yet, not ready)**
+> [!TIP]
+> Alternatively you can add it to the PATH to be able to use it globally, TODO: Make static .config location, the current configuration and session files will break otherwise.
+
+<!--
+   Alternatively you can move it to a location and add it to the path to be able to use it globally. **(dont do it yet, not ready)**
    ```bash
    sudo cp ./bin/kthcloud /usr/local/bin/
    ```
@@ -68,6 +76,7 @@ The tool will create two deployments and set up their environment variables, por
    ```bash
    echo $PATH | grep /usr/local/bin
    ```
+-->
 
 ## Usage
 
