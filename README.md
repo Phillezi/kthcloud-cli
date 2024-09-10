@@ -6,6 +6,7 @@
 ## Table of Contents
 
 - [Overview](#overview)
+    - [Compose](#compose)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Configuration](#configuration)
