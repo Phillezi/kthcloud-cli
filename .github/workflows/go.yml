@@ -69,7 +69,7 @@ jobs:
         tag_name: release-${{ env.TIMESTAMP }}
         release_name: Release ${{ github.ref }}
         body: Latest release build by github actions
-        files: artifacts/*
+        files: artifacts/**/*
         
     - id: step_upload_url
       run: echo "::set-output name=upload_url::${{ steps.create_release.outputs.upload_url }}"
