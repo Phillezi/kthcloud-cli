@@ -1,7 +1,6 @@
 package compose
 
 import (
-	"errors"
 	"go-deploy/dto/v2/body"
 	"kthcloud-cli/internal/model"
 	"kthcloud-cli/pkg/util"
@@ -41,8 +40,8 @@ func Up(filename string) error {
 			log.Errorln("error: ", err, " response: ", resp)
 			return err
 		}
-		if resp.IsError() {
-			return errors.New("could not create deployment: " + key)
+		if err := util.HandleResponse(resp); err != nil {
+			return err
 		}
 		job, err := util.ProcessResponse[body.DeploymentCreated](resp.String())
 		if err != nil {
