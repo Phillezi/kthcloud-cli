@@ -62,12 +62,12 @@ jobs:
     
     - name: Create Release
       id: create_release
-      uses: actions/create-release@v1
+      uses: softprops/action-gh-release@v2
       env:
         GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
       with:
         tag_name: release-${{ env.TIMESTAMP }}
-        release_name: Release ${{ github.ref }}
+        release_name: Release ${{ env.TIMESTAMP }}
         body: Latest release build by github actions
         files: artifacts/**/*
         
