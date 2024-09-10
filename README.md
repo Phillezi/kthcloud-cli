@@ -14,6 +14,32 @@
 
 ![Screencast from 2024-09-10 10-40-06](https://github.com/user-attachments/assets/ad602b50-53c4-41f2-8aba-fddaab70481a)
 
+### Compose
+
+The clis core functionallity is to parse `docker compose` files and create deployments from the content.
+
+For example, if i have this `docker-compose.yaml` file:
+```yaml
+services:
+  testingcompose1:
+    image: registry.cloud.cbh.kth.se/waitapp/cicd:latest
+    ports:
+      - "8080:8080"
+  testingcompose:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: supersecretuserhere
+      POSTGRES_PASSWORD: supersecretpassword
+      POSTGRES_DB: WAIT
+    command: ["sleep", "infinity"]
+    ports:
+      - "5432:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+```
+***Note:** The above example is just an example to showcase what is supported. It does not provide a functional application, the database will just run sleep*
+
+The tool will create two deployments and set up their environment variables, port, start commands and persistent storage.
 
 ## Installation
 
