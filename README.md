@@ -7,7 +7,6 @@
 - [Usage](#usage)
 - [Configuration](#configuration)
 - [Commands](#commands)
-- [License](#license)
 
 ## Overview
 
@@ -32,7 +31,15 @@
 
 3. Run the application:
    ```bash
-   kthcloud
+   ./bin/kthcloud
+   ```
+   Alternatively you can add move it to a location and add it to the path to be able to use it globally. **(dont do it yet, not ready)**
+   ```bash
+   sudo cp ./bin/kthcloud /usr/local/bin/
+   ```
+   Also make sure that `/usr/local/bin` is on the `PATH`.
+   ```bash
+   echo $PATH | grep /usr/local/bin
    ```
 
 ## Usage
@@ -45,9 +52,11 @@ To log in to kthcloud using keycload, use the `login` command:
 kthcloud login
 ```
 
-### Parsing Docker Compose Files
+This will bring up your browser and prompt you to login.
 
-To parse a Docker Compose file, use the `compose parse` command:
+### Compose
+
+To parse a Docker Compose file, and deploy to the cloud. Use the `compose up` command:
 
 ```bash
 kthcloud compose parse
@@ -57,7 +66,7 @@ kthcloud compose parse
 
 #### `login`
 
-Logs in to kthcloud and retrieves an authentication token, the token gets saved to the config.yaml.
+Logs in to kthcloud and retrieves an authentication token, the token gets saved to a file named session.json.
 
 **Usage:**
 
