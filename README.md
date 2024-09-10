@@ -16,7 +16,7 @@
 
 `kthcloud-cli` is a command-line interface tool for interacting with kthclouds rest api. It allows you to perform various operations such as logging in, fetching resources, and creating deployments from `docker-compose` files.
 
-![Screencast from 2024-09-10 10-40-06](https://github.com/user-attachments/assets/ad602b50-53c4-41f2-8aba-fddaab70481a)
+![Screencast-from-2024-09-10-16-06-09](https://github.com/user-attachments/assets/9596c72d-6b64-4808-a7dc-e58289220c1c)
 
 ### Compose
 
