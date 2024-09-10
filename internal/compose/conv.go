@@ -2,11 +2,16 @@ package compose
 
 import (
 	"go-deploy/dto/v2/body"
+	"kthcloud-cli/internal/model"
 	"kthcloud-cli/pkg/util"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
+
+	"github.com/spf13/viper"
 )
 
-func serviceToDepl(service Service, name string) *body.DeploymentCreate {
+func serviceToDepl(service model.Service, name string) *body.DeploymentCreate {
 	envsMap := make(map[string]bool)
 	var envs []body.Env
 	for envName, value := range service.Environment {
@@ -39,6 +44,24 @@ func serviceToDepl(service Service, name string) *body.DeploymentCreate {
 		}
 	}
 
+	// Get the prefered zone and check if it is valid
+	// Note: zoneName is the zoneName name
+	zoneName := viper.GetString("zone")
+	// TODO: Might be better to fetch /v2/zones and check if the zone is valid that way
+	// the only downside to that is that we have to rewrite the converter to either take in
+	// a Session or a list of valid zones, since it would be highly inefficient to fetch
+	// /v2/zones for every conversion
+	if zoneName != "se-flem2" && zoneName != "se-kista" {
+		log.Warnln("Specified zone is (most likely) not valid")
+	}
+
+	var zone *string
+	if zoneName == "" {
+		zone = nil
+	} else {
+		zone = &zoneName
+	}
+
 	return &body.DeploymentCreate{
 		Name:       name,
 		CpuCores:   util.Float64Pointer(0.2),
@@ -48,5 +71,6 @@ func serviceToDepl(service Service, name string) *body.DeploymentCreate {
 		Image:      &service.Image,
 		Visibility: visibility,
 		Args:       service.Command,
+		Zone:       zone,
 	}
 }

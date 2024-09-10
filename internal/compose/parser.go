@@ -2,6 +2,7 @@ package compose
 
 import (
 	"fmt"
+	"kthcloud-cli/internal/model"
 
 	log "github.com/sirupsen/logrus"
 
@@ -11,36 +12,21 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Service represents the structure of a service in docker-compose
-type Service struct {
-	Image       string            `yaml:"image,omitempty"`
-	Environment map[string]string `yaml:"environment,omitempty"`
-	Ports       []string          `yaml:"ports,omitempty"`
-	Volumes     []string          `yaml:"volumes,omitempty"`
-	Command     []string          `yaml:"command,omitempty"`
-}
-
-// ComposeFile represents the structure of a docker-compose file
-type ComposeFile struct {
-	Version  string                            `yaml:"version"`
-	Services map[string]map[string]interface{} `yaml:"services"`
-}
-
 // ParseComposeFile reads and parses a docker-compose file
-func ParseComposeFile(filename string) (map[string]Service, error) {
+func ParseComposeFile(filename string) (map[string]model.Service, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
 
-	var composeFile ComposeFile
+	var composeFile model.ComposeFile
 	if err := yaml.Unmarshal(data, &composeFile); err != nil {
 		return nil, fmt.Errorf("failed to parse YAML: %w", err)
 	}
 
-	services := make(map[string]Service)
+	services := make(map[string]model.Service)
 	for name, serviceData := range composeFile.Services {
-		service := Service{}
+		service := model.Service{}
 		if err := processService(serviceData, &service); err != nil {
 			return nil, err
 		}
@@ -50,7 +36,7 @@ func ParseComposeFile(filename string) (map[string]Service, error) {
 	return services, nil
 }
 
-func processService(serviceData map[string]interface{}, service *Service) error {
+func processService(serviceData map[string]interface{}, service *model.Service) error {
 	if env, ok := serviceData["environment"]; ok {
 		service.Environment = parseEnvironment(env)
 	}
@@ -73,6 +59,7 @@ func processService(serviceData map[string]interface{}, service *Service) error 
 }
 
 // parseEnvironment handles both the list and map formats for environment variables
+// TODO: Resolve .env files and exported envs?
 func parseEnvironment(env interface{}) map[string]string {
 	result := make(map[string]string)
 

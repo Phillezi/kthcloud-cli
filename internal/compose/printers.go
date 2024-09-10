@@ -2,9 +2,10 @@ package compose
 
 import (
 	"fmt"
+	"kthcloud-cli/internal/model"
 )
 
-func PrintServices(services map[string]Service) {
+func PrintServices(services map[string]model.Service) {
 	for name, service := range services {
 		fmt.Printf("Service: %s\n", name)
 		fmt.Printf("  Image: %s\n", service.Image)

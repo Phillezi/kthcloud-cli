@@ -14,6 +14,7 @@ func Up(filename string) error {
 		log.Errorln(err)
 	}
 
+	// load the session from the session.json file
 	session, err := model.Load(viper.GetString("session-path"))
 	if err != nil {
 		log.Fatalln("No active session. Please log in")

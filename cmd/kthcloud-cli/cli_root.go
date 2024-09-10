@@ -31,6 +31,9 @@ func init() {
 	rootCmd.Flags().StringP("api-token", "x", "", "kthcloud api token")
 	viper.BindPFlag("api-token", loginCmd.Flags().Lookup("api-token"))
 
+	rootCmd.Flags().StringP("zone", "z", "", "The preferred zone to use")
+	viper.BindPFlag("zone", loginCmd.Flags().Lookup("zone"))
+
 	rootCmd.Flags().StringP("session-path", "s", "session.json", "The filepath where the session should be loaded and saved to")
 	viper.BindPFlag("session-path", loginCmd.Flags().Lookup("session-path"))
 
