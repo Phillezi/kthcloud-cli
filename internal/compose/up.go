@@ -1,12 +1,15 @@
 package compose
 
 import (
+	"fmt"
 	"go-deploy/dto/v2/body"
 	"kthcloud-cli/internal/model"
 	"kthcloud-cli/pkg/util"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/briandowns/spinner"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -34,14 +37,28 @@ func Up(filename string) error {
 
 	var wg sync.WaitGroup
 
+	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+	s.Color("blue")
+	s.Start()
+
 	for key, service := range services {
 		resp, err := session.Client.Req("/v2/deployments", "POST", serviceToDepl(service, key, projectDir))
 		if err != nil {
 			log.Errorln("error: ", err, " response: ", resp)
 			return err
 		}
-		if err := util.HandleResponse(resp); err != nil {
-			return err
+		if strings.HasPrefix(resp.String(), "{\"errors\":") {
+			errors, err := util.ProcessResponse[model.ErrorResponse](resp.String())
+			if err != nil {
+				return err
+			}
+			s.Color("red")
+			// TODO: handle race condition here later
+			s.Stop()
+			log.Errorf("Error when trying to create deployment %s: %v", key, *errors)
+			s.Start()
+
+			return fmt.Errorf("error when trying to create deployment %s: %v", key, *errors)
 		}
 		job, err := util.ProcessResponse[body.DeploymentCreated](resp.String())
 		if err != nil {
@@ -51,34 +68,45 @@ func Up(filename string) error {
 		wg.Add(1)
 		go func(jobId string, serviceKey string) {
 			defer wg.Done()
-			log.Infof("Tracking job for deployment: %s", serviceKey)
 
 			for {
 				jobResp, err := session.Client.Req("/v2/jobs/"+jobId, "GET", nil)
 				if err != nil {
+					s.Color("red")
 					log.Errorf("Failed to get job status for deployment %s: %v", serviceKey, err)
 					return
 				}
 
 				jobStatus, err := util.ProcessResponse[body.JobRead](jobResp.String())
 				if err != nil {
+					s.Color("red")
 					log.Errorf("Error processing job status for deployment %s: %v", serviceKey, err)
 					return
 				}
 
-				//log.Infof("Job status for deployment %s: %v", serviceKey, jobStatus)
-
 				// Break out of loop when job is complete
 				if jobStatus.Status == "finished" {
+					s.Color("green")
+					// TODO: handle race condition here later
+					s.Stop()
 					log.Infof("Deployment %s created successfully", serviceKey)
+					s.Start()
 					break
 				}
 				if jobStatus.Status == "terminated" {
+					s.Color("yellow")
+					// TODO: handle race condition here later
+					s.Stop()
 					log.Infof("Job for deployment %s was terminated", serviceKey)
+					s.Start()
 					break
 				}
 				if jobStatus.LastError != nil {
+					s.Color("red")
+					// TODO: handle race condition here later
+					s.Stop()
 					log.Errorf("Failed to create deployment: %s", serviceKey)
+					s.Start()
 					break
 				}
 
@@ -88,6 +116,8 @@ func Up(filename string) error {
 
 	}
 	wg.Wait()
+	s.Color("green")
+	s.Stop()
 
 	log.Info("All jobs have been completed.")
 	return nil
