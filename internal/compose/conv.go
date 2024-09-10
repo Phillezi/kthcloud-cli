@@ -51,7 +51,7 @@ func serviceToDepl(service model.Service, name string, projectDir string) *body.
 	// the only downside to that is that we have to rewrite the converter to either take in
 	// a Session or a list of valid zones, since it would be highly inefficient to fetch
 	// /v2/zones for every conversion
-	if zoneName != "se-flem2" && zoneName != "se-kista" {
+	if zoneName != "" && zoneName != "se-flem2" && zoneName != "se-kista" {
 		log.Warnln("Specified zone is (most likely) not valid")
 	}
 
