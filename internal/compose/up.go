@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/briandowns/spinner"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -33,6 +34,10 @@ func Up(filename string) error {
 	}
 
 	var wg sync.WaitGroup
+
+	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond) // Using a spinner with an interval of 100ms
+	s.Prefix = "Tracking jobs... "
+	s.Start()
 
 	for key, service := range services {
 		resp, err := session.Client.Req("/v2/deployments", "POST", serviceToDepl(service, key, projectDir))
@@ -89,6 +94,7 @@ func Up(filename string) error {
 	}
 	wg.Wait()
 
+	s.Stop()
 	log.Info("All jobs have been completed.")
 	return nil
 }
