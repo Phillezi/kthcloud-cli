@@ -48,25 +48,16 @@ jobs:
     outputs:
         upload_url: ${{ steps.step_upload_url.outputs.upload_url }}
     steps:
-    - uses: actions/download-artifact@v3
-      with:
-        name: linux-binaries
-    - uses: actions/download-artifact@v3
-      with:
-        name: windows-binaries
-    - uses: actions/download-artifact@v3
-      with:
-        name: darwin-binaries
-        
-    - name: Get current timestamp
-      id: timestamp
-      run: echo "TIMESTAMP=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
 
     - name: Download all artifacts
       uses: actions/download-artifact@v4
       with:
         path: './artifacts'
-
+        
+    - name: Get current timestamp
+      id: timestamp
+      run: echo "TIMESTAMP=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+    
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
