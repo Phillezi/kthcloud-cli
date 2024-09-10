@@ -24,8 +24,13 @@ func Up(filename string) error {
 	}
 	session.SetupClient()
 
+	projectDir, err := CreateVolume(session, services)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 	for key, service := range services {
-		resp, err := session.Client.Req("/v2/deployments", "POST", serviceToDepl(service, key))
+		resp, err := session.Client.Req("/v2/deployments", "POST", serviceToDepl(service, key, projectDir))
 		if err != nil {
 			log.Errorln("error: ", err, " response: ", resp)
 			return err

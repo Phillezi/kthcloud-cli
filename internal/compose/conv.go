@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func serviceToDepl(service model.Service, name string) *body.DeploymentCreate {
+func serviceToDepl(service model.Service, name string, projectDir string) *body.DeploymentCreate {
 	envsMap := make(map[string]bool)
 	var envs []body.Env
 	for envName, value := range service.Environment {
@@ -62,6 +62,8 @@ func serviceToDepl(service model.Service, name string) *body.DeploymentCreate {
 		zone = &zoneName
 	}
 
+	volumes := ToVolumes(service.Volumes, projectDir)
+
 	return &body.DeploymentCreate{
 		Name:       name,
 		CpuCores:   util.Float64Pointer(0.2),
@@ -72,5 +74,6 @@ func serviceToDepl(service model.Service, name string) *body.DeploymentCreate {
 		Visibility: visibility,
 		Args:       service.Command,
 		Zone:       zone,
+		Volumes:    volumes,
 	}
 }
