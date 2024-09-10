@@ -36,11 +36,26 @@ jobs:
             GOOS=darwin GOARCH=arm64 make BINARY_NAME=kthcloud_arm64_macos ;;
         esac
 
-    - name: Upload Artifacts
+    - name: Upload Linux Binary
+      if: matrix.os == 'linux'
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ matrix.os }}-binaries
-        path: ./bin/
+        name: linux-binaries
+        path: ./bin/kthcloud_amd64_linux
+
+    - name: Upload Windows Binary
+      if: matrix.os == 'windows'
+      uses: actions/upload-artifact@v3
+      with:
+        name: windows-binaries
+        path: ./bin/kthcloud_amd64_windows.exe
+
+    - name: Upload macOS Binary
+      if: matrix.os == 'darwin'
+      uses: actions/upload-artifact@v3
+      with:
+        name: darwin-binaries
+        path: ./bin/kthcloud_arm64_macos
 
   release:
     needs: build
