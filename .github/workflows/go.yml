@@ -17,14 +17,14 @@ jobs:
         os: [linux, windows, darwin]
         go-version: ["1.23.1"]
     outputs:
-      timestamp: ${{ steps.timestamp.outputs.timestamp }}
+      timestamp: ${{ env.TIMESTAMP }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Get current timestamp
         id: timestamp
-        run: echo "TIMESTAMP=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV && \
-          echo "timestamp=${{ env.TIMESTAMP }}" >> $GITHUB_ENV
+        run: echo "TIMESTAMP=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
