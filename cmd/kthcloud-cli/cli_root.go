@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"kthcloud-cli/pkg/config"
 
 	"github.com/spf13/cobra"
@@ -15,6 +16,14 @@ var rootCmd = &cobra.Command{
  /  '_// __/ / _ \/ __/ / / / _ \/ // // _  / /___// __/ / /  / / 
 /_/\_\ \__/ /_//_/\__/ /_/  \___/\_,_/ \_,_/       \__/ /_/  /_/  
                                                                   `,
+}
+
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "See the version of the binary",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("version: " + viper.GetString("release"))
+	},
 }
 
 func init() {
@@ -38,5 +47,7 @@ func init() {
 	viper.BindPFlag("session-path", loginCmd.Flags().Lookup("session-path"))
 
 	viper.SetDefault("session-path", "session.json")
+
+	rootCmd.AddCommand(versionCmd)
 
 }
