@@ -23,8 +23,8 @@ jobs:
 
       - name: Get current timestamp
         id: timestamp
-        run: echo "TIMESTAMP=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
-
+        run: echo "TIMESTAMP=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV && \
+          echo "timestamp=${{ env.TIMESTAMP }}" >> $GITHUB_ENV
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
