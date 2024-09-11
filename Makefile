@@ -3,6 +3,7 @@ BINARY_NAME=kthcloud
 BUILD_DIR=bin
 CMD_DIR=cmd/kthcloud-cli
 MAIN_FILE=$(CMD_DIR)/main.go
+BUILDTIMESTAMP=$(shell date +%Y%m%d%H%M%S)
 
 # Targets
 .PHONY: all clean build run
@@ -12,7 +13,7 @@ all: build
 build:
 	@echo "Building the application..."
 	@mkdir -p $(BUILD_DIR)
-	@CGOENABLED=0 go build -o $(BUILD_DIR)/$(BINARY_NAME) $(CMD_DIR)/*
+	@CGOENABLED=0 go build -ldflags "-X main.buildTimestamp=$(BUILDTIMESTAMP)" -o $(BUILD_DIR)/$(BINARY_NAME) $(CMD_DIR)/*
 	@echo "Build complete."
 
 run: build
