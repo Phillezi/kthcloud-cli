@@ -40,6 +40,7 @@ func Up(filename string) error {
 	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
 	s.Color("blue")
 	s.Start()
+	defer s.Stop()
 
 	for key, service := range services {
 		resp, err := session.Client.Req("/v2/deployments", "POST", serviceToDepl(service, key, projectDir))

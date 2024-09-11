@@ -4,8 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Authenticate</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☁️</text></svg>"
+    />
+    <style>
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+          sans-serif;
+      }
+    </style>
   </head>
-  <body style="background-color: #333; color: #ccc; margin: auto; max-width: 800px;">
+  <body
+    style="background-color: #333; color: #ccc; margin: auto; max-width: 800px"
+  >
     <script>
       const baseUrl = "{{.BaseURL}}";
       const realm = "{{.Realm}}";
@@ -77,7 +90,7 @@
           const JWT = sessionStorage.getItem("token");
           const payload = decodeJWT(JWT);
           const refresh_token = sessionStorage.getItem("refresh_token");
-          const expires_in = sessionStorage.getItem("expires_in")
+          const expires_in = sessionStorage.getItem("expires_in");
           const url = `${location.protocol}//${location.host}/auth?id=${payload.sub}&token=${token}&expires_in=${expires_in}&refresh_token=${refresh_token}`;
           window.location.href = url;
           return;

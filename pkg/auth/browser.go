@@ -6,6 +6,9 @@ import (
 	"kthcloud-cli/internal/model"
 	"os/exec"
 	"runtime"
+	"time"
+
+	"github.com/briandowns/spinner"
 )
 
 //go:embed static/authenticated.html
@@ -31,6 +34,11 @@ func OpenBrowser(url string) error {
 }
 
 func StartLocalServer() (*model.AuthSession, error) {
+	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+	s.Color("blue")
+	s.Prefix = "Waiting for login\n"
+	s.Start()
+	defer s.Stop()
 	server := model.NewServer(":3000", authenticateHTML, authenticatedHTML)
 	return server.Start()
 }
