@@ -3,16 +3,16 @@ package auth
 import (
 	_ "embed"
 	"fmt"
-	"net/http"
+	"kthcloud-cli/internal/model"
 	"os/exec"
 	"runtime"
-	"time"
-
-	log "github.com/sirupsen/logrus"
 )
 
 //go:embed static/authenticated.html
 var authenticatedHTML string
+
+//go:embed static/authenticate.html
+var authenticateHTML string
 
 func OpenBrowser(url string) error {
 	var cmd *exec.Cmd
@@ -26,34 +26,11 @@ func OpenBrowser(url string) error {
 	default:
 		return fmt.Errorf("unsupported platform")
 	}
-	fmt.Printf("Trying to open: %s in web browser", url)
+	fmt.Printf("Trying to open: %s in web browser\n\n", url)
 	return cmd.Start()
 }
 
-func StartLocalServer() (string, error) {
-	fmt.Println("Starting server")
-	codeChannel := make(chan string)
-	server := &http.Server{Addr: ":3000", Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		code := r.URL.Query().Get("code")
-		if code != "" {
-			codeChannel <- code
-			fmt.Fprintln(w, authenticatedHTML)
-			return
-		}
-		fmt.Fprintln(w, "Failed to get authorization code.")
-	})}
-
-	go func() {
-		err := server.ListenAndServe()
-		if err != nil && err != http.ErrServerClosed {
-			log.Errorf("Server error: %v\n", err)
-		}
-	}()
-
-	select {
-	case code := <-codeChannel:
-		return code, nil
-	case <-time.After(5 * time.Minute):
-		return "", fmt.Errorf("timeout waiting for authorization code")
-	}
+func StartLocalServer() (*model.AuthSession, error) {
+	server := model.NewServer(":3000", authenticateHTML, authenticatedHTML)
+	return server.Start()
 }

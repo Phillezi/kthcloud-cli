@@ -14,19 +14,13 @@ import (
 	"github.com/spf13/viper"
 )
 
-type KeycloakSession struct {
-	Token                 string `json:"access_token"`
-	RefreshToken          string `json:"refresh_token"`
-	RefreshTokenExpiresIn int    `json:"refresh_token_expires_in"`
-	ExpiresIn             int    `json:"expires_in"`
-}
-
 type AuthSession struct {
 	SessionStart          *time.Time `json:"session_start,omitempty"`
 	Token                 string     `json:"access_token"`
 	RefreshToken          string     `json:"refresh_token"`
 	RefreshTokenExpiresIn int        `json:"refresh_token_expires_in"`
 	ExpiresIn             int        `json:"expires_in"`
+	SessionId             *string    `json:"keycloak_session,omitempty"`
 }
 
 type ApiKey struct {
@@ -44,22 +38,10 @@ type Session struct {
 func NewAuthSession(token string, refreshToken string, expiresIn int, refreshTokenExpiresIn int) *AuthSession {
 	now := time.Now()
 	return &AuthSession{
-		SessionStart:          &now,
-		Token:                 token,
-		RefreshToken:          refreshToken,
-		ExpiresIn:             expiresIn,
-		RefreshTokenExpiresIn: refreshTokenExpiresIn,
-	}
-}
-
-func (k *KeycloakSession) ToAuthSession() *AuthSession {
-	now := time.Now()
-	return &AuthSession{
-		SessionStart:          &now,
-		Token:                 k.Token,
-		RefreshToken:          k.RefreshToken,
-		ExpiresIn:             k.ExpiresIn,
-		RefreshTokenExpiresIn: k.RefreshTokenExpiresIn,
+		SessionStart: &now,
+		Token:        token,
+		RefreshToken: refreshToken,
+		ExpiresIn:    expiresIn,
 	}
 }
 
@@ -102,24 +84,20 @@ func (s *Session) FetchUser() error {
 	if s.Client == nil {
 		s.SetupClient()
 	}
-	resp, err := s.Client.Req("/v2/users", "GET", nil)
+	resp, err := s.Client.Req("/v2/users/"+*s.AuthSession.SessionId, "GET", nil)
 	if err != nil {
 		return err
 	}
 	if resp.IsError() {
-		return errors.New("non ok responsecode when fetching user")
+		return errors.New("non ok responsecode when fetching user: " + resp.String())
 	}
 
-	users, err := util.ProcessResponseArr[body.UserRead](resp.String())
+	user, err := util.ProcessResponse[body.UserRead](resp.String())
 	if err != nil {
 		return err
 	}
 
-	if len(users) != 1 {
-		return errors.New("recieved more than one user")
-	}
-
-	s.User = &users[0]
+	s.User = user
 	return nil
 }
 
