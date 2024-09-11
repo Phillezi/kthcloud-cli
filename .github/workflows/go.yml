@@ -6,7 +6,7 @@ on:
     paths-ignore:
       - README.md
       - .gitignore
-      - .github/**
+      #- .github/**
       - LICENSE
 
 jobs:
@@ -23,8 +23,7 @@ jobs:
 
       - name: Get current timestamp
         id: timestamp
-        run: echo "TIMESTAMP=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV && \
-          echo "::set-output name=timestamp::${{ env.TIMESTAMP }}
+        run: echo "TIMESTAMP=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
 
       - name: Set up Go
         uses: actions/setup-go@v4
