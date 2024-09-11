@@ -68,7 +68,7 @@ func serviceToDepl(service model.Service, name string, projectDir string) *body.
 		Name:       name,
 		CpuCores:   util.Float64Pointer(0.2),
 		RAM:        util.Float64Pointer(0.5),
-		Replicas:   util.IntPointer(0),
+		Replicas:   util.IntPointer(1),
 		Envs:       envs,
 		Image:      &service.Image,
 		Visibility: visibility,
