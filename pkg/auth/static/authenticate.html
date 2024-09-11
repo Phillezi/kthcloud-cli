@@ -78,7 +78,7 @@
           const payload = decodeJWT(JWT);
           const refresh_token = sessionStorage.getItem("refresh_token");
           const expires_in = sessionStorage.getItem("expires_in")
-          const url = `http://localhost:3000/auth?id=${payload.sub}&token=${token}&expires_in=${expires_in}&refresh_token=${refresh_token}`;
+          const url = `${location.protocol}//${location.host}/auth?id=${payload.sub}&token=${token}&expires_in=${expires_in}&refresh_token=${refresh_token}`;
           window.location.href = url;
           return;
         }
