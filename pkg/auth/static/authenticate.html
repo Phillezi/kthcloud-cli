@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Authenticate</title>
+  </head>
+  <body style="background-color: #333; color: #ccc; margin: auto; max-width: 800px;">
+    <script>
+      const baseUrl = "{{.BaseURL}}";
+      const realm = "{{.Realm}}";
+      const client_id = "{{.ClientID}}";
+      const redirect_uri = `${location.protocol}//${location.host}/`;
+      const generateRandomState = () => {
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+          /[xy]/g,
+          function (c) {
+            var r = (Math.random() * 16) | 0,
+              v = c == "x" ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+          }
+        );
+      };
+      const redirectToKeycloak = () => {
+        const state = generateRandomState();
+        const nonce = generateRandomState();
+        const urlParams = {
+          client_id,
+          redirect_uri,
+          response_type: "code",
+          response_mode: "fragment",
+          scope: "openid",
+          nonce,
+          state,
+        };
+        const conectionURI = new URL(
+          `${baseUrl}/realms/${realm}/protocol/openid-connect/auth`
+        );
+        for (const key of Object.keys(urlParams)) {
+          conectionURI.searchParams.append(key, urlParams[key]);
+        }
+        window.location.href = conectionURI;
+      };
+      const getToken = async (code) => {
+        const tokenUri = new URL(
+          `${baseUrl}/realms/${realm}/protocol/openid-connect/token`
+        );
+        var body = new URLSearchParams();
+        body.append("client_id", client_id);
+        body.append("redirect_uri", redirect_uri);
+        body.append("grant_type", "authorization_code");
+        body.append("code", code);
+        const data = await fetch(tokenUri, {
+          method: "post",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body,
+        });
+        const jsonData = await data.json();
+        sessionStorage.setItem("token", jsonData.access_token);
+        sessionStorage.setItem("expires_in", jsonData.expires_in);
+        sessionStorage.setItem("id_token", jsonData.id_token);
+        sessionStorage.setItem("refresh_token", jsonData.refresh_token);
+        sessionStorage.setItem("session_state", jsonData.session_state);
+        history.replaceState({}, "", "/");
+        location.reload();
+      };
+      const decodeJWT = (token) => {
+        const parts = token.split(".");
+        if (parts.length !== 3) throw new Error("Invalid JWT");
+        const decoded = atob(parts[1]);
+        const payload = JSON.parse(decoded);
+        return payload;
+      };
+      window.addEventListener("load", () => {
+        const token = sessionStorage.getItem("token");
+        if (token !== null) {
+          const JWT = sessionStorage.getItem("token");
+          const payload = decodeJWT(JWT);
+          const refresh_token = sessionStorage.getItem("refresh_token");
+          const expires_in = sessionStorage.getItem("expires_in")
+          const url = `${location.protocol}//${location.host}/auth?id=${payload.sub}&token=${token}&expires_in=${expires_in}&refresh_token=${refresh_token}`;
+          window.location.href = url;
+          return;
+        }
+        const params = new URLSearchParams(window.location.hash.split("#")[1]);
+        const code = params.get("code");
+        if (code) {
+          sessionStorage.setItem("code", code);
+          getToken(code);
+          return;
+        }
+        redirectToKeycloak();
+      });
+    </script>
+  </body>
+</html>

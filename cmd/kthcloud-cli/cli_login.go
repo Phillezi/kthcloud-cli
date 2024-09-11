@@ -3,7 +3,6 @@ package main
 import (
 	"kthcloud-cli/internal/model"
 	"kthcloud-cli/pkg/auth"
-	"net/url"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -14,25 +13,22 @@ var loginCmd = &cobra.Command{
 	Use:   "login",
 	Short: "Log in to kthcloud using Keycloak and retrieve the authentication token",
 	Run: func(cmd *cobra.Command, args []string) {
-		clientID := viper.GetString("client-id")
-		clientSecret := viper.GetString("client-secret")
-		authURL := viper.GetString("auth-url")
-		tokenURL := viper.GetString("token-url")
-		redirectURI := viper.GetString("redirect-uri")
+		//clientID := viper.GetString("client-id")
+		//clientSecret := viper.GetString("client-secret")
+		//authURL := viper.GetString("auth-url")
+		//tokenURL := viper.GetString("token-url")
+		//redirectURI := viper.GetString("redirect-uri")
 
-		err := auth.OpenBrowser(authURL + "?client_id=" + clientID + "&redirect_uri=" + url.QueryEscape(redirectURI) + "&response_type=code&scope=openid")
+		//url := authURL + "?client_id=" + clientID + "&redirect_uri=" + url.QueryEscape(redirectURI) + "&response_type=code&scope=openid"
+
+		err := auth.OpenBrowser("http://localhost:3000")
 		if err != nil {
 			log.Fatalf("Failed to open browser: %v", err)
 		}
 
-		code, err := auth.StartLocalServer()
+		authSession, err := auth.StartLocalServer()
 		if err != nil {
 			log.Fatalf("Failed to start local server: %v", err)
-		}
-
-		authSession, err := auth.GetAuthSession(code, clientID, clientSecret, tokenURL, redirectURI)
-		if err != nil {
-			log.Fatalf("Failed to get auth session: %v", err)
 		}
 
 		session := model.NewSession(authSession)
