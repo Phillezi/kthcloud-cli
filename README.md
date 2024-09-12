@@ -6,6 +6,11 @@
 /_/\_\ \__/ /_//_/\__/ /_/  \___/\_,_/ \_,_/       \__/ /_/  /_/  
                                                                   
 </pre>
+
+[![Windows](https://img.shields.io/badge/Windows-FFFFFF?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBoZWlnaHQ9IjgwMHB4IiB3aWR0aD0iODAwcHgiIHZlcnNpb249IjEuMSIgaWQ9IkNhcGFfMSIgdmlld0JveD0iMCAwIDE5LjEzMiAxOS4xMzIiIHhtbDpzcGFjZT0icHJlc2VydmUiPgo8Zz4KCTxnPgoJCTxwYXRoIHN0eWxlPSJmaWxsOiMwMzAxMDQ7IiBkPSJNOS4xNzIsOS4xNzlWMC4xNDZIMHY5LjAzM0g5LjE3MnoiLz4KCQk8cGF0aCBzdHlsZT0iZmlsbDojMDMwMTA0OyIgZD0iTTE5LjEzMiw5LjE3OVYwLjE0Nkg5Ljk1OXY5LjAzM0gxOS4xMzJ6Ii8+CgkJPHBhdGggc3R5bGU9ImZpbGw6IzAzMDEwNDsiIGQ9Ik0xOS4xMzIsMTguOTg2VjkuOTU1SDkuOTU5djkuMDMySDE5LjEzMnoiLz4KCQk8cGF0aCBzdHlsZT0iZmlsbDojMDMwMTA0OyIgZD0iTTkuMTcyLDE4Ljk4NlY5Ljk1NUgwdjkuMDMySDkuMTcyeiIvPgoJPC9nPgo8L2c+Cjwvc3ZnPg==)](#windows)
+[![Linux](https://img.shields.io/badge/Linux-FFFFFF?style=for-the-badge&logo=linux&logoColor=black)](#mac-and-linux)
+[![macOS](https://img.shields.io/badge/mac%20os-FFFFFF?style=for-the-badge&logo=apple&logoColor=black)](#mac-and-linux)
+
 </div>
 
 # kthcloud-cli
