@@ -82,10 +82,6 @@ For mac and linux there is a installation script that can be ran to install the 
 - bash
 - curl
 
-> [!WARNING]
-> Shell detection doesnt seem to work in the script, defaults to bash.
-> If you are using `zsh` you might have to add the path to the `$PATH` manually.
-
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Phillezi/kthcloud-cli/main/scripts/install.sh | bash
 
