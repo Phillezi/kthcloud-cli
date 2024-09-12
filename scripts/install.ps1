@@ -21,7 +21,7 @@ switch ($OS) {
 }
 
 switch ($ARCH) {
-    "X64" { $ARCH = "amd64" }
+    "x64" { $ARCH = "amd64" }
     default { Write-Host "Unsupported architecture: $ARCH" -ForegroundColor $Red; exit 1 }
 }
 
