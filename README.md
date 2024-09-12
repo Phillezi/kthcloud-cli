@@ -96,6 +96,8 @@ curl -fsSL https://raw.githubusercontent.com/Phillezi/kthcloud-cli/main/scripts/
 
 ```
 
+Check out what the script does [here](https://github.com/Phillezi/kthcloud-cli/blob/main/scripts/install.sh).
+
 #### Windows
 
 There is a powershell installation script that can be ran to install the cli.
@@ -104,6 +106,8 @@ There is a powershell installation script that can be ran to install the cli.
 powershell -c "irm https://raw.githubusercontent.com/Phillezi/kthcloud-cli/main/scripts/install.ps1 | iex"
 
 ```
+
+Check out what the script does [here](https://github.com/Phillezi/kthcloud-cli/blob/main/scripts/install.ps1).
 
 You might need to change your `ExecutionPolicy` to run the script. This can be done by running:
 
