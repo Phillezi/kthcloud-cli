@@ -61,6 +61,22 @@ The tool will create two deployments and set up their environment variables, por
 
 ## Installation
 
+### Download and install binary
+
+For mac and linux there is a installation script that can be ran to install the cli.
+
+**Prerequistes**
+
+* bash
+* curl
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Phillezi/kthcloud-cli/main/scripts/install.sh | bash
+
+```
+
+### Build it yourself
+
 1. Clone the repository:
 
    ```bash
