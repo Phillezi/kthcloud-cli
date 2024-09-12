@@ -10,7 +10,7 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "kthcloud-cli",
+	Use:   "kthcloud",
 	Short: "CLI app for interacting with kthclouds REST API",
 	Long: `   __    __    __         __                __             __   _ 
   / /__ / /_  / /  ____  / / ___  __ __ ___/ / ____ ____  / /  (_)
