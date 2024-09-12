@@ -13,7 +13,7 @@ all: build
 build:
 	@echo "Building the application..."
 	@mkdir -p $(BUILD_DIR)
-	@CGOENABLED=0 go build -ldflags "-X main.buildTimestamp=$(BUILDTIMESTAMP)" -o $(BUILD_DIR)/$(BINARY_NAME) $(CMD_DIR)/*
+	@CGO_ENABLED=0 go build -ldflags "-X main.buildTimestamp=$(BUILDTIMESTAMP)" -o $(BUILD_DIR)/$(BINARY_NAME) $(CMD_DIR)/*
 	@echo "Build complete."
 
 run: build
