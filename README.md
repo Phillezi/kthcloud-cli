@@ -18,6 +18,8 @@
 - [Overview](#overview)
     - [Compose](#compose)
 - [Installation](#installation)
+     - [Download binary](#download-and-install-binary)
+     - [Build](#build-it-yourself)
 - [Usage](#usage)
 - [Configuration](#configuration)
 - [Commands](#commands)
