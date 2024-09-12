@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"kthcloud-cli/pkg/config"
+	"path"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -43,10 +44,10 @@ func init() {
 	rootCmd.Flags().StringP("zone", "z", "", "The preferred zone to use")
 	viper.BindPFlag("zone", loginCmd.Flags().Lookup("zone"))
 
-	rootCmd.Flags().StringP("session-path", "s", "session.json", "The filepath where the session should be loaded and saved to")
+	rootCmd.Flags().StringP("session-path", "s", path.Join(config.GetConfigPath(), "session.json"), "The filepath where the session should be loaded and saved to")
 	viper.BindPFlag("session-path", loginCmd.Flags().Lookup("session-path"))
 
-	viper.SetDefault("session-path", "session.json")
+	viper.SetDefault("session-path", path.Join(config.GetConfigPath(), "session.json"))
 
 	rootCmd.AddCommand(versionCmd)
 

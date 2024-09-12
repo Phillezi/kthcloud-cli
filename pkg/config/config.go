@@ -1,6 +1,10 @@
 package config
 
 import (
+	"errors"
+	"os"
+	"path"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -9,8 +13,8 @@ import (
 func InitConfig() {
 	viper.SetConfigName("config") // Name of the config file (without extension)
 	viper.SetConfigType("yaml")   // File format (yaml)
-	viper.AddConfigPath(".")      // Search in the current directory TODO: maybe establish a config dir like ~/.kthcloud
-	viper.AutomaticEnv()          // Read environment variables
+	viper.AddConfigPath(GetConfigPath())
+	viper.AutomaticEnv() // Read environment variables
 
 	// Load config file
 	if err := viper.ReadInConfig(); err != nil {
@@ -19,4 +23,38 @@ func InitConfig() {
 		log.Debugf("Using config file: %s", viper.ConfigFileUsed())
 	}
 
+}
+
+func getConfigPath() (string, error) {
+	basePath, err := os.UserConfigDir()
+	if err != nil {
+		return "", err
+	}
+	configPath := path.Join(basePath, ".kthcloud")
+	fileDescr, err := os.Stat(configPath)
+	if os.IsNotExist(err) {
+		err := os.MkdirAll(configPath, os.ModePerm)
+		if err != nil {
+			return "", err
+		}
+		fileDescr, err = os.Stat(configPath)
+		if err != nil {
+			return "", err
+		}
+	} else if err != nil {
+		return "", err
+	}
+	if !fileDescr.IsDir() {
+		return "", errors.New("default config dir is file")
+	}
+	return configPath, nil
+}
+
+func GetConfigPath() string {
+	configPath, err := getConfigPath()
+	if err != nil {
+		log.Errorln(err)
+		configPath = "."
+	}
+	return configPath
 }
