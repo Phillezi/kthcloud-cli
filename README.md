@@ -119,45 +119,14 @@ Before running the install command again.
    ```bash
    ./bin/kthcloud
    ```
-   > [!TIP]
-   > Alternatively you can add it to the PATH to be able to use it globally, TODO: Make static .config location, the current configuration and session files will break otherwise.
-
-<!--
-   Alternatively you can move it to a location and add it to the path to be able to use it globally. **(dont do it yet, not ready)**
-   ```bash
-   sudo cp ./bin/kthcloud /usr/local/bin/
-   ```
-   Also make sure that `/usr/local/bin` is on the `PATH`.
-   ```bash
-   echo $PATH | grep /usr/local/bin
-   ```
--->
-
-## Usage
-
-### Logging In
-
-To log in to kthcloud using keycload, use the `login` command:
-
-```bash
-kthcloud login
-```
-
-This will bring up your browser and prompt you to login.
-
-### Compose
-
-To parse a Docker Compose file, and deploy to the cloud. Use the `compose up` command:
-
-```bash
-kthcloud compose parse
-```
+> [!TIP]
+> Alternatively you can add it to the PATH to be able to use it globally. The installation script automatically does this.
 
 ### Commands
 
 #### `login`
 
-Logs in to kthcloud and retrieves an authentication token, the token gets saved to a file named session.json.
+Logs in to kthcloud and retrieves an authentication token, the token gets saved to a file named `session.json` inside the configuration path. It opens a browser window to let you login through the kthcloud keycloak login page.
 
 **Usage:**
 
@@ -167,30 +136,57 @@ kthcloud login
 
 #### `compose`
 
-Parses a `docker-compose.yaml` or `docker-compose.yml` file and displays the services, environment variables, ports, and volumes.
+Parses a `docker-compose.yaml` or `docker-compose.yml` file and gives the ability to bring up these services on `kthcloud`.
 
 **Usage:**
 
 ```bash
-kthcloud compose
+kthcloud compose # lists all options
 ```
 
 **Sub-Commands:**
 
 - `parse`: Parses a Docker Compose file and prints the Services, Envs, Ports and Volumes.
-- `up`: (TODO)Brings up the services defined in the Docker Compose file.
-- `down`: (TODO)Brings down the services defined in the Docker Compose file.
+- `up`: Brings up the services defined in the Docker Compose file.
+- `down`: (**TODO**) Brings down the services defined in the Docker Compose file.
+
+#### `update`
+
+Checks for newer releases than the release of the binary running the command. If a newer release is found it will prompt you to install it, (can be bypassed wit the `-y` flag).
+
+> [!WARNING]
+> This currently doesnt work as expected on Windows.
+
+**Usage:**
+
+```bash
+kthcloud update
+```
+
+#### `version`
+
+Displays the version of the binary.
+
+**Usage:**
+
+```bash
+kthcloud version
+```
 
 ## Configuration
 
-The `kthcloud-cli` uses a configuration file named `config.yaml`. You can specify the following fields:
+The `kthcloud-cli` uses a configuration file named `config.yaml` it is located in the configuration directory. You can specify the following fields:
 
 - `api-url`: The URL of the API endpoint.
-- `auth-token`: The authentication token from keycloak to access the API.
+- `api-token`: The api token from kthcloud.
+- `loglevel`: The logging level (info, warn, error, debug) (default "info")
+- `session-path`: The filepath where the session should be loaded and saved to (default "~/.config/.kthcloud/session.json")
+- `zone`: The preferred kthcloud zone to use, will use `se-flem2` by default
 
 Example `config.yaml`:
 
 ```yaml
 api-url: https://api.example.com
-auth-token: your-auth-token-from-keycloak
+api-token: your-api-key-from-kthcloud
+loglevel: error
 ```
