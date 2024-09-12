@@ -24,10 +24,18 @@
   - [Compose](#compose)
 - [Installation](#installation)
   - [Download binary](#download-and-install-binary)
+     - [Mac and Linux](#mac-and-linux)
+     - [Windows](#windows)
   - [Build](#build-it-yourself)
-- [Usage](#usage)
-- [Configuration](#configuration)
 - [Commands](#commands)
+     - [Login](#login-command)
+     - [Compose](#compose-command)
+          - [Up](#compose-up-command)
+          - [Down](#compose-down-command)
+          - [Parse](#compose-parse-command)
+     - [Update](#update-command)
+     - [Version](#version-command)
+- [Configuration](#configuration)
 
 ## Overview
 
@@ -41,7 +49,7 @@
 
 ### Compose
 
-The clis core functionallity is to parse `docker compose` files and create deployments from the content.
+The clis core functionality is to parse `docker compose` files and create deployments from the content.
 
 For example, if i have this `docker-compose.yaml` file:
 
@@ -64,8 +72,9 @@ services:
       - dbdata:/var/lib/postgresql/data
 ```
 
-> [!NOTE]
-> The above example is just an example to showcase what is supported. It does not provide a functional application, the database will just run sleep
+> [!NOTE]  
+> The above example showcases what is supported but does not provide a functional application. The database service will simply run the `sleep` command.
+
 
 The tool will create two deployments and set up their environment variables, port, start commands and persistent storage.
 
@@ -75,9 +84,9 @@ The tool will create two deployments and set up their environment variables, por
 
 #### Mac and Linux
 
-For mac and linux there is a installation script that can be ran to install the cli.
+For Mac and Linux there is a installation script that can be ran to install the cli.
 
-**Prerequistes**
+##### Prerequisites
 
 - bash
 - curl
@@ -107,6 +116,12 @@ Before running the install command again.
 
 ### Build it yourself
 
+#### Prerequisites
+
+- [![Git](https://img.shields.io/badge/Git-FFFFFF?style=for-the-badge&logo=Git&logoColor=black)](https://git-scm.com/downloads)
+- [![Go >= 1.23.1](https://img.shields.io/badge/Go%20%3E%3D%201.23.1-FFFFFF?style=for-the-badge&logo=go&logoColor=black)](https://go.dev/dl/)
+- [![Gnu Make](https://img.shields.io/badge/GNU%20Make-FFFFFF?style=for-the-badge&logo=GNU&logoColor=black)](https://www.gnu.org/software/make/)
+
 1. Clone the repository:
 
    ```bash
@@ -129,50 +144,59 @@ Before running the install command again.
 
 ### Commands
 
-#### `login`
+#### Login command
 
 Logs in to kthcloud and retrieves an authentication token, the token gets saved to a file named `session.json` inside the configuration path. It opens a browser window to let you login through the kthcloud keycloak login page.
 
-**Usage:**
+##### Usage of the login command
 
 ```bash
 kthcloud login
 ```
 
-#### `compose`
+#### Compose command
 
 Parses a `docker-compose.yaml` or `docker-compose.yml` file and gives the ability to bring up these services on `kthcloud`.
 
-**Usage:**
+##### Usage of the compose command
 
 ```bash
 kthcloud compose # lists all options
 ```
 
-**Sub-Commands:**
+##### Compose up command
 
-- `parse`: Parses a Docker Compose file and prints the Services, Envs, Ports and Volumes.
-- `up`: Brings up the services defined in the Docker Compose file.
-- `down`: (**TODO**) Brings down the services defined in the Docker Compose file.
+Brings up the services defined in the Docker Compose file.
 
-#### `update`
+##### Compose down command
+
+> [!NOTE]
+> This feature is not implemented yet.
+
+(**TODO**) Brings down the services defined in the Docker Compose file.
+
+##### Compose parse command
+
+Parses a Docker Compose file and prints the Services, Envs, Ports and Volumes.
+
+#### Update command
 
 Checks for newer releases than the release of the binary running the command. If a newer release is found it will prompt you to install it, (can be bypassed wit the `-y` flag).
 
 > [!WARNING]
 > This currently doesnt work as expected on Windows.
 
-**Usage:**
+##### Usage of the update command
 
 ```bash
 kthcloud update
 ```
 
-#### `version`
+#### Version command
 
 Displays the version of the binary.
 
-**Usage:**
+##### Usage of the version command
 
 ```bash
 kthcloud version
