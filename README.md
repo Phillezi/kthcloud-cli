@@ -101,7 +101,7 @@ curl -fsSL https://raw.githubusercontent.com/Phillezi/kthcloud-cli/main/scripts/
 There is a powershell installation script that can be ran to install the cli.
 
 ```powershell
-irm https://raw.githubusercontent.com/Phillezi/kthcloud-cli/main/scripts/install.ps1 | iex
+powershell -c "irm https://raw.githubusercontent.com/Phillezi/kthcloud-cli/main/scripts/install.ps1 | iex"
 
 ```
 
