@@ -3,7 +3,7 @@ package auth
 import (
 	_ "embed"
 	"fmt"
-	"kthcloud-cli/internal/model"
+	"github.com/Phillezi/kthcloud-cli/internal/model"
 	"os/exec"
 	"runtime"
 	"time"

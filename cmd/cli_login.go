@@ -1,8 +1,8 @@
-package main
+package cmd
 
 import (
-	"kthcloud-cli/internal/model"
-	"kthcloud-cli/pkg/auth"
+	"github.com/Phillezi/kthcloud-cli/internal/model"
+	"github.com/Phillezi/kthcloud-cli/pkg/auth"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"

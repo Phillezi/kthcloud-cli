@@ -2,7 +2,7 @@ package auth
 
 import (
 	"errors"
-	"kthcloud-cli/internal/api"
+	"github.com/Phillezi/kthcloud-cli/internal/api"
 
 	log "github.com/sirupsen/logrus"
 

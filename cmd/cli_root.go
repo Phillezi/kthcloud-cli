@@ -1,9 +1,10 @@
-package main
+package cmd
 
 import (
 	"fmt"
-	"kthcloud-cli/pkg/config"
 	"path"
+
+	"github.com/Phillezi/kthcloud-cli/pkg/config"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
