@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"kthcloud-cli/internal/compose"
+	"github.com/Phillezi/kthcloud-cli/internal/compose"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

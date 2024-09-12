@@ -1,4 +1,4 @@
-module kthcloud-cli
+module github.com/Phillezi/kthcloud-cli
 
 go 1.23.1
 

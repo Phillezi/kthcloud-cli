@@ -2,7 +2,7 @@ package compose
 
 import (
 	"fmt"
-	"kthcloud-cli/internal/model"
+	"github.com/Phillezi/kthcloud-cli/internal/model"
 )
 
 func PrintServices(services map[string]model.Service) {

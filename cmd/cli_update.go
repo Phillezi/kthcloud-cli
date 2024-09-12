@@ -1,7 +1,7 @@
-package main
+package cmd
 
 import (
-	"kthcloud-cli/internal/update"
+	"github.com/Phillezi/kthcloud-cli/internal/update"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"

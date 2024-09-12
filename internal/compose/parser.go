@@ -2,7 +2,7 @@ package compose
 
 import (
 	"fmt"
-	"kthcloud-cli/internal/model"
+	"github.com/Phillezi/kthcloud-cli/internal/model"
 
 	log "github.com/sirupsen/logrus"
 

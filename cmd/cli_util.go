@@ -1,10 +1,11 @@
-package main
+package cmd
 
 import (
 	"go-deploy/dto/v2/body"
-	"kthcloud-cli/internal/model"
-	"kthcloud-cli/pkg/util"
 	"time"
+
+	"github.com/Phillezi/kthcloud-cli/internal/model"
+	"github.com/Phillezi/kthcloud-cli/pkg/util"
 
 	log "github.com/sirupsen/logrus"
 
