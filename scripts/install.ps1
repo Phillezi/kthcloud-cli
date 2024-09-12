@@ -11,7 +11,7 @@ $GITHUB_REPO = "Phillezi/kthcloud-cli"
 
 # Detect OS and architecture
 $OS = [System.Environment]::OSVersion.Platform
-$ARCH = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
+$ARCH = if ([System.Environment]::Is64BitOperatingSystem) { "x64" } else { "x86" }
 
 # Determine OS and ARCH for the binary
 # Powershell can be installed on other OS:s than Windows now, so make sure its running on windows 
