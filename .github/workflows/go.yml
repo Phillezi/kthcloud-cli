@@ -6,24 +6,29 @@ on:
     paths-ignore:
       - README.md
       - .gitignore
-      - .github/**
+      #- .github/**
       - LICENSE
 
 jobs:
+  gettime:
+    runs-on: ubuntu-latest
+    outputs:
+      timestamp: ${{ env.TIMESTAMP }}
+    steps:
+    - name: Get current timestamp
+      id: timestamp
+      run: echo "TIMESTAMP=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+      
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         os: [linux, windows, darwin]
         go-version: ["1.23.1"]
-    outputs:
-      timestamp: ${{ env.TIMESTAMP }}
+    env:
+      TIMESTAMP: ${{ needs.gettime.outputs.timestamp }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Get current timestamp
-        id: timestamp
-        run: echo "TIMESTAMP=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
 
       - name: Set up Go
         uses: actions/setup-go@v4
@@ -53,7 +58,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     env:
-      TIMESTAMP: ${{ needs.build.outputs.timestamp }}
+      TIMESTAMP: ${{ needs.gettime.outputs.timestamp }}
     outputs:
       upload_url: ${{ steps.step_upload_url.outputs.upload_url }}
     steps:
