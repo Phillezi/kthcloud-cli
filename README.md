@@ -16,10 +16,10 @@
 ## Table of Contents
 
 - [Overview](#overview)
-    - [Compose](#compose)
+  - [Compose](#compose)
 - [Installation](#installation)
-     - [Download binary](#download-and-install-binary)
-     - [Build](#build-it-yourself)
+  - [Download binary](#download-and-install-binary)
+  - [Build](#build-it-yourself)
 - [Usage](#usage)
 - [Configuration](#configuration)
 - [Commands](#commands)
@@ -27,6 +27,7 @@
 ## Overview
 
 `kthcloud-cli` is a command-line interface tool for interacting with kthclouds rest api. It allows you to perform various operations such as logging in, fetching resources, and creating deployments from `docker-compose` files.
+
 <div align="center">
     
 ![Screencast-from-2024-09-10-17-47-54](https://github.com/user-attachments/assets/ffa9d85d-0974-4a89-a480-3918b4ebb35f)
@@ -38,6 +39,7 @@
 The clis core functionallity is to parse `docker compose` files and create deployments from the content.
 
 For example, if i have this `docker-compose.yaml` file:
+
 ```yaml
 services:
   testingcompose1:
@@ -56,7 +58,8 @@ services:
     volumes:
       - dbdata:/var/lib/postgresql/data
 ```
-> [!NOTE] 
+
+> [!NOTE]
 > The above example is just an example to showcase what is supported. It does not provide a functional application, the database will just run sleep
 
 The tool will create two deployments and set up their environment variables, port, start commands and persistent storage.
@@ -65,17 +68,37 @@ The tool will create two deployments and set up their environment variables, por
 
 ### Download and install binary
 
+#### Mac and Linux
+
 For mac and linux there is a installation script that can be ran to install the cli.
 
 **Prerequistes**
 
-* bash
-* curl
+- bash
+- curl
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Phillezi/kthcloud-cli/main/scripts/install.sh | bash
 
 ```
+
+#### Windows
+
+There is a powershell installation script that can be ran to install the cli.
+
+```powershell
+irm https://raw.githubusercontent.com/Phillezi/kthcloud-cli/main/scripts/install.ps1 | iex
+
+```
+
+You might need to change your `ExecutionPolicy` to run the script. This can be done by running:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+```
+
+Before running the install command again.
 
 ### Build it yourself
 
@@ -96,8 +119,8 @@ curl -fsSL https://raw.githubusercontent.com/Phillezi/kthcloud-cli/main/scripts/
    ```bash
    ./bin/kthcloud
    ```
-> [!TIP]
-> Alternatively you can add it to the PATH to be able to use it globally, TODO: Make static .config location, the current configuration and session files will break otherwise.
+   > [!TIP]
+   > Alternatively you can add it to the PATH to be able to use it globally, TODO: Make static .config location, the current configuration and session files will break otherwise.
 
 <!--
    Alternatively you can move it to a location and add it to the path to be able to use it globally. **(dont do it yet, not ready)**
