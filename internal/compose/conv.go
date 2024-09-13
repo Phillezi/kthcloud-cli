@@ -2,9 +2,10 @@ package compose
 
 import (
 	"go-deploy/dto/v2/body"
+	"strings"
+
 	"github.com/Phillezi/kthcloud-cli/internal/model"
 	"github.com/Phillezi/kthcloud-cli/pkg/util"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 
@@ -44,7 +45,7 @@ func serviceToDepl(service model.Service, name string, projectDir string) *body.
 		}
 	}
 
-	// Get the prefered zone and check if it is valid
+	// Get the preferred zone and check if it is valid
 	// Note: zoneName is the zoneName name
 	zoneName := viper.GetString("zone")
 	// TODO: Might be better to fetch /v2/zones and check if the zone is valid that way

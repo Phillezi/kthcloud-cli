@@ -3,10 +3,11 @@ package auth
 import (
 	_ "embed"
 	"fmt"
-	"github.com/Phillezi/kthcloud-cli/internal/model"
 	"os/exec"
 	"runtime"
 	"time"
+
+	"github.com/Phillezi/kthcloud-cli/internal/model"
 
 	"github.com/briandowns/spinner"
 )
