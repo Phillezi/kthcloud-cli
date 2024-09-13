@@ -11,6 +11,8 @@
 [![Linux](https://img.shields.io/badge/Linux-FFFFFF?style=for-the-badge&logo=linux&logoColor=black)](#mac-and-linux)
 [![macOS](https://img.shields.io/badge/mac%20os-FFFFFF?style=for-the-badge&logo=apple&logoColor=black)](#mac-and-linux)
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/Phillezi/kthcloud-cli?labelColor=ffffffff&style=social)](https://goreportcard.com/report/github.com/Phillezi/kthcloud-cli)
+
 </div>
 
 # kthcloud-cli
