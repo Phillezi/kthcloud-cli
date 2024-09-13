@@ -45,7 +45,7 @@
 
 <div align="center">
     
-![Screencast-from-2024-09-10-17-47-54](https://github.com/user-attachments/assets/ffa9d85d-0974-4a89-a480-3918b4ebb35f)
+![example](https://github.com/user-attachments/assets/9482fba7-a50d-4502-8d80-1319b932dfe1)
 
 </div>
 
