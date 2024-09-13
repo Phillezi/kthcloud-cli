@@ -21,7 +21,7 @@ type Server struct {
 func NewServer(addr string, authenticateHTML string, authenticatedHTML string) *Server {
 	authHTML, err := NewTemplate(viper.GetString("keycloak-host"), viper.GetString("keycloak-realm"), viper.GetString("client-id")).Replace(authenticateHTML)
 	if err != nil {
-		log.Fatal("could not replace html template varaibles")
+		log.Fatal("could not replace html template variables")
 		return nil
 	}
 	return &Server{

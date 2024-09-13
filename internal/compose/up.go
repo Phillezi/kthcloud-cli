@@ -3,11 +3,12 @@ package compose
 import (
 	"fmt"
 	"go-deploy/dto/v2/body"
-	"github.com/Phillezi/kthcloud-cli/internal/model"
-	"github.com/Phillezi/kthcloud-cli/pkg/util"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/Phillezi/kthcloud-cli/internal/model"
+	"github.com/Phillezi/kthcloud-cli/pkg/util"
 
 	"github.com/briandowns/spinner"
 	log "github.com/sirupsen/logrus"

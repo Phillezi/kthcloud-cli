@@ -60,7 +60,7 @@ var composeDownCmd = &cobra.Command{
 
 func init() {
 	composeUpCmd.Flags().BoolP("detached", "d", false, "doesn't do anything, just here for parity with Docker Compose up")
-	viper.BindPFlag("detatched", composeUpCmd.Flags().Lookup("detatched"))
+	viper.BindPFlag("detached", composeUpCmd.Flags().Lookup("detached"))
 
 	// Register subcommands with the main compose command
 	composeCmd.AddCommand(composeParseCmd)
