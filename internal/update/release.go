@@ -48,7 +48,7 @@ func (r *GitHubRelease) IsNewer() (bool, error) {
 }
 
 func GetLatestRelease() (*GitHubRelease, error) {
-	url := "https://api.github.com/repos/Phillezi/github.com/Phillezi/kthcloud-cli/releases/latest"
+	url := "https://api.github.com/repos/Phillezi/kthcloud-cli/releases/latest"
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching release info: %v", err)
