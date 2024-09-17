@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
 	"io"
 	"log"
@@ -12,6 +13,9 @@ import (
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/session"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/token"
 )
+
+//go:embed static/authenticated.html
+var authenticatedHTML string
 
 type Server struct {
 	addr            string
@@ -83,7 +87,7 @@ func (s *Server) Start() {
 		http.HandleFunc("/auth/done", func(w http.ResponseWriter, r *http.Request) {
 			doneChan <- true
 			s.sessionChannel <- sess
-			fmt.Fprintln(w, "<body><h1>Authorization Complete</h1><p>The authorization token has been received. You can close this window if it hasn't closed automatically.</p><script> window.close(); </script></body")
+			fmt.Fprintln(w, authenticatedHTML)
 
 			go func() {
 				time.Sleep(500 * time.Millisecond)
