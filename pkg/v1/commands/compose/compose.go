@@ -3,10 +3,16 @@ package compose
 import (
 	"encoding/json"
 	"fmt"
+	"go-deploy/dto/v2/body"
+	"sync"
+	"time"
 
+	"github.com/Phillezi/kthcloud-cli/pkg/util"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/client"
+	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose/jobs"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose/parser"
-	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose/storage"
+	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose/response"
+	"github.com/briandowns/spinner"
 	"github.com/sirupsen/logrus"
 )
 
@@ -21,10 +27,17 @@ func Up() {
 		logrus.Fatal("no valid session, log in and try again")
 	}
 
-	_, err = storage.CreateVolumes(c, composeInstance)
+	/*_, err = storage.CreateVolumes(c, composeInstance)
 	if err != nil {
 		logrus.Fatal(err)
-	}
+	}*/
+
+	var wg sync.WaitGroup
+
+	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+	s.Color("blue")
+	s.Start()
+	defer s.Stop()
 
 	deployments := composeInstance.ToDeployments()
 	for _, deployment := range deployments {
@@ -32,8 +45,18 @@ func Up() {
 		if err != nil {
 			logrus.Fatal(err)
 		}
-		logrus.Info(resp.String())
+		err = response.IsError(resp.String())
+		if err != nil {
+			logrus.Fatal(err)
+		}
+		job, err := util.ProcessResponse[body.DeploymentCreated](resp.String())
+		if err != nil {
+			logrus.Fatal(err)
+		}
+		jobs.TrackDeploymentCreationW(deployment.Name, job, &wg, s)
 	}
+	wg.Wait()
+	s.Color("green")
 }
 
 func Parse() {

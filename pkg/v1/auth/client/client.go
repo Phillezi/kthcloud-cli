@@ -48,6 +48,10 @@ func Get() *Client {
 	)
 }
 
+func (c *Client) Client() *resty.Client {
+	return c.client
+}
+
 func GetInstance(baseURL, kcBaseURL, clientID, clientSecret, realm string) *Client {
 	once.Do(func() {
 		client := resty.New()
