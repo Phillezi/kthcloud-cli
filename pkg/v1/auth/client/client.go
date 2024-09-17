@@ -18,8 +18,10 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/spf13/viper"
 
 	"github.com/Phillezi/kthcloud-cli/pkg/util"
+	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/token"
 	"github.com/go-resty/resty/v2"
 	"golang.org/x/exp/rand"
 	"golang.org/x/term"
@@ -32,6 +34,7 @@ type Client struct {
 	realm        string
 	client       *resty.Client
 	jar          http.CookieJar
+	Token        *token.AuthToken
 }
 
 var (
@@ -47,6 +50,11 @@ func GetInstance(baseURL, clientID, clientSecret, realm string) *Client {
 			log.Fatalf("Error creating cookie jar: %v", err)
 		}
 		client.SetCookieJar(jar)
+		token, err := token.LoadAuthToken(viper.GetString("session-path"))
+		if err != nil || token.IsExpired() {
+			// try to refresh token here later
+			token = nil
+		}
 		instance = &Client{
 			baseURL:      baseURL,
 			clientID:     clientID,
@@ -54,6 +62,7 @@ func GetInstance(baseURL, clientID, clientSecret, realm string) *Client {
 			realm:        realm,
 			client:       resty.New(),
 			jar:          jar,
+			Token:        token,
 		}
 	})
 	return instance
@@ -119,12 +128,12 @@ func (c *Client) Authv2() {
 	c.DoAuth()
 }
 
-func (c *Client) login(url string, cookies []*http.Cookie) ([]*http.Cookie, error) {
+func (c *Client) HasValidSession() bool {
+	return c.Token != nil && !c.Token.IsExpired()
+}
 
-	newURL, err := replaceRedirectURI(url, "http://localhost:3000/auth/callback")
-	if err != nil {
-		return nil, err
-	}
+func (c *Client) Login() ([]*http.Cookie, error) {
+	kcURL := c.generateKCUrl()
 
 	cookieChan := make(chan []*http.Cookie)
 
@@ -134,11 +143,11 @@ func (c *Client) login(url string, cookies []*http.Cookie) ([]*http.Cookie, erro
 		// Serve the / endpoint
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
-			for _, cookie := range cookies {
+			for _, cookie := range c.jar.Cookies(&url.URL{Scheme: "http", Host: "localhost:3000"}) {
 				http.SetCookie(w, cookie)
 			}
 
-			http.Redirect(w, r, newURL, http.StatusFound)
+			http.Redirect(w, r, kcURL, http.StatusFound)
 		})
 
 		http.HandleFunc("/auth/callback", func(w http.ResponseWriter, r *http.Request) {
@@ -146,7 +155,7 @@ func (c *Client) login(url string, cookies []*http.Cookie) ([]*http.Cookie, erro
 			if code == "" {
 				//http.Redirect(w, r, newURL, http.StatusFound)
 				fmt.Fprintln(w, "no code provided")
-				http.Redirect(w, r, newURL, http.StatusFound)
+				http.Redirect(w, r, kcURL, http.StatusFound)
 				return
 			}
 
@@ -158,6 +167,7 @@ func (c *Client) login(url string, cookies []*http.Cookie) ([]*http.Cookie, erro
 			resp, err := c.fetchOAuthToken("http://localhost:3000/auth/callback", code)
 			if err != nil {
 				fmt.Println(err)
+				return
 			}
 			defer resp.Body.Close()
 			body, err := io.ReadAll(resp.Body)
@@ -165,7 +175,15 @@ func (c *Client) login(url string, cookies []*http.Cookie) ([]*http.Cookie, erro
 				fmt.Printf("Error reading response body: %v\n", err)
 				return
 			}
-			fmt.Println(string(body))
+			jwt, err := util.ProcessResponse[token.JWTToken](string(body))
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			c.Token = token.NewAuthToken(*jwt)
+			for _, cookie := range resp.Cookies() {
+				fmt.Println("got cookie: ", cookie)
+			}
 
 			//fmt.Fprintln(w, "code: ", code)
 			http.Redirect(w, r, "http://localhost:3000/auth/done", http.StatusFound)
@@ -194,7 +212,7 @@ func (c *Client) login(url string, cookies []*http.Cookie) ([]*http.Cookie, erro
 	}()
 
 	// Open the browser with the authURL
-	err = OpenBrowser("http://localhost:3000")
+	err := OpenBrowser("http://localhost:3000")
 	if err != nil {
 		return nil, err
 	}
@@ -345,11 +363,6 @@ func (c *Client) DoAuth() {
 		log.Fatal(err)
 	}*/
 
-	cookies, err := c.login(c.generateKCUrl(), []*http.Cookie{})
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	/*username, password, err := getUsernameAndPassword()
 	if err != nil {
 		log.Fatal(err)
@@ -408,10 +421,10 @@ func (c *Client) DoAuth() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	cookies = append(cookies, kthResp.Cookies()...)*/
+	cookies = append(cookies, kthResp.Cookies()...)
 	for _, cookie := range cookies {
 		fmt.Printf("Cookie: %s=%s\n", cookie.Name, cookie.Value)
-	}
+	}*/
 
 	fmt.Println("Authentication flow completed.")
 }

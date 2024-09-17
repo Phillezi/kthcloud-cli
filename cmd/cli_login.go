@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/client"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -11,12 +12,15 @@ var loginCmd = &cobra.Command{
 	Short: "Log in to kthcloud using Keycloak and retrieve the authentication token",
 	Run: func(cmd *cobra.Command, args []string) {
 		c := client.GetInstance(viper.GetString("keycloak-host"), viper.GetString("client-id"), "", viper.GetString("keycloak-realm"))
-		/*username, password, err := getUsernameAndPassword()
-		if err != nil {
-			log.Fatal(err)
-		}*/
 
-		c.Authv2()
+		if !c.HasValidSession() {
+			c.Login()
+		} else {
+			log.Info("already logged in")
+		}
+
+		log.Info("Token expires in: ", c.Token.TimeUntilExpiry())
+		c.Token.Save(viper.GetString("session-path"))
 
 	},
 }
