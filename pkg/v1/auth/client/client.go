@@ -1,30 +1,24 @@
 package client
 
 import (
-	"bufio"
 	"context"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"os"
 	"os/exec"
-	"regexp"
 	"runtime"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/PuerkitoBio/goquery"
 	"github.com/spf13/viper"
 
-	"github.com/Phillezi/kthcloud-cli/pkg/util"
-	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/token"
+	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/server"
+	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/session"
 	"github.com/go-resty/resty/v2"
 	"golang.org/x/exp/rand"
-	"golang.org/x/term"
 )
 
 type Client struct {
@@ -34,7 +28,7 @@ type Client struct {
 	realm        string
 	client       *resty.Client
 	jar          http.CookieJar
-	Token        *token.AuthToken
+	Session      *session.Session
 }
 
 var (
@@ -50,10 +44,10 @@ func GetInstance(baseURL, clientID, clientSecret, realm string) *Client {
 			log.Fatalf("Error creating cookie jar: %v", err)
 		}
 		client.SetCookieJar(jar)
-		token, err := token.LoadAuthToken(viper.GetString("session-path"))
-		if err != nil || token.IsExpired() {
+		sess, err := session.Load(viper.GetString("session-path"))
+		if err != nil || sess.IsExpired() {
 			// try to refresh token here later
-			token = nil
+			sess = nil
 		}
 		instance = &Client{
 			baseURL:      baseURL,
@@ -62,161 +56,36 @@ func GetInstance(baseURL, clientID, clientSecret, realm string) *Client {
 			realm:        realm,
 			client:       resty.New(),
 			jar:          jar,
-			Token:        token,
+			Session:      sess,
 		}
 	})
 	return instance
 }
 
-// Authenticate handles the initial authentication and returns an access token.
-// It detects if MFA is required and handles it.
-func (c *Client) Authenticate(username, password string) (string, error) {
-	tokenURL := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", c.baseURL, c.realm)
-	// Step 1: Request the token with username and password
-	resp, err := c.client.R().
-		SetFormData(map[string]string{
-			"client_id":     c.clientID,
-			"client_secret": c.clientSecret,
-			"username":      username,
-			"password":      password,
-			"grant_type":    "password",
-		}).
-		Post(tokenURL)
-
-	if err != nil {
-		return "", fmt.Errorf("error sending request: %v", err)
-	}
-
-	if resp.StatusCode() == 401 && resp.Header().Get("WWW-Authenticate") == "mfa_required" {
-		fmt.Println("MFA required. Please enter your MFA code:")
-		var mfaCode string
-		fmt.Scanln(&mfaCode)
-
-		// Step 2: Send MFA code
-		resp, err = c.client.R().
-			SetFormData(map[string]string{
-				"client_id":     c.clientID,
-				"client_secret": c.clientSecret,
-				"username":      username,
-				"password":      password,
-				"grant_type":    "password",
-				"totp":          mfaCode, // MFA code from user
-			}).
-			Post(tokenURL)
-
-		if err != nil {
-			return "", fmt.Errorf("error sending MFA request: %v", err)
-		}
-	}
-
-	if resp.StatusCode() != 200 {
-		return "", fmt.Errorf("authentication failed: %s", resp.String())
-	}
-
-	// Extract the token from the response
-	tokenResp, err := util.ProcessResponse[map[string]interface{}](resp.String())
-	if err != nil {
-		return "", fmt.Errorf("failed to parse response: %v", err)
-	}
-
-	accessToken := (*tokenResp)["access_token"].(string)
-	return accessToken, nil
-}
-
-func (c *Client) Authv2() {
-
-	c.DoAuth()
-}
-
 func (c *Client) HasValidSession() bool {
-	return c.Token != nil && !c.Token.IsExpired()
+	return c.Session != nil && !c.Session.IsExpired()
 }
 
-func (c *Client) Login() ([]*http.Cookie, error) {
+func (c *Client) Login() (*session.Session, error) {
 	kcURL := c.generateKCUrl()
 
-	cookieChan := make(chan []*http.Cookie)
+	sessionChannel := make(chan *session.Session)
+	server := server.New(":3000", kcURL, sessionChannel, c.fetchOAuthToken)
 
-	go func() {
-		server := &http.Server{Addr: ":3000"}
+	server.Start()
 
-		// Serve the / endpoint
-		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-
-			for _, cookie := range c.jar.Cookies(&url.URL{Scheme: "http", Host: "localhost:3000"}) {
-				http.SetCookie(w, cookie)
-			}
-
-			http.Redirect(w, r, kcURL, http.StatusFound)
-		})
-
-		http.HandleFunc("/auth/callback", func(w http.ResponseWriter, r *http.Request) {
-			code := r.URL.Query().Get("code")
-			if code == "" {
-				//http.Redirect(w, r, newURL, http.StatusFound)
-				fmt.Fprintln(w, "no code provided")
-				http.Redirect(w, r, kcURL, http.StatusFound)
-				return
-			}
-
-			for _, cookie := range r.Cookies() {
-				fmt.Println(cookie)
-				http.SetCookie(w, cookie)
-			}
-
-			resp, err := c.fetchOAuthToken("http://localhost:3000/auth/callback", code)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			defer resp.Body.Close()
-			body, err := io.ReadAll(resp.Body)
-			if err != nil {
-				fmt.Printf("Error reading response body: %v\n", err)
-				return
-			}
-			jwt, err := util.ProcessResponse[token.JWTToken](string(body))
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			c.Token = token.NewAuthToken(*jwt)
-			for _, cookie := range resp.Cookies() {
-				fmt.Println("got cookie: ", cookie)
-			}
-
-			//fmt.Fprintln(w, "code: ", code)
-			http.Redirect(w, r, "http://localhost:3000/auth/done", http.StatusFound)
-		})
-
-		// Handle /auth/callback
-		http.HandleFunc("/auth/done", func(w http.ResponseWriter, r *http.Request) {
-			collectedCookies := r.Cookies()
-			cookieChan <- collectedCookies
-			fmt.Fprintln(w, "Callback received. Server will now shut down.")
-
-			// Close the server
-			go func() {
-				time.Sleep(500 * time.Millisecond)
-				if err := server.Shutdown(context.Background()); err != nil {
-					log.Fatalf("Server Shutdown Failed:%+v", err)
-				}
-				fmt.Println("Server stopped after serving the callback request")
-			}()
-		})
-
-		// Start the server on localhost:3000
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Server failed: %s", err)
-		}
-	}()
-
-	// Open the browser with the authURL
 	err := OpenBrowser("http://localhost:3000")
 	if err != nil {
 		return nil, err
 	}
-	return <-cookieChan, nil
+
+	session := <-sessionChannel
+
+	if session != nil {
+		c.Session = session
+	}
+
+	return session, nil
 }
 
 func (c *Client) fetchOAuthToken(redirectURI, code string) (*http.Response, error) {
@@ -246,65 +115,6 @@ func (c *Client) fetchOAuthToken(redirectURI, code string) (*http.Response, erro
 	return resp, nil
 }
 
-func extractParams(rawURL string) (map[string]string, map[string]string, error) {
-	// Split the URL into main part and fragment
-	urlParts := strings.Split(rawURL, "#")
-	if len(urlParts) < 2 {
-		return nil, nil, fmt.Errorf("URL does not contain a fragment")
-	}
-
-	baseURL := urlParts[0]
-	fragment := urlParts[1]
-
-	// Parse the base URL query parameters
-	base, err := url.Parse(baseURL)
-	if err != nil {
-		return nil, nil, err
-	}
-	baseParams := base.Query()
-
-	// Parse the fragment parameters
-	fragmentParams, err := url.ParseQuery(fragment)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// Convert the query params from url.Values to a map
-	baseParamsMap := make(map[string]string)
-	for key, values := range baseParams {
-		if len(values) > 0 {
-			baseParamsMap[key] = values[0]
-		}
-	}
-
-	fragmentParamsMap := make(map[string]string)
-	for key, values := range fragmentParams {
-		if len(values) > 0 {
-			fragmentParamsMap[key] = values[0]
-		}
-	}
-
-	return baseParamsMap, fragmentParamsMap, nil
-}
-
-func replaceRedirectURI(authURL, newRedirectURI string) (string, error) {
-	// Parse the authURL
-	parsedURL, err := url.Parse(authURL)
-	if err != nil {
-		return "", fmt.Errorf("error parsing authURL: %w", err)
-	}
-
-	// Parse the query parameters
-	queryParams := parsedURL.Query()
-
-	// Update the redirect_uri parameter
-	queryParams.Set("redirect_uri", newRedirectURI)
-
-	// Reconstruct the URL with the updated query parameters
-	parsedURL.RawQuery = queryParams.Encode()
-	return parsedURL.String(), nil
-}
-
 func OpenBrowser(url string) error {
 	var cmd *exec.Cmd
 	switch {
@@ -319,197 +129,6 @@ func OpenBrowser(url string) error {
 	}
 	fmt.Printf("Trying to open: %s in web browser\n\n", url)
 	return cmd.Start()
-}
-
-func (c *Client) DoAuth() {
-	/*initialResponse, err := c.client.R().
-		Get(c.generateKCUrl())
-	if err != nil {
-		log.Fatalf("Error initiating request: %v", err)
-	}
-
-	redirectToKthURL, err := extractURL(initialResponse.String())
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	c.client.SetRedirectPolicy(resty.NoRedirectPolicy())
-
-	cookies := initialResponse.Cookies()
-
-	kthResp, err := c.client.R().
-		SetCookies(cookies). // Set collected cookies for the request
-		Get(viper.GetString("keycloak-host") + redirectToKthURL)
-	if err != nil && !strings.Contains(err.Error(), "auto redirect is disabled") {
-		log.Fatalf("Error initiating request after redirect: %v", err)
-	}
-
-	c.client.SetRedirectPolicy(resty.FlexibleRedirectPolicy(20))
-
-	cookies = append(cookies, kthResp.Cookies()...)
-
-	kthLoginURL := kthResp.Header().Get("Location")
-
-	kthResp, err = c.client.R().
-		SetCookies(cookies).
-		Get(kthLoginURL)
-	if err != nil {
-		log.Fatal(err)
-	}
-	cookies = append(cookies, kthResp.Cookies()...)
-
-	clientReqID, err := extractClientRequestID(kthResp.String())
-	if err != nil {
-		log.Fatal(err)
-	}*/
-
-	/*username, password, err := getUsernameAndPassword()
-	if err != nil {
-		log.Fatal(err)
-	}
-	formData := map[string]string{
-		"UserName":   username,
-		"Password":   password,
-		"AuthMethod": "FormsAuthentication",
-	}
-
-	kthResp, err = c.client.R().
-		SetCookies(cookies).
-		SetFormData(formData).
-		Post(kthLoginURL + "&client-request-id=" + clientReqID)
-	if err != nil {
-		log.Fatal(err)
-	}
-	cookies = append(cookies, kthResp.Cookies()...)
-
-	mfaNumFound := false
-	mfaNumPrinted := false
-	printedMfaNUM := ""
-
-	mfaNum, err := extractElementByID(kthResp.String(), "validEntropyNumber")
-	if err == nil {
-		mfaNumFound = true
-	}
-
-	for {
-		if mfaNumFound && !mfaNumPrinted || ((printedMfaNUM != mfaNum) && mfaNumPrinted) {
-			fmt.Println("\n\n" + "MFA NUMBER: " + mfaNum + "\n")
-			mfaNumPrinted = true
-		}
-		kthResp, err = c.client.R().
-			SetCookies(cookies).
-			Post(kthLoginURL + "&client-request-id=" + clientReqID)
-		if err != nil {
-			log.Fatal(err)
-		}
-		mfaNum, err = extractElementByID(kthResp.String(), "validEntropyNumber")
-		if err == nil {
-			mfaNumFound = true
-		} else {
-			fmt.Println(err)
-		}
-		if kthResp.StatusCode() == 302 {
-			cookies = append(cookies, kthResp.Cookies()...)
-			break
-		}
-		time.Sleep(1 * time.Second)
-	}
-
-	kthResp, err = c.client.R().
-		SetCookies(cookies).
-		Get(kthLoginURL + "&client-request-id=" + clientReqID)
-	if err != nil {
-		log.Fatal(err)
-	}
-	cookies = append(cookies, kthResp.Cookies()...)
-	for _, cookie := range cookies {
-		fmt.Printf("Cookie: %s=%s\n", cookie.Name, cookie.Value)
-	}*/
-
-	fmt.Println("Authentication flow completed.")
-}
-
-func getUsernameAndPassword() (string, string, error) {
-	reader := bufio.NewReader(os.Stdin)
-
-	// Prompt for username
-	fmt.Print("Enter username: ")
-	username, err := reader.ReadString('\n')
-	if err != nil {
-		return "", "", fmt.Errorf("error reading username: %v", err)
-	}
-	username = username[:len(username)-1] // Remove trailing newline
-
-	// Prompt for password
-	fmt.Print("Enter password: ")
-	passwordBytes, err := term.ReadPassword(int(os.Stdin.Fd()))
-	if err != nil {
-		return "", "", fmt.Errorf("error reading password: %v", err)
-	}
-	password := string(passwordBytes)
-
-	fmt.Println()
-
-	return username, password, nil
-}
-
-func extractElementByID(htmlContent, id string) (string, error) {
-	// Load the HTML content into goquery
-	doc, err := goquery.NewDocumentFromReader(strings.NewReader(htmlContent))
-	if err != nil {
-		return "", fmt.Errorf("failed to load HTML: %v", err)
-	}
-
-	// Find the element with the specific id
-	selection := doc.Find(fmt.Sprintf("#%s", id))
-	if selection.Length() == 0 {
-		return "", fmt.Errorf("element with id %s not found", id)
-	}
-
-	// Extract and return the HTML content of the element
-	return selection.Text(), nil
-}
-
-func extractClientRequestID(html string) (string, error) {
-	// Define the regular expression pattern
-	pattern := `client-request-id=([^&"\s]+)`
-
-	// Compile the regular expression
-	re, err := regexp.Compile(pattern)
-	if err != nil {
-		return "", fmt.Errorf("failed to compile regex: %v", err)
-	}
-
-	// Find the match
-	match := re.FindStringSubmatch(html)
-	if len(match) < 2 {
-		return "", fmt.Errorf("client-request-id not found in the HTML")
-	}
-
-	// Return the captured value
-	return match[1], nil
-}
-
-func extractURL(html string) (string, error) {
-	// Define the regular expression pattern
-	// This pattern looks for href attributes starting with the specified prefix and captures the URL
-	pattern := `href="/realms/cloud/broker/oidc/login\?client_id=landing[^"]*"`
-
-	// Compile the regular expression
-	re, err := regexp.Compile(pattern)
-	if err != nil {
-		return "", fmt.Errorf("failed to compile regex: %v", err)
-	}
-
-	// Find the first match
-	match := re.FindString(html)
-	if match == "" {
-		return "", fmt.Errorf("no matching URL found")
-	}
-
-	// Extract the URL part from the href attribute
-	url := match[len(`href="`) : len(match)-1]
-	return url, nil
 }
 
 func (c *Client) generateKCUrl() string {

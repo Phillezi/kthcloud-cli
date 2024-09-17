@@ -19,8 +19,8 @@ var loginCmd = &cobra.Command{
 			log.Info("already logged in")
 		}
 
-		log.Info("Token expires in: ", c.Token.TimeUntilExpiry())
-		c.Token.Save(viper.GetString("session-path"))
+		log.Info("Token expires in: ", c.Session.TimeUntilExpiry())
+		c.Session.Save(viper.GetString("session-path"))
 
 	},
 }
