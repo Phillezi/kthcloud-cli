@@ -92,8 +92,13 @@ func (s *Service) ToDeployment(name string, projectDir string) *body.DeploymentC
 	if replicas == nil {
 		replicas = util.IntPointer(1)
 	}
-	if util.Contains([]string{"private", "public", "auth"}, visibilityConf) {
-		visibility = visibilityConf
+	if visibilityConf != "" {
+		visibilityConf := strings.ToLower(visibilityConf)
+		if util.Contains([]string{"private", "public", "auth"}, visibilityConf) {
+			visibility = visibilityConf
+		} else {
+			log.Warnln("KTHCLOUD_VISIBILITY is set to: ", visibilityConf, " which is not valid, must be one of: private public auth.")
+		}
 	}
 
 	return &body.DeploymentCreate{
