@@ -1,10 +1,7 @@
 package cmd
 
 import (
-	"github.com/Phillezi/kthcloud-cli/internal/model"
-	"github.com/Phillezi/kthcloud-cli/pkg/auth"
-
-	log "github.com/sirupsen/logrus"
+	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/client"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -13,36 +10,14 @@ var loginCmd = &cobra.Command{
 	Use:   "login",
 	Short: "Log in to kthcloud using Keycloak and retrieve the authentication token",
 	Run: func(cmd *cobra.Command, args []string) {
-		//clientID := viper.GetString("client-id")
-		//clientSecret := viper.GetString("client-secret")
-		//authURL := viper.GetString("auth-url")
-		//tokenURL := viper.GetString("token-url")
-		//redirectURI := viper.GetString("redirect-uri")
-
-		//url := authURL + "?client_id=" + clientID + "&redirect_uri=" + url.QueryEscape(redirectURI) + "&response_type=code&scope=openid"
-
-		err := auth.OpenBrowser("http://localhost:3000")
+		c := client.GetInstance(viper.GetString("keycloak-host"), viper.GetString("client-id"), "", viper.GetString("keycloak-realm"))
+		/*username, password, err := getUsernameAndPassword()
 		if err != nil {
-			log.Fatalf("Failed to open browser: %v", err)
-		}
+			log.Fatal(err)
+		}*/
 
-		authSession, err := auth.StartLocalServer()
-		if err != nil {
-			log.Fatalf("Failed to start local server: %v", err)
-		}
+		c.Authv2()
 
-		session := model.NewSession(authSession)
-
-		err = session.FetchUser()
-		if err != nil {
-			log.Fatalln(err)
-		}
-		err = session.Save(viper.GetString("session-path"))
-		if err != nil {
-			log.Fatalln("eeee", err)
-		}
-
-		log.Infoln("Login successful. Access token stored in config file.")
 	},
 }
 
