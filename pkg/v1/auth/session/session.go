@@ -3,6 +3,7 @@ package session
 import (
 	"encoding/json"
 	"fmt"
+	"go-deploy/dto/v2/body"
 	"os"
 	"time"
 
@@ -16,6 +17,7 @@ type Session struct {
 	ExpiryTime time.Time
 	Resources  *resources.Resources
 	ID         *string
+	ApiKey     *body.ApiKey
 }
 
 func New(token token.JWTToken) *Session {

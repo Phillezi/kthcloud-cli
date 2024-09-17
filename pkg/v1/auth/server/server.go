@@ -83,7 +83,7 @@ func (s *Server) Start() {
 		http.HandleFunc("/auth/done", func(w http.ResponseWriter, r *http.Request) {
 
 			s.sessionChannel <- sess
-			fmt.Fprintln(w, "Callback received. Server will now shut down.")
+			fmt.Fprintln(w, "<body><h1>Authorization Complete</h1><p>The authorization token has been received. You can close this window if it hasn't closed automatically.</p><script> window.close(); </script></body")
 
 			go func() {
 				time.Sleep(500 * time.Millisecond)
