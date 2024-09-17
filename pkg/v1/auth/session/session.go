@@ -29,7 +29,6 @@ func New(token token.JWTToken) *Session {
 	}
 	sub, ok := data["sub"].(string)
 	if !ok {
-		id = nil
 		logrus.Warn("JWT 'sub' claim is not a string")
 	}
 	id = &sub
@@ -89,7 +88,6 @@ func Load(filepath string) (*Session, error) {
 		}
 		sub, ok := data["sub"].(string)
 		if !ok {
-			id = nil
 			logrus.Warn("JWT 'sub' claim is not a string")
 		}
 		id = &sub
