@@ -7,6 +7,7 @@ import (
 
 	"github.com/Phillezi/kthcloud-cli/pkg/util"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/resources"
+	"github.com/spf13/viper"
 )
 
 func (c *Client) User() (*body.UserRead, error) {
@@ -36,7 +37,7 @@ func (c *Client) User() (*body.UserRead, error) {
 	c.Session.Resources.User = &resources.CachedResource[*body.UserRead]{
 		Data:      user,
 		CachedAt:  time.Now(),
-		ExpiresIn: 1 * time.Hour,
+		ExpiresIn: viper.GetDuration("resource-cache-duration"),
 	}
 
 	return user, nil

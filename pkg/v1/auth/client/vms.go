@@ -7,6 +7,7 @@ import (
 
 	"github.com/Phillezi/kthcloud-cli/pkg/util"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/resources"
+	"github.com/spf13/viper"
 )
 
 func (c *Client) Vms() ([]body.VmRead, error) {
@@ -36,7 +37,7 @@ func (c *Client) Vms() ([]body.VmRead, error) {
 	c.Session.Resources.Vms = &resources.CachedResource[[]body.VmRead]{
 		Data:      vms,
 		CachedAt:  time.Now(),
-		ExpiresIn: 1 * time.Hour,
+		ExpiresIn: viper.GetDuration("resource-cache-duration"),
 	}
 
 	return vms, nil

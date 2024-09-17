@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"path"
+	"time"
 
 	"github.com/Phillezi/kthcloud-cli/pkg/config"
 
@@ -40,15 +41,16 @@ func init() {
 	viper.BindPFlag("api-url", rootCmd.PersistentFlags().Lookup("api-url"))
 
 	rootCmd.Flags().StringP("api-token", "x", "", "kthcloud api token")
-	viper.BindPFlag("api-token", loginCmd.Flags().Lookup("api-token"))
+	viper.BindPFlag("api-token", rootCmd.PersistentFlags().Lookup("api-token"))
 
 	rootCmd.Flags().StringP("zone", "z", "", "The preferred zone to use")
-	viper.BindPFlag("zone", loginCmd.Flags().Lookup("zone"))
+	viper.BindPFlag("zone", rootCmd.PersistentFlags().Lookup("zone"))
 
 	rootCmd.Flags().StringP("session-path", "s", path.Join(config.GetConfigPath(), "session.json"), "The filepath where the session should be loaded and saved to")
-	viper.BindPFlag("session-path", loginCmd.Flags().Lookup("session-path"))
+	viper.BindPFlag("session-path", rootCmd.PersistentFlags().Lookup("session-path"))
 
-	viper.SetDefault("session-path", path.Join(config.GetConfigPath(), "session.json"))
+	rootCmd.Flags().DurationP("resource-cache-duration", "c", 60*time.Second, "How long resources should be cached when possible")
+	viper.BindPFlag("resource-cache-duration", rootCmd.PersistentFlags().Lookup("resource-cache-duration"))
 
 	rootCmd.AddCommand(versionCmd)
 
