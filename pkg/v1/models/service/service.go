@@ -20,15 +20,18 @@ type Service struct {
 }
 
 func (s *Service) ToDeployment(name string, projectDir string) *body.DeploymentCreate {
+	specialEnvs := []string{"KTHCLOUD_CORES", "KTHCLOUD_RAM", "KTHCLOUD_REPLICAS"}
 	envsMap := make(map[string]bool)
 	var envs []body.Env
 	for envName, value := range s.Environment {
 		if _, exists := envsMap[envName]; !exists {
-			envsMap[envName] = true
-			envs = append(envs, body.Env{
-				Name:  envName,
-				Value: value,
-			})
+			if !util.Contains(specialEnvs, envName) {
+				envsMap[envName] = true
+				envs = append(envs, body.Env{
+					Name:  envName,
+					Value: value,
+				})
+			}
 		}
 	}
 
@@ -72,17 +75,30 @@ func (s *Service) ToDeployment(name string, projectDir string) *body.DeploymentC
 
 	volumes := ToVolumes(s.Volumes, projectDir)
 
+	// Get configuration from "special" set environment variables
+	cores, ram, replicas, healthPath := s.Environment.ResolveConfigEnvs()
+	if cores == nil {
+		cores = util.Float64Pointer(0.2)
+	}
+	if ram == nil {
+		ram = util.Float64Pointer(0.5)
+	}
+	if replicas == nil {
+		replicas = util.IntPointer(1)
+	}
+
 	return &body.DeploymentCreate{
-		Name:       name,
-		CpuCores:   util.Float64Pointer(0.2),
-		RAM:        util.Float64Pointer(0.5),
-		Replicas:   util.IntPointer(1),
-		Envs:       envs,
-		Image:      &s.Image,
-		Visibility: visibility,
-		Args:       s.Command,
-		Zone:       zone,
-		Volumes:    volumes,
+		Name:            name,
+		CpuCores:        cores,
+		RAM:             ram,
+		Replicas:        replicas,
+		Envs:            envs,
+		Image:           &s.Image,
+		Visibility:      visibility,
+		Args:            s.Command,
+		Zone:            zone,
+		Volumes:         volumes,
+		HealthCheckPath: healthPath,
 	}
 }
 
