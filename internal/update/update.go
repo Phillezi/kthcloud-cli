@@ -23,7 +23,7 @@ func Update(skipPrompt bool) (bool, error) {
 		return false, err
 	}
 	if !isNewer {
-		log.Infoln("Installation is already latest")
+		log.Infoln("No newer versions found")
 		return false, nil
 	}
 
