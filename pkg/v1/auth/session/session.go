@@ -13,11 +13,11 @@ import (
 )
 
 type Session struct {
-	Token      token.JWTToken
-	ExpiryTime time.Time
-	Resources  *resources.Resources
-	ID         *string
-	ApiKey     *body.ApiKey
+	Token      token.JWTToken       `json:"token"`
+	ExpiryTime time.Time            `json:"expiry_time"`
+	Resources  *resources.Resources `json:"resources,omitempty"`
+	ID         *string              `json:"id,omitempty"`
+	ApiKey     *body.ApiKey         `json:"api_key,omitempty"`
 }
 
 func New(token token.JWTToken) *Session {

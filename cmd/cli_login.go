@@ -20,7 +20,10 @@ var loginCmd = &cobra.Command{
 		//}
 
 		log.Info("Token expires in: ", c.Session.TimeUntilExpiry())
-		c.Session.Save(viper.GetString("session-path"))
+		err := c.Session.Save(viper.GetString("session-path"))
+		if err != nil {
+			log.Errorln(err)
+		}
 	},
 }
 

@@ -49,6 +49,8 @@ func init() {
 	rootCmd.Flags().StringP("session-path", "s", path.Join(config.GetConfigPath(), "session.json"), "The filepath where the session should be loaded and saved to")
 	viper.BindPFlag("session-path", rootCmd.PersistentFlags().Lookup("session-path"))
 
+	viper.SetDefault("session-path", path.Join(config.GetConfigPath(), "session.json"))
+
 	rootCmd.Flags().DurationP("resource-cache-duration", "c", 60*time.Second, "How long resources should be cached when possible")
 	viper.BindPFlag("resource-cache-duration", rootCmd.PersistentFlags().Lookup("resource-cache-duration"))
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/client"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose/parser"
+	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose/storage"
 	"github.com/sirupsen/logrus"
 )
 
@@ -18,6 +19,11 @@ func Up() {
 	c := client.Get()
 	if !c.HasValidSession() {
 		logrus.Fatal("no valid session, log in and try again")
+	}
+
+	_, err = storage.CreateVolumes(c, composeInstance)
+	if err != nil {
+		logrus.Fatal(err)
 	}
 
 	deployments := composeInstance.ToDeployments()
