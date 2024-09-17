@@ -22,6 +22,7 @@ import (
 )
 
 type Client struct {
+	kcBaseURL    string
 	baseURL      string
 	clientID     string
 	clientSecret string
@@ -37,15 +38,17 @@ var (
 )
 
 func Get() *Client {
-	return GetInstance(viper.GetString(
-		"keycloak-host"),
+	return GetInstance(
+		viper.GetString("api-url"),
+		viper.GetString(
+			"keycloak-host"),
 		viper.GetString("client-id"),
 		"",
 		viper.GetString("keycloak-realm"),
 	)
 }
 
-func GetInstance(baseURL, clientID, clientSecret, realm string) *Client {
+func GetInstance(baseURL, kcBaseURL, clientID, clientSecret, realm string) *Client {
 	once.Do(func() {
 		client := resty.New()
 		jar, err := cookiejar.New(nil)
@@ -60,12 +63,16 @@ func GetInstance(baseURL, clientID, clientSecret, realm string) *Client {
 		}
 		instance = &Client{
 			baseURL:      baseURL,
+			kcBaseURL:    kcBaseURL,
 			clientID:     clientID,
 			clientSecret: clientSecret,
 			realm:        realm,
 			client:       resty.New(),
 			jar:          jar,
 			Session:      sess,
+		}
+		if sess != nil {
+			instance.client.SetAuthToken(instance.Session.Token.AccessToken)
 		}
 	})
 	return instance
@@ -92,13 +99,14 @@ func (c *Client) Login() (*session.Session, error) {
 
 	if session != nil {
 		c.Session = session
+		c.client.SetAuthToken(c.Session.Token.AccessToken)
 	}
 
 	return session, nil
 }
 
 func (c *Client) fetchOAuthToken(redirectURI, code string) (*http.Response, error) {
-	tokenURL := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", c.baseURL, c.realm)
+	tokenURL := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", c.kcBaseURL, c.realm)
 
 	// Create the URL-encoded form data
 	form := url.Values{}
@@ -146,7 +154,7 @@ func (c *Client) generateKCUrl() string {
 	nonce := generateRandomState()
 
 	return fmt.Sprintf("%s/realms/%s/protocol/openid-connect/auth?client_id=%s&redirect_uri=%s&response_type=code&response_mode=query&scope=openid&nonce=%s&state=%s",
-		c.baseURL, c.realm, c.clientID, url.QueryEscape(redirectURI), nonce, state)
+		c.kcBaseURL, c.realm, c.clientID, url.QueryEscape(redirectURI), nonce, state)
 }
 
 func (c *Client) RedirectToKeycloak(w http.ResponseWriter) {
@@ -161,7 +169,7 @@ func (c *Client) HandleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenURL := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", c.baseURL, c.realm)
+	tokenURL := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", c.kcBaseURL, c.realm)
 
 	resp, err := c.client.R().
 		SetFormData(map[string]string{

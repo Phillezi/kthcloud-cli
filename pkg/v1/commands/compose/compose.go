@@ -1,39 +1,29 @@
 package compose
 
 import (
-	"fmt"
-	"log"
-	"os"
-
-	"github.com/Phillezi/kthcloud-cli/pkg/v1/models/compose"
+	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/client"
+	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose/parser"
+	"github.com/sirupsen/logrus"
 )
 
 func Up() {
-	files := []string{"docker-compose.yml", "docker-compose.yaml"}
-
-	var filePath string
-	var fileFound bool
-
-	for _, file := range files {
-		if _, err := os.Stat(file); err == nil {
-			filePath = file
-			fileFound = true
-			break
-		}
-	}
-
-	if !fileFound {
-		log.Println("No docker-compose file found.")
-		return
-	}
-
-	composeInstance, err := compose.New(filePath)
+	composeInstance, err := parser.GetCompose()
 	if err != nil {
-		log.Printf("Error creating Compose instance: %v", err)
-		return
+		logrus.Fatal(err)
 	}
 
-	log.Printf("Successfully created Compose instance from file: %s", filePath)
+	c := client.Get()
+	if !c.HasValidSession() {
+		logrus.Fatal("no valid session, log in and try again")
+	}
 
-	fmt.Printf("Compose instance: %+v\n", composeInstance.String())
+	deployments := composeInstance.ToDeployments()
+	for _, deployment := range deployments {
+		resp, err := c.Create(deployment)
+		if err != nil {
+			logrus.Fatal(err)
+		}
+		logrus.Info(resp.String())
+	}
+
 }
