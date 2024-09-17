@@ -3,8 +3,7 @@ package cmd
 import (
 	"log"
 
-	"github.com/Phillezi/kthcloud-cli/internal/ps"
-
+	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/ps"
 	"github.com/spf13/cobra"
 )
 

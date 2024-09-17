@@ -1,13 +1,7 @@
 package cmd
 
 import (
-	"fmt"
-	"path/filepath"
-
-	log "github.com/sirupsen/logrus"
-
-	"github.com/Phillezi/kthcloud-cli/internal/compose"
-
+	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -21,19 +15,7 @@ var composeParseCmd = &cobra.Command{
 	Use:   "parse",
 	Short: "Parse a docker-compose.yaml or docker-compose.yml file",
 	Run: func(cmd *cobra.Command, args []string) {
-		// Look for docker-compose.yaml or docker-compose.yml
-		composeFile, err := findComposeFile()
-		if err != nil {
-			log.Fatalf("Error: %v", err)
-		}
-
-		// Parse the file
-		services, err := compose.ParseComposeFile(composeFile)
-		if err != nil {
-			log.Fatalf("Failed to parse compose file: %v", err)
-		}
-
-		compose.PrintServices(services)
+		compose.Parse()
 	},
 }
 
@@ -41,24 +23,20 @@ var composeUpCmd = &cobra.Command{
 	Use:   "up",
 	Short: "Deploy compose configuration to cloud",
 	Run: func(cmd *cobra.Command, args []string) {
-		// Look for docker-compose.yaml or docker-compose.yml
-		composeFile, err := findComposeFile()
-		if err != nil {
-			log.Fatalf("Error: %v", err)
-		}
-		compose.Up(composeFile)
+		tryToCreateVolumes, _ := cmd.Flags().GetBool("try-volumes")
+		compose.Up(tryToCreateVolumes)
 	},
 }
-
 var composeDownCmd = &cobra.Command{
 	Use:   "down",
 	Short: "Stop compose configuration to cloud",
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Fatal("not implemented yet...")
+		compose.Down()
 	},
 }
 
 func init() {
+	composeUpCmd.Flags().BoolP("try-volumes", "", false, "Try to create volumes despite auth not working for it yet")
 	composeUpCmd.Flags().BoolP("detached", "d", false, "doesn't do anything, just here for parity with Docker Compose up")
 	viper.BindPFlag("detached", composeUpCmd.Flags().Lookup("detached"))
 
@@ -69,20 +47,4 @@ func init() {
 
 	// Register the compose command in root
 	rootCmd.AddCommand(composeCmd)
-}
-
-// Helper function to find the compose file
-func findComposeFile() (string, error) {
-	// Search for docker-compose.yaml or docker-compose.yml
-	files := []string{"docker-compose.yaml", "docker-compose.yml"}
-	for _, file := range files {
-		matches, err := filepath.Glob(file)
-		if err != nil {
-			return "", err
-		}
-		if len(matches) > 0 {
-			return matches[0], nil
-		}
-	}
-	return "", fmt.Errorf("docker-compose.yaml or docker-compose.yml not found")
 }
