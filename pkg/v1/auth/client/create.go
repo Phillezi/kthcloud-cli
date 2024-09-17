@@ -17,6 +17,12 @@ func (c *Client) Create(data any) (*resty.Response, error) {
 		path = "/v2/deployments"
 	case *body.VmCreate:
 		path = "/v2/vms"
+	case *body.ApiKeyCreate:
+		user, err := c.User()
+		if err != nil {
+			return nil, err
+		}
+		path = "/v2/users/" + user.ID + "/apiKeys"
 	default:
 		return nil, fmt.Errorf("unsupported data type: %T", v)
 	}

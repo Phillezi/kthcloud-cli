@@ -17,7 +17,7 @@ type Session struct {
 	ExpiryTime time.Time            `json:"expiry_time"`
 	Resources  *resources.Resources `json:"resources,omitempty"`
 	ID         *string              `json:"id,omitempty"`
-	ApiKey     *body.ApiKey         `json:"api_key,omitempty"`
+	ApiKey     *body.ApiKeyCreated  `json:"api_key,omitempty"`
 }
 
 func New(token token.JWTToken) *Session {
