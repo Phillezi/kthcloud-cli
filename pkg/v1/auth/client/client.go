@@ -2,13 +2,17 @@ package client
 
 import (
 	"bufio"
+	"context"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"os"
+	"os/exec"
 	"regexp"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -17,9 +21,8 @@ import (
 
 	"github.com/Phillezi/kthcloud-cli/pkg/util"
 	"github.com/go-resty/resty/v2"
-	"github.com/spf13/viper"
-	"golang.org/x/crypto/ssh/terminal"
 	"golang.org/x/exp/rand"
+	"golang.org/x/term"
 )
 
 type Client struct {
@@ -116,8 +119,192 @@ func (c *Client) Authv2() {
 	c.DoAuth()
 }
 
+func (c *Client) login(url string, cookies []*http.Cookie) ([]*http.Cookie, error) {
+
+	newURL, err := replaceRedirectURI(url, "http://localhost:3000/auth/callback")
+	if err != nil {
+		return nil, err
+	}
+
+	cookieChan := make(chan []*http.Cookie)
+
+	go func() {
+		server := &http.Server{Addr: ":3000"}
+
+		// Serve the / endpoint
+		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+
+			for _, cookie := range cookies {
+				http.SetCookie(w, cookie)
+			}
+
+			http.Redirect(w, r, newURL, http.StatusFound)
+		})
+
+		http.HandleFunc("/auth/callback", func(w http.ResponseWriter, r *http.Request) {
+			code := r.URL.Query().Get("code")
+			if code == "" {
+				//http.Redirect(w, r, newURL, http.StatusFound)
+				fmt.Fprintln(w, "no code provided")
+				http.Redirect(w, r, newURL, http.StatusFound)
+				return
+			}
+
+			for _, cookie := range r.Cookies() {
+				fmt.Println(cookie)
+				http.SetCookie(w, cookie)
+			}
+
+			resp, err := c.fetchOAuthToken("http://localhost:3000/auth/callback", code)
+			if err != nil {
+				fmt.Println(err)
+			}
+			defer resp.Body.Close()
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				fmt.Printf("Error reading response body: %v\n", err)
+				return
+			}
+			fmt.Println(string(body))
+
+			//fmt.Fprintln(w, "code: ", code)
+			http.Redirect(w, r, "http://localhost:3000/auth/done", http.StatusFound)
+		})
+
+		// Handle /auth/callback
+		http.HandleFunc("/auth/done", func(w http.ResponseWriter, r *http.Request) {
+			collectedCookies := r.Cookies()
+			cookieChan <- collectedCookies
+			fmt.Fprintln(w, "Callback received. Server will now shut down.")
+
+			// Close the server
+			go func() {
+				time.Sleep(500 * time.Millisecond)
+				if err := server.Shutdown(context.Background()); err != nil {
+					log.Fatalf("Server Shutdown Failed:%+v", err)
+				}
+				fmt.Println("Server stopped after serving the callback request")
+			}()
+		})
+
+		// Start the server on localhost:3000
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Server failed: %s", err)
+		}
+	}()
+
+	// Open the browser with the authURL
+	err = OpenBrowser("http://localhost:3000")
+	if err != nil {
+		return nil, err
+	}
+	return <-cookieChan, nil
+}
+
+func (c *Client) fetchOAuthToken(redirectURI, code string) (*http.Response, error) {
+	tokenURL := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", c.baseURL, c.realm)
+
+	// Create the URL-encoded form data
+	form := url.Values{}
+	form.Add("client_id", c.clientID)
+	form.Add("redirect_uri", redirectURI)
+	form.Add("grant_type", "authorization_code")
+	form.Add("code", code)
+
+	// Create the POST request
+	req, err := http.NewRequestWithContext(context.Background(), "POST", tokenURL, strings.NewReader(form.Encode()))
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	// Send the request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+
+	return resp, nil
+}
+
+func extractParams(rawURL string) (map[string]string, map[string]string, error) {
+	// Split the URL into main part and fragment
+	urlParts := strings.Split(rawURL, "#")
+	if len(urlParts) < 2 {
+		return nil, nil, fmt.Errorf("URL does not contain a fragment")
+	}
+
+	baseURL := urlParts[0]
+	fragment := urlParts[1]
+
+	// Parse the base URL query parameters
+	base, err := url.Parse(baseURL)
+	if err != nil {
+		return nil, nil, err
+	}
+	baseParams := base.Query()
+
+	// Parse the fragment parameters
+	fragmentParams, err := url.ParseQuery(fragment)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Convert the query params from url.Values to a map
+	baseParamsMap := make(map[string]string)
+	for key, values := range baseParams {
+		if len(values) > 0 {
+			baseParamsMap[key] = values[0]
+		}
+	}
+
+	fragmentParamsMap := make(map[string]string)
+	for key, values := range fragmentParams {
+		if len(values) > 0 {
+			fragmentParamsMap[key] = values[0]
+		}
+	}
+
+	return baseParamsMap, fragmentParamsMap, nil
+}
+
+func replaceRedirectURI(authURL, newRedirectURI string) (string, error) {
+	// Parse the authURL
+	parsedURL, err := url.Parse(authURL)
+	if err != nil {
+		return "", fmt.Errorf("error parsing authURL: %w", err)
+	}
+
+	// Parse the query parameters
+	queryParams := parsedURL.Query()
+
+	// Update the redirect_uri parameter
+	queryParams.Set("redirect_uri", newRedirectURI)
+
+	// Reconstruct the URL with the updated query parameters
+	parsedURL.RawQuery = queryParams.Encode()
+	return parsedURL.String(), nil
+}
+
+func OpenBrowser(url string) error {
+	var cmd *exec.Cmd
+	switch {
+	case runtime.GOOS == "linux":
+		cmd = exec.Command("xdg-open", url)
+	case runtime.GOOS == "windows":
+		cmd = exec.Command("rundll32", "url.dll,FileProtocolHandler", url)
+	case runtime.GOOS == "darwin":
+		cmd = exec.Command("open", url)
+	default:
+		return fmt.Errorf("unsupported platform")
+	}
+	fmt.Printf("Trying to open: %s in web browser\n\n", url)
+	return cmd.Start()
+}
+
 func (c *Client) DoAuth() {
-	initialResponse, err := c.client.R().
+	/*initialResponse, err := c.client.R().
 		Get(c.generateKCUrl())
 	if err != nil {
 		log.Fatalf("Error initiating request: %v", err)
@@ -156,9 +343,14 @@ func (c *Client) DoAuth() {
 	clientReqID, err := extractClientRequestID(kthResp.String())
 	if err != nil {
 		log.Fatal(err)
+	}*/
+
+	cookies, err := c.login(c.generateKCUrl(), []*http.Cookie{})
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	username, password, err := getUsernameAndPassword()
+	/*username, password, err := getUsernameAndPassword()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -216,7 +408,7 @@ func (c *Client) DoAuth() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	cookies = append(cookies, kthResp.Cookies()...)
+	cookies = append(cookies, kthResp.Cookies()...)*/
 	for _, cookie := range cookies {
 		fmt.Printf("Cookie: %s=%s\n", cookie.Name, cookie.Value)
 	}
@@ -237,13 +429,13 @@ func getUsernameAndPassword() (string, string, error) {
 
 	// Prompt for password
 	fmt.Print("Enter password: ")
-	passwordBytes, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+	passwordBytes, err := term.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
 		return "", "", fmt.Errorf("error reading password: %v", err)
 	}
 	password := string(passwordBytes)
 
-	fmt.Println() // Print a newline after password input for better formatting
+	fmt.Println()
 
 	return username, password, nil
 }
@@ -308,12 +500,11 @@ func extractURL(html string) (string, error) {
 }
 
 func (c *Client) generateKCUrl() string {
-	redirectURI := fmt.Sprintf("%s/auth/callback", "http://localhost:3000") // Replace with your app's base URL
-
+	redirectURI := fmt.Sprintf("%s/auth/callback", "http://localhost:3000")
 	state := generateRandomState()
 	nonce := generateRandomState()
 
-	return fmt.Sprintf("%s/realms/%s/protocol/openid-connect/auth?client_id=%s&redirect_uri=%s&response_type=code&response_mode=fragment&scope=openid&nonce=%s&state=%s",
+	return fmt.Sprintf("%s/realms/%s/protocol/openid-connect/auth?client_id=%s&redirect_uri=%s&response_type=code&response_mode=query&scope=openid&nonce=%s&state=%s",
 		c.baseURL, c.realm, c.clientID, url.QueryEscape(redirectURI), nonce, state)
 }
 
@@ -337,7 +528,7 @@ func (c *Client) HandleCallback(w http.ResponseWriter, r *http.Request) {
 			"client_secret": c.clientSecret,
 			"grant_type":    "authorization_code",
 			"code":          code,
-			"redirect_uri":  "http://localhost:8080/auth/callback", // Replace with your app's callback URL
+			"redirect_uri":  "http://localhost:3000/auth/callback",
 		}).
 		Post(tokenURL)
 
