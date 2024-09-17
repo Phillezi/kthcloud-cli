@@ -26,22 +26,22 @@
   - [Compose](#compose)
 - [Installation](#installation)
   - [Download binary](#download-and-install-binary)
-     - [Mac and Linux](#mac-and-linux)
-     - [Windows](#windows)
+    - [Mac and Linux](#mac-and-linux)
+    - [Windows](#windows)
   - [Build](#build-it-yourself)
 - [Commands](#commands)
-     - [Login](#login-command)
-     - [Compose](#compose-command)
-          - [Up](#compose-up-command)
-          - [Down](#compose-down-command)
-          - [Parse](#compose-parse-command)
-     - [Update](#update-command)
-     - [Version](#version-command)
+  - [Login](#login-command)
+  - [Compose](#compose-command)
+    - [Up](#compose-up-command)
+    - [Down](#compose-down-command)
+    - [Parse](#compose-parse-command)
+  - [Update](#update-command)
+  - [Version](#version-command)
 - [Configuration](#configuration)
 
 ## Overview
 
-`kthcloud-cli` is a command-line interface tool for interacting with kthclouds rest api. It allows you to perform various operations such as logging in, fetching resources, and creating deployments from `docker-compose` files.
+`kthcloud-cli` is a command-line interface tool for interacting with kthcloud’s API. It allows you to perform various operations such as listin deployments, creating api keys, and creating deployments from `docker-compose` files.
 
 <div align="center">
     
@@ -67,6 +67,7 @@ services:
       POSTGRES_USER: supersecretuserhere
       POSTGRES_PASSWORD: supersecretpassword
       POSTGRES_DB: WAIT
+      KTHCLOUD_VISIBILITY: private
     command: ["sleep", "infinity"]
     ports:
       - "5432:5432"
@@ -76,7 +77,6 @@ services:
 
 > [!NOTE]  
 > The above example showcases what is supported but does not provide a functional application. The database service will simply run the `sleep` command.
-
 
 The tool will create two deployments and set up their environment variables, port, start commands and persistent storage.
 
@@ -111,7 +111,7 @@ powershell -c "irm https://raw.githubusercontent.com/Phillezi/kthcloud-cli/main/
 
 Check out what the script does [here](https://github.com/Phillezi/kthcloud-cli/blob/main/scripts/install.ps1).
 
-You might need to change your `ExecutionPolicy` to run the script. This can be done by running:
+If the above command fails, you might need to change your `ExecutionPolicy` to run the script. This can be done by running:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
@@ -142,9 +142,11 @@ Before running the install command again.
    ```
 
 3. Run the application:
+
    ```bash
    ./bin/kthcloud
    ```
+
 > [!TIP]
 > Alternatively you can add it to the PATH to be able to use it globally. The installation script automatically does this.
 
@@ -183,7 +185,7 @@ Brings up the services defined in the Docker Compose file.
 
 ##### Compose parse command
 
-Parses a Docker Compose file and prints the Services, Envs, Ports and Volumes.
+Parses a Docker Compose file and prints the Services, Envs, Ports and Volumes. And prints out the resulting deployments.
 
 #### Update command
 
@@ -191,6 +193,9 @@ Checks for newer releases than the release of the binary running the command. If
 
 > [!WARNING]
 > This currently doesnt work as expected on Windows.
+
+> [!WARNING]
+> This does not verify against a hash to confirm the integrity of the bibary (yet).
 
 ##### Usage of the update command
 
