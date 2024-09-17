@@ -20,7 +20,7 @@ type Service struct {
 }
 
 func (s *Service) ToDeployment(name string, projectDir string) *body.DeploymentCreate {
-	specialEnvs := []string{"KTHCLOUD_CORES", "KTHCLOUD_RAM", "KTHCLOUD_REPLICAS"}
+	specialEnvs := []string{"KTHCLOUD_CORES", "KTHCLOUD_RAM", "KTHCLOUD_REPLICAS", "KTHCLOUD_HEALTH_PATH"}
 	envsMap := make(map[string]bool)
 	var envs []body.Env
 	for envName, value := range s.Environment {
