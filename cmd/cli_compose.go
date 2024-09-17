@@ -23,7 +23,8 @@ var composeUpCmd = &cobra.Command{
 	Use:   "up",
 	Short: "Deploy compose configuration to cloud",
 	Run: func(cmd *cobra.Command, args []string) {
-		compose.Up()
+		tryToCreateVolumes, _ := cmd.Flags().GetBool("try-volumes")
+		compose.Up(tryToCreateVolumes)
 	},
 }
 var composeDownCmd = &cobra.Command{
@@ -35,6 +36,7 @@ var composeDownCmd = &cobra.Command{
 }
 
 func init() {
+	composeUpCmd.Flags().BoolP("try-volumes", "", false, "Try to create volumes despite auth not working for it yet")
 	composeUpCmd.Flags().BoolP("detached", "d", false, "doesn't do anything, just here for parity with Docker Compose up")
 	viper.BindPFlag("detached", composeUpCmd.Flags().Lookup("detached"))
 

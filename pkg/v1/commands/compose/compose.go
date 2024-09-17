@@ -12,11 +12,12 @@ import (
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose/jobs"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose/parser"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose/response"
+	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose/storage"
 	"github.com/briandowns/spinner"
 	"github.com/sirupsen/logrus"
 )
 
-func Up() {
+func Up(tryToCreateVolumes bool) {
 	composeInstance, err := parser.GetCompose()
 	if err != nil {
 		logrus.Fatal(err)
@@ -27,10 +28,15 @@ func Up() {
 		logrus.Fatal("no valid session, log in and try again")
 	}
 
-	/*_, err = storage.CreateVolumes(c, composeInstance)
-	if err != nil {
-		logrus.Fatal(err)
-	}*/
+	if tryToCreateVolumes {
+		_, err = storage.CreateVolumes(c, composeInstance)
+		if err != nil {
+			logrus.Fatal(err)
+		}
+	} else {
+		logrus.Infoln("Skipping trying to create volumes, no solution to auth on the storage managers proxy")
+		logrus.Infoln("use --try-volumes to try anyway")
+	}
 
 	var wg sync.WaitGroup
 
