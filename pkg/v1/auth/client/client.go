@@ -74,6 +74,7 @@ func GetInstance(baseURL, kcBaseURL, clientID, clientSecret, realm string) *Clie
 		if sess != nil {
 			instance.client.SetAuthToken(instance.Session.Token.AccessToken)
 		}
+		instance.client.SetBaseURL(baseURL)
 	})
 	return instance
 }

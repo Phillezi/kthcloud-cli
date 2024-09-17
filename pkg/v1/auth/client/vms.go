@@ -10,12 +10,11 @@ import (
 )
 
 func (c *Client) Vms() ([]body.VmRead, error) {
-	if c.Session.Resources.User != nil && !c.Session.Resources.Vms.IsExpired() {
+	if c.Session.Resources != nil && c.Session.Resources.Vms != nil && !c.Session.Resources.Vms.IsExpired() {
 		return c.Session.Resources.Vms.Data, nil
 	}
 
 	req := c.client.R()
-	req.SetAuthToken(c.Session.Token.AccessToken)
 
 	resp, err := req.Get("/v2/vms")
 	if err != nil {

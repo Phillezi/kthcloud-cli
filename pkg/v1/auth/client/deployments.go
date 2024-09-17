@@ -10,12 +10,11 @@ import (
 )
 
 func (c *Client) Deployments() ([]body.DeploymentRead, error) {
-	if c.Session.Resources.User != nil && !c.Session.Resources.Deployments.IsExpired() {
+	if c.Session.Resources != nil && c.Session.Resources.Deployments != nil && !c.Session.Resources.Deployments.IsExpired() {
 		return c.Session.Resources.Deployments.Data, nil
 	}
 
 	req := c.client.R()
-	req.SetAuthToken(c.Session.Token.AccessToken)
 
 	resp, err := req.Get("/v2/deployments")
 	if err != nil {

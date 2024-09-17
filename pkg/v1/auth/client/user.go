@@ -10,12 +10,11 @@ import (
 )
 
 func (c *Client) User() (*body.UserRead, error) {
-	if c.Session.Resources.User != nil && !c.Session.Resources.User.IsExpired() {
+	if c.Session.Resources != nil && c.Session.Resources.User != nil && !c.Session.Resources.User.IsExpired() {
 		return c.Session.Resources.User.Data, nil
 	}
 
 	req := c.client.R()
-	req.SetAuthToken(c.Session.Token.AccessToken)
 
 	resp, err := req.Get("/v2/users/" + *c.Session.ID)
 	if err != nil {
