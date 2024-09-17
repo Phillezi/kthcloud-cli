@@ -3,9 +3,11 @@ package cmd
 import (
 	"fmt"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/Phillezi/kthcloud-cli/pkg/config"
+	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/client"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -26,6 +28,25 @@ var versionCmd = &cobra.Command{
 	Short: "See the version of the binary",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("version: " + viper.GetString("release"))
+	},
+}
+
+var whoamiCmd = &cobra.Command{
+	Use:   "whoami",
+	Short: "See who you are",
+	Run: func(cmd *cobra.Command, args []string) {
+		c := client.Get()
+		if !c.HasValidSession() {
+			fmt.Println("I dont know...")
+			return
+		}
+		user, err := c.User()
+		if err != nil {
+			fmt.Println("I dont know...")
+			return
+		}
+		fmt.Println("Name:\t" + strings.Split(user.FirstName, " ")[0] + " " + user.LastName + "\n\nEmail:\t" + user.Email + "\nRole:\t" + user.Role.Name)
+
 	},
 }
 
@@ -55,5 +76,7 @@ func init() {
 	viper.BindPFlag("resource-cache-duration", rootCmd.PersistentFlags().Lookup("resource-cache-duration"))
 
 	rootCmd.AddCommand(versionCmd)
+
+	rootCmd.AddCommand(whoamiCmd)
 
 }
