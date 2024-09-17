@@ -2,6 +2,7 @@ package service
 
 import (
 	"go-deploy/dto/v2/body"
+	"path"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -15,7 +16,7 @@ func ToVolumes(volumes []string, projectRoot string) []body.Volume {
 		parts := strings.Split(volume, ":")
 		v := body.Volume{
 			Name:       "kth-cli-generated",
-			ServerPath: toServerPath(parts[0], projectRoot),
+			ServerPath: path.Join(projectRoot, parts[0]),
 			AppPath:    parts[0],
 		}
 
@@ -31,11 +32,4 @@ func ToVolumes(volumes []string, projectRoot string) []body.Volume {
 	}
 
 	return parsedVolumes
-}
-
-func toServerPath(path string, root string) string {
-	if root == "" {
-		return path
-	}
-	return root + "/" + path
 }
