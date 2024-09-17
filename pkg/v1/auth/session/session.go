@@ -6,19 +6,37 @@ import (
 	"os"
 	"time"
 
+	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/resources"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/token"
+	"github.com/sirupsen/logrus"
 )
 
 type Session struct {
 	Token      token.JWTToken
 	ExpiryTime time.Time
+	Resources  *resources.Resources
+	ID         *string
 }
 
 func New(token token.JWTToken) *Session {
 	expiryTime := time.Now().Add(time.Duration(token.ExpiresIn) * time.Second)
+	var id *string
+	data, err := token.Decode()
+	if err != nil {
+		logrus.Warn("Could not parse the JWT token")
+	}
+	sub, ok := data["sub"].(string)
+	if !ok {
+		id = nil
+		logrus.Warn("JWT 'sub' claim is not a string")
+	}
+	id = &sub
+
 	return &Session{
 		Token:      token,
 		ExpiryTime: expiryTime,
+		Resources:  nil,
+		ID:         id,
 	}
 }
 
@@ -59,6 +77,21 @@ func Load(filepath string) (*Session, error) {
 	err = json.Unmarshal(data, &authToken)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal token: %w", err)
+	}
+
+	if authToken.ID == nil {
+		var id *string
+		data, err := authToken.Token.Decode()
+		if err != nil {
+			logrus.Warn("Could not parse the JWT token")
+		}
+		sub, ok := data["sub"].(string)
+		if !ok {
+			id = nil
+			logrus.Warn("JWT 'sub' claim is not a string")
+		}
+		id = &sub
+		authToken.ID = id
 	}
 
 	return &authToken, nil

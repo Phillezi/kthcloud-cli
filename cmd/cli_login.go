@@ -11,7 +11,7 @@ var loginCmd = &cobra.Command{
 	Use:   "login",
 	Short: "Log in to kthcloud using Keycloak and retrieve the authentication token",
 	Run: func(cmd *cobra.Command, args []string) {
-		c := client.GetInstance(viper.GetString("keycloak-host"), viper.GetString("client-id"), "", viper.GetString("keycloak-realm"))
+		c := client.Get()
 
 		if !c.HasValidSession() {
 			c.Login()
@@ -21,7 +21,6 @@ var loginCmd = &cobra.Command{
 
 		log.Info("Token expires in: ", c.Session.TimeUntilExpiry())
 		c.Session.Save(viper.GetString("session-path"))
-
 	},
 }
 

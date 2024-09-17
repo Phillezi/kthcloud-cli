@@ -14,9 +14,8 @@ import (
 )
 
 type Server struct {
-	addr           string
-	sessionChannel chan *session.Session
-	//cookies         []*http.Cookie
+	addr            string
+	sessionChannel  chan *session.Session
 	kcURL           string
 	fetchOAuthToken func(redirectURI, code string) (*http.Response, error)
 }
@@ -25,14 +24,12 @@ func New(
 	addr string,
 	kcURL string,
 	sessionChannel chan *session.Session,
-	//cookies []*http.Cookie,
 	fetchOAuthToken func(redirectURI, code string) (*http.Response, error),
 ) *Server {
 	return &Server{
-		addr:           addr,
-		kcURL:          kcURL,
-		sessionChannel: sessionChannel,
-		//cookies:         cookies,
+		addr:            addr,
+		kcURL:           kcURL,
+		sessionChannel:  sessionChannel,
 		fetchOAuthToken: fetchOAuthToken,
 	}
 }
@@ -49,7 +46,6 @@ func (s *Server) Start() {
 		http.HandleFunc("/auth/callback", func(w http.ResponseWriter, r *http.Request) {
 			code := r.URL.Query().Get("code")
 			if code == "" {
-				//http.Redirect(w, r, newURL, http.StatusFound)
 				fmt.Fprintln(w, "no code provided")
 				http.Redirect(w, r, s.kcURL, http.StatusFound)
 				return
@@ -81,17 +77,14 @@ func (s *Server) Start() {
 				fmt.Println("got cookie: ", cookie)
 			}
 
-			//fmt.Fprintln(w, "code: ", code)
 			http.Redirect(w, r, "http://localhost:3000/auth/done", http.StatusFound)
 		})
 
-		// Handle /auth/callback
 		http.HandleFunc("/auth/done", func(w http.ResponseWriter, r *http.Request) {
 
 			s.sessionChannel <- sess
 			fmt.Fprintln(w, "Callback received. Server will now shut down.")
 
-			// Close the server
 			go func() {
 				time.Sleep(500 * time.Millisecond)
 				if err := server.Shutdown(context.Background()); err != nil {
@@ -101,7 +94,6 @@ func (s *Server) Start() {
 			}()
 		})
 
-		// Start the server on localhost:3000
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server failed: %s", err)
 		}

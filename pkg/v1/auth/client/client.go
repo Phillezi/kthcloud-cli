@@ -36,6 +36,15 @@ var (
 	once     sync.Once
 )
 
+func Get() *Client {
+	return GetInstance(viper.GetString(
+		"keycloak-host"),
+		viper.GetString("client-id"),
+		"",
+		viper.GetString("keycloak-realm"),
+	)
+}
+
 func GetInstance(baseURL, clientID, clientSecret, realm string) *Client {
 	once.Do(func() {
 		client := resty.New()
