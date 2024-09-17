@@ -13,17 +13,21 @@ var loginCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := client.Get()
 
-		//if !c.HasValidSession() {
-		c.Login()
-		//} else {
-		//	log.Info("already logged in")
-		//}
-
-		log.Info("Token expires in: ", c.Session.TimeUntilExpiry())
-		err := c.Session.Save(viper.GetString("session-path"))
+		session, err := c.Login()
+		if err != nil {
+			log.Fatal(err)
+		}
+		if session == nil {
+			log.Fatal("Could not login")
+		}
+		if c.HasValidSession() {
+			log.Info("Logged in")
+		}
+		err = c.Session.Save(viper.GetString("session-path"))
 		if err != nil {
 			log.Errorln(err)
 		}
+		log.Info("Saved session to file")
 	},
 }
 

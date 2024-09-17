@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/spf13/viper"
 
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/server"
@@ -62,7 +63,7 @@ func GetInstance(baseURL, kcBaseURL, clientID, clientSecret, realm string) *Clie
 		client.SetCookieJar(jar)
 		sess, err := session.Load(viper.GetString("session-path"))
 		if err != nil || sess.IsExpired() {
-			// try to refresh token here later
+			// TODO: try to refresh token here later
 			sess = nil
 		}
 		instance = &Client{
@@ -91,7 +92,7 @@ func (c *Client) Login() (*session.Session, error) {
 	kcURL := c.generateKCUrl()
 
 	sessionChannel := make(chan *session.Session)
-	server := server.New(":3000", kcURL, sessionChannel, c.fetchOAuthToken)
+	server := server.New(":3000", kcURL, sessionChannel, c.fetchOAuthToken, context.Background())
 
 	server.Start()
 
@@ -100,7 +101,15 @@ func (c *Client) Login() (*session.Session, error) {
 		return nil, err
 	}
 
+	fmt.Println("Waiting for login...")
+
+	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+	s.Color("blue")
+	s.Start()
+
 	session := <-sessionChannel
+
+	s.Stop()
 
 	if session != nil {
 		c.Session = session
