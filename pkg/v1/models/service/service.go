@@ -20,7 +20,13 @@ type Service struct {
 }
 
 func (s *Service) ToDeployment(name string, projectDir string) *body.DeploymentCreate {
-	specialEnvs := []string{"KTHCLOUD_CORES", "KTHCLOUD_RAM", "KTHCLOUD_REPLICAS", "KTHCLOUD_HEALTH_PATH"}
+	specialEnvs := []string{
+		"KTHCLOUD_CORES",
+		"KTHCLOUD_RAM",
+		"KTHCLOUD_REPLICAS",
+		"KTHCLOUD_HEALTH_PATH",
+		"KTHCLOUD_VISIBILITY",
+	}
 	envsMap := make(map[string]bool)
 	var envs []body.Env
 	for envName, value := range s.Environment {
@@ -76,7 +82,7 @@ func (s *Service) ToDeployment(name string, projectDir string) *body.DeploymentC
 	volumes := ToVolumes(s.Volumes, projectDir)
 
 	// Get configuration from "special" set environment variables
-	cores, ram, replicas, healthPath := s.Environment.ResolveConfigEnvs()
+	cores, ram, replicas, healthPath, visibilityConf := s.Environment.ResolveConfigEnvs()
 	if cores == nil {
 		cores = util.Float64Pointer(0.2)
 	}
@@ -85,6 +91,14 @@ func (s *Service) ToDeployment(name string, projectDir string) *body.DeploymentC
 	}
 	if replicas == nil {
 		replicas = util.IntPointer(1)
+	}
+	if visibilityConf != "" {
+		visibilityConf := strings.ToLower(visibilityConf)
+		if util.Contains([]string{"private", "public", "auth"}, visibilityConf) {
+			visibility = visibilityConf
+		} else {
+			log.Warnln("KTHCLOUD_VISIBILITY is set to: ", visibilityConf, " which is not valid, must be one of: private public auth.")
+		}
 	}
 
 	return &body.DeploymentCreate{

@@ -45,8 +45,12 @@ func (e *EnvVars) UnmarshalYAML(node *yaml.Node) error {
 	return nil
 }
 
-func (envs EnvVars) ResolveConfigEnvs() (cpucores, ram *float64, replicas *int, healthPath *string) {
-	return envs.getFloat64ptr("KTHCLOUD_CORES"), envs.getFloat64ptr("KTHCLOUD_RAM"), envs.getIntptr("KTHCLOUD_REPLICAS"), envs.getStrptr("KTHCLOUD_HEALTH_PATH")
+func (envs EnvVars) ResolveConfigEnvs() (cpucores, ram *float64, replicas *int, healthPath *string, visibility string) {
+	return envs.getFloat64ptr("KTHCLOUD_CORES"),
+		envs.getFloat64ptr("KTHCLOUD_RAM"),
+		envs.getIntptr("KTHCLOUD_REPLICAS"),
+		envs.getStrptr("KTHCLOUD_HEALTH_PATH"),
+		envs.getStr("KTHCLOUD_VISIBILITY")
 }
 
 func (envs EnvVars) getFloat64ptr(key string) *float64 {
@@ -79,4 +83,11 @@ func (envs EnvVars) getStrptr(key string) *string {
 		return &envValue
 	}
 	return nil
+}
+
+func (envs EnvVars) getStr(key string) string {
+	if envValue, exists := envs[key]; exists {
+		return envValue
+	}
+	return ""
 }
