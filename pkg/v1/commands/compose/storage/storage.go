@@ -50,10 +50,13 @@ func CreateVolumes(c *client.Client, composeInstance *compose.Compose) (string, 
 	}
 	if !isAuth {
 		return "", errors.New("Not authenticated on storage Url" + *user.StorageURL)
+	} else {
+		logrus.Info("yayyy")
 	}
 
 	created, err := c.StorageCreateDir(projectDir)
 	if err != nil {
+		logrus.Info("dir")
 		return "", err
 	}
 	if !created {

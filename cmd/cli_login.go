@@ -23,6 +23,7 @@ var loginCmd = &cobra.Command{
 		if c.HasValidSession() {
 			log.Info("Logged in")
 		}
+
 		err = c.Session.Save(viper.GetString("session-path"))
 		if err != nil {
 			log.Errorln(err)
