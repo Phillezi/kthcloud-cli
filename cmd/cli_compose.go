@@ -36,7 +36,7 @@ var composeDownCmd = &cobra.Command{
 }
 
 func init() {
-	composeUpCmd.Flags().BoolP("try-volumes", "", false, "Try to create volumes despite auth not working for it yet")
+	composeUpCmd.Flags().BoolP("try-volumes", "", false, "Try uploading local files and dirs that should be mounted on the deployment.\nIf enabled it will \"steal\" cookies from your browser to authenticate.")
 	composeUpCmd.Flags().BoolP("detached", "d", false, "doesn't do anything, just here for parity with Docker Compose up")
 	viper.BindPFlag("detached", composeUpCmd.Flags().Lookup("detached"))
 

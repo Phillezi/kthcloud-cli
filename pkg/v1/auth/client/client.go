@@ -30,6 +30,7 @@ type Client struct {
 	realm        string
 	client       *resty.Client
 	jar          http.CookieJar
+	cookies      []*http.Cookie
 	Session      *session.Session
 }
 

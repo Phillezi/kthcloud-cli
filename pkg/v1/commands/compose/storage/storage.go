@@ -8,7 +8,6 @@ import (
 
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/client"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/models/compose"
-	"github.com/sirupsen/logrus"
 )
 
 type FileType int
@@ -137,12 +136,6 @@ func handlePath(filePath string, fileType FileType, c *client.Client, projectDir
 
 		}
 	} else if fileType == File {
-		fileName := path.Base(filePath)
-
-		logrus.Info("fileName: " + fileName)
-		logrus.Info("filePath: " + filePath)
-		logrus.Info("serverPath: " + serverPath)
-
 		filecontent, err := os.ReadFile(filePath)
 		if err != nil {
 			return err

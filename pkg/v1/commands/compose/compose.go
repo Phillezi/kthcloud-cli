@@ -34,8 +34,9 @@ func Up(tryToCreateVolumes bool) {
 			logrus.Fatal(err)
 		}
 	} else {
-		logrus.Infoln("Skipping trying to create volumes, no solution to auth on the storage managers proxy")
-		logrus.Infoln("use --try-volumes to try anyway")
+		logrus.Infoln("Skipping volume creation from local structure")
+		logrus.Infoln("If enabled it will \"steal\" cookies from your browser to authenticate")
+		logrus.Infoln("use --try-volumes to try")
 	}
 
 	var wg sync.WaitGroup
