@@ -11,8 +11,10 @@ import (
 )
 
 func (c *Client) Deployments() ([]body.DeploymentRead, error) {
-	if c.Session != nil &&
-		c.Session.Resources != nil &&
+	if c.Session == nil {
+		return nil, errors.New("no active session, log in first")
+	}
+	if c.Session.Resources != nil &&
 		c.Session.Resources.Deployments != nil &&
 		!c.Session.Resources.Deployments.IsExpired() {
 		return c.Session.Resources.Deployments.Data, nil
