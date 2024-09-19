@@ -35,6 +35,13 @@ var composeDownCmd = &cobra.Command{
 		compose.Down()
 	},
 }
+var composeLogsCmd = &cobra.Command{
+	Use:   "logs",
+	Short: "Get logs from deployments in the compose file",
+	Run: func(cmd *cobra.Command, args []string) {
+		compose.Logs()
+	},
+}
 
 var testSMAuthCmd = &cobra.Command{
 	Use:    "sm check",
@@ -54,6 +61,7 @@ func init() {
 	composeCmd.AddCommand(composeParseCmd)
 	composeCmd.AddCommand(composeUpCmd)
 	composeCmd.AddCommand(composeDownCmd)
+	composeCmd.AddCommand(composeLogsCmd)
 	composeCmd.AddCommand(testSMAuthCmd)
 
 	// Register the compose command in root
