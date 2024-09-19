@@ -86,6 +86,11 @@ func (c *Client) loadCookies() (bool, error) {
 	}
 	c.client.Jar.SetCookies(storageURL, storageCookies)
 	c.client.Jar.SetCookies(kcURL, iamCookies)
+
+	if len(iamCookies) == 0 {
+		logrus.Warn("no cookies from keycloak, try to log in")
+	}
+
 	return true, nil
 }
 
