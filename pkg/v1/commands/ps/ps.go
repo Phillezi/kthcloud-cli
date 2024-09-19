@@ -13,6 +13,9 @@ import (
 
 func Ps(all bool) {
 	c := client.Get()
+	if !c.HasValidSession() {
+		logrus.Fatal("no valid session, log in and try again")
+	}
 
 	c.DropDeploymentsCache()
 	depls, err := c.Deployments()
