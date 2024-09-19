@@ -24,8 +24,9 @@ var composeUpCmd = &cobra.Command{
 	Use:   "up",
 	Short: "Deploy compose configuration to cloud",
 	Run: func(cmd *cobra.Command, args []string) {
+		detached, _ := cmd.Flags().GetBool("detached")
 		tryToCreateVolumes, _ := cmd.Flags().GetBool("try-volumes")
-		compose.Up(tryToCreateVolumes)
+		compose.Up(detached, tryToCreateVolumes)
 	},
 }
 var composeDownCmd = &cobra.Command{
@@ -33,6 +34,13 @@ var composeDownCmd = &cobra.Command{
 	Short: "Stop compose configuration to cloud",
 	Run: func(cmd *cobra.Command, args []string) {
 		compose.Down()
+	},
+}
+var composeLogsCmd = &cobra.Command{
+	Use:   "logs",
+	Short: "Get logs from deployments in the compose file",
+	Run: func(cmd *cobra.Command, args []string) {
+		compose.Logs()
 	},
 }
 
@@ -47,13 +55,14 @@ var testSMAuthCmd = &cobra.Command{
 
 func init() {
 	composeUpCmd.Flags().BoolP("try-volumes", "", false, "Try uploading local files and dirs that should be mounted on the deployment.\nIf enabled it will \"steal\" cookies from your browser to authenticate.")
-	composeUpCmd.Flags().BoolP("detached", "d", false, "doesn't do anything, just here for parity with Docker Compose up")
+	composeUpCmd.Flags().BoolP("detached", "d", false, "Run detached, default behaviour attaches logs from the deployments")
 	viper.BindPFlag("detached", composeUpCmd.Flags().Lookup("detached"))
 
 	// Register subcommands with the main compose command
 	composeCmd.AddCommand(composeParseCmd)
 	composeCmd.AddCommand(composeUpCmd)
 	composeCmd.AddCommand(composeDownCmd)
+	composeCmd.AddCommand(composeLogsCmd)
 	composeCmd.AddCommand(testSMAuthCmd)
 
 	// Register the compose command in root
