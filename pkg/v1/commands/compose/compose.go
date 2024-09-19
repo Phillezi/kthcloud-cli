@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Phillezi/kthcloud-cli/internal/update"
 	"github.com/Phillezi/kthcloud-cli/pkg/util"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/client"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose/jobs"
@@ -21,6 +22,23 @@ import (
 )
 
 func Up(detached, tryToCreateVolumes bool) {
+	if !detached {
+		done := make(chan bool, 1)
+		setupSignalHandler(done, func() {
+			resp, err := update.PromptYesNo("Do you want to terminate deployments")
+			if err != nil {
+				return
+			}
+			if resp {
+				Down()
+			}
+		})
+		defer func() {
+			go Logs()
+			<-done
+		}()
+	}
+
 	composeInstance, err := parser.GetCompose()
 	if err != nil {
 		logrus.Fatal(err)
@@ -68,10 +86,6 @@ func Up(detached, tryToCreateVolumes bool) {
 	wg.Wait()
 	s.Color("green")
 	s.Stop()
-
-	if !detached {
-		Logs()
-	}
 }
 
 func Parse() {
