@@ -25,13 +25,19 @@ func (r *CachedResource[T]) IsExpired() bool {
 }
 
 func (r *Resources) DropUserCache() {
-	r.User = nil
+	if r.User != nil {
+		r.User = nil
+	}
 }
 
 func (r *Resources) DropDeploymentsCache() {
-	r.Deployments = nil
+	if r.Deployments != nil {
+		r.Deployments = nil
+	}
 }
 
 func (r *Resources) DropVmsCache() {
-	r.Vms = nil
+	if r.Vms != nil {
+		r.Vms = nil
+	}
 }

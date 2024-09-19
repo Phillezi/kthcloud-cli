@@ -11,7 +11,10 @@ import (
 )
 
 func (c *Client) Vms() ([]body.VmRead, error) {
-	if c.Session.Resources != nil && c.Session.Resources.Vms != nil && !c.Session.Resources.Vms.IsExpired() {
+	if c.Session != nil &&
+		c.Session.Resources != nil &&
+		c.Session.Resources.Vms != nil &&
+		!c.Session.Resources.Vms.IsExpired() {
 		return c.Session.Resources.Vms.Data, nil
 	}
 
@@ -44,7 +47,7 @@ func (c *Client) Vms() ([]body.VmRead, error) {
 }
 
 func (c *Client) DropVmsCache() {
-	if c.Session.Resources != nil {
+	if c.Session != nil && c.Session.Resources != nil {
 		c.Session.Resources.DropVmsCache()
 	}
 }

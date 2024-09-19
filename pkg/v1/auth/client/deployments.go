@@ -11,7 +11,10 @@ import (
 )
 
 func (c *Client) Deployments() ([]body.DeploymentRead, error) {
-	if c.Session.Resources != nil && c.Session.Resources.Deployments != nil && !c.Session.Resources.Deployments.IsExpired() {
+	if c.Session != nil &&
+		c.Session.Resources != nil &&
+		c.Session.Resources.Deployments != nil &&
+		!c.Session.Resources.Deployments.IsExpired() {
 		return c.Session.Resources.Deployments.Data, nil
 	}
 
@@ -44,7 +47,7 @@ func (c *Client) Deployments() ([]body.DeploymentRead, error) {
 }
 
 func (c *Client) DropDeploymentsCache() {
-	if c.Session.Resources != nil {
-		c.Session.Resources.DropVmsCache()
+	if c.Session != nil && c.Session.Resources != nil {
+		c.Session.Resources.DropDeploymentsCache()
 	}
 }

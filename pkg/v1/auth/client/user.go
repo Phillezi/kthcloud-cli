@@ -11,7 +11,10 @@ import (
 )
 
 func (c *Client) User() (*body.UserRead, error) {
-	if c.Session.Resources != nil && c.Session.Resources.User != nil && !c.Session.Resources.User.IsExpired() {
+	if c.Session != nil &&
+		c.Session.Resources != nil &&
+		c.Session.Resources.User != nil &&
+		!c.Session.Resources.User.IsExpired() {
 		return c.Session.Resources.User.Data, nil
 	}
 
@@ -44,7 +47,7 @@ func (c *Client) User() (*body.UserRead, error) {
 }
 
 func (c *Client) DropUserCache() {
-	if c.Session.Resources != nil {
+	if c.Session != nil && c.Session.Resources != nil {
 		c.Session.Resources.DropUserCache()
 	}
 }
