@@ -108,7 +108,6 @@ func CreateConns(depls []*body.DeploymentRead, apiURL, token, key string) []*SSE
 			Key:   key,
 			Color: colors[i%len(colors)],
 		})
-		i++
 	}
 	return conns
 }
