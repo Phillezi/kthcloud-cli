@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose"
+	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose/storage"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -35,6 +36,15 @@ var composeDownCmd = &cobra.Command{
 	},
 }
 
+var testSMAuthCmd = &cobra.Command{
+	Use:    "sm check",
+	Short:  "Test authentication against storage manager",
+	Hidden: true,
+	Run: func(cmd *cobra.Command, args []string) {
+		storage.Check()
+	},
+}
+
 func init() {
 	composeUpCmd.Flags().BoolP("try-volumes", "", false, "Try uploading local files and dirs that should be mounted on the deployment.\nIf enabled it will \"steal\" cookies from your browser to authenticate.")
 	composeUpCmd.Flags().BoolP("detached", "d", false, "doesn't do anything, just here for parity with Docker Compose up")
@@ -44,6 +54,7 @@ func init() {
 	composeCmd.AddCommand(composeParseCmd)
 	composeCmd.AddCommand(composeUpCmd)
 	composeCmd.AddCommand(composeDownCmd)
+	composeCmd.AddCommand(testSMAuthCmd)
 
 	// Register the compose command in root
 	rootCmd.AddCommand(composeCmd)
