@@ -86,7 +86,7 @@ The tool will create two deployments and set up their environment variables, por
 
 #### Mac and Linux
 
-For Mac and Linux there is a installation script that can be ran to install the cli.
+or Mac and Linux, there is an installation script that can be run to install the CLI.
 
 ##### Prerequisites
 
@@ -102,7 +102,7 @@ Check out what the script does [here](https://github.com/Phillezi/kthcloud-cli/b
 
 #### Windows
 
-There is a powershell installation script that can be ran to install the cli.
+There is a PowerShell installation script that can be run to install the CLI.
 
 ```powershell
 powershell -c "irm https://raw.githubusercontent.com/Phillezi/kthcloud-cli/main/scripts/install.ps1 | iex"
