@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func Up(tryToCreateVolumes bool) {
+func Up(detached, tryToCreateVolumes bool) {
 	composeInstance, err := parser.GetCompose()
 	if err != nil {
 		logrus.Fatal(err)
@@ -67,6 +67,11 @@ func Up(tryToCreateVolumes bool) {
 	}
 	wg.Wait()
 	s.Color("green")
+	s.Stop()
+
+	if !detached {
+		Logs()
+	}
 }
 
 func Parse() {
