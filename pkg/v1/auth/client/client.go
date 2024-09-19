@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"os/exec"
-	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -16,22 +14,24 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/spf13/viper"
 
+	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/browser"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/server"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/session"
+	storageclient "github.com/Phillezi/kthcloud-cli/pkg/v1/auth/storage-client"
 	"github.com/go-resty/resty/v2"
 	"golang.org/x/exp/rand"
 )
 
 type Client struct {
-	kcBaseURL    string
-	baseURL      string
-	clientID     string
-	clientSecret string
-	realm        string
-	client       *resty.Client
-	jar          http.CookieJar
-	cookies      []*http.Cookie
-	Session      *session.Session
+	kcBaseURL     string
+	baseURL       string
+	clientID      string
+	clientSecret  string
+	realm         string
+	client        *resty.Client
+	jar           http.CookieJar
+	Session       *session.Session
+	StorageClient *storageclient.Client
 }
 
 var (
@@ -68,14 +68,15 @@ func GetInstance(baseURL, kcBaseURL, clientID, clientSecret, realm string) *Clie
 			sess = nil
 		}
 		instance = &Client{
-			baseURL:      baseURL,
-			kcBaseURL:    kcBaseURL,
-			clientID:     clientID,
-			clientSecret: clientSecret,
-			realm:        realm,
-			client:       resty.New(),
-			jar:          jar,
-			Session:      sess,
+			baseURL:       baseURL,
+			kcBaseURL:     kcBaseURL,
+			clientID:      clientID,
+			clientSecret:  clientSecret,
+			realm:         realm,
+			client:        client,
+			jar:           jar,
+			Session:       sess,
+			StorageClient: nil,
 		}
 		if sess != nil {
 			instance.client.SetAuthToken(instance.Session.Token.AccessToken)
@@ -97,7 +98,7 @@ func (c *Client) Login() (*session.Session, error) {
 
 	server.Start()
 
-	err := OpenBrowser("http://localhost:3000")
+	err := browser.Open("http://localhost:3000")
 	if err != nil {
 		return nil, err
 	}
@@ -145,22 +146,6 @@ func (c *Client) fetchOAuthToken(redirectURI, code string) (*http.Response, erro
 	}
 
 	return resp, nil
-}
-
-func OpenBrowser(url string) error {
-	var cmd *exec.Cmd
-	switch {
-	case runtime.GOOS == "linux":
-		cmd = exec.Command("xdg-open", url)
-	case runtime.GOOS == "windows":
-		cmd = exec.Command("rundll32", "url.dll,FileProtocolHandler", url)
-	case runtime.GOOS == "darwin":
-		cmd = exec.Command("open", url)
-	default:
-		return fmt.Errorf("unsupported platform")
-	}
-	fmt.Printf("Trying to open: %s in web browser\n\n", url)
-	return cmd.Start()
 }
 
 func (c *Client) generateKCUrl() string {

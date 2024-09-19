@@ -7,7 +7,9 @@ import (
 	"strings"
 
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/client"
+	storageclient "github.com/Phillezi/kthcloud-cli/pkg/v1/auth/storage-client"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/models/compose"
+	"github.com/spf13/viper"
 )
 
 type FileType int
@@ -43,7 +45,11 @@ func CreateVolumes(c *client.Client, composeInstance *compose.Compose) (string, 
 		return "", errors.New("volume creation requires being logged in, please log in")
 	}
 
-	isAuth, err := c.StorageAuth()
+	if c.StorageClient == nil {
+		c.StorageClient = storageclient.GetInstance(*storageURL, viper.GetString("keycloak-host"))
+	}
+
+	isAuth, err := c.StorageClient.Auth()
 	if err != nil {
 		return "", err
 	}
@@ -51,7 +57,7 @@ func CreateVolumes(c *client.Client, composeInstance *compose.Compose) (string, 
 		return "", errors.New("Not authenticated on storage Url" + *user.StorageURL)
 	}
 
-	created, err := c.StorageCreateDir(projectDir)
+	created, err := c.StorageClient.CreateDir(projectDir)
 	if err != nil {
 		return "", err
 	}
@@ -108,7 +114,7 @@ func checkLocalPaths(composeInstance *compose.Compose) (map[string]FileType, err
 func handlePath(filePath string, fileType FileType, c *client.Client, projectDir string) error {
 	serverPath := path.Join(projectDir, filePath)
 	if fileType == Dir || fileType == Nonexistent {
-		created, err := c.StorageCreateDir(serverPath)
+		created, err := c.StorageClient.CreateDir(serverPath)
 		if err != nil {
 			return err
 		}
@@ -141,7 +147,7 @@ func handlePath(filePath string, fileType FileType, c *client.Client, projectDir
 			return err
 		}
 
-		created, err := c.StorageCreateFile(serverPath, filecontent)
+		created, err := c.StorageClient.UploadFile(serverPath, filecontent)
 		if err != nil {
 			return err
 		}
