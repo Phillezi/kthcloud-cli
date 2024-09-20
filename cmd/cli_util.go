@@ -58,8 +58,15 @@ var tokenCmd = &cobra.Command{
 	},
 }
 var uploadCmd = &cobra.Command{
-	Use:   "upload",
+	Use:   "upload <local-file-path> <server-file-path>",
 	Short: "Upload a file",
+	Long: `Upload a file to the server.
+
+Arguments:
+  <local-file-path>   The local path to the file that you want to upload.
+  <server-file-path>  The destination path on the server where the file will be uploaded, including the filename.`,
+	Example: "upload ./myfile.txt existingpath/myfile.txt",
+	Args:    cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 2 {
 			log.Fatal(cmd.Usage())
