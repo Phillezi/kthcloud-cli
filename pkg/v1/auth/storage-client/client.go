@@ -190,7 +190,8 @@ func (c *Client) UploadFile(filePath string, content []byte) (bool, error) {
 	chunkSize := viper.GetInt("file-upload-chunk-size")
 	if chunkSize <= 0 {
 		// nginx default size
-		chunkSize = 1024
+		// 1mb = 1024kb = 1024^2 bytes
+		chunkSize = 1048576
 	}
 	uploadedbytes := 0
 
