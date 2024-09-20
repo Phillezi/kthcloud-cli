@@ -74,7 +74,7 @@ jobs:
       - name: Generate SHA512 checksums
         run: |
           cd artifacts
-          find . -type f -exec sha512sum {} \; > SHA512SUMS.txt
+          find . -type f -name 'kthcloud*' -exec sha512sum {} + | sed 's|^\./||' > SHA512SUMS.txt
 
       - name: Create Release
         id: create_release
