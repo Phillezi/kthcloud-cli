@@ -6,7 +6,7 @@ on:
     paths-ignore:
       - README.md
       - .gitignore
-      - .github/**
+      #- .github/**
       - LICENSE
 
 jobs:
@@ -70,6 +70,11 @@ jobs:
         with:
           path: "./artifacts"
           if-no-files-found: error
+
+      - name: Generate SHA512 checksums
+        run: |
+          cd artifacts
+          find . -type f -exec sha512sum {} \; > SHA512SUMS.txt
 
       - name: Create Release
         id: create_release
