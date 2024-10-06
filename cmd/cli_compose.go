@@ -54,8 +54,11 @@ var testSMAuthCmd = &cobra.Command{
 }
 
 func init() {
+	composeCmd.PersistentFlags().StringP("file", "", "", "Specify which docker-compose file to use.")
+	viper.BindPFlag("file", composeCmd.PersistentFlags().Lookup("file"))
+
 	composeUpCmd.Flags().BoolP("try-volumes", "", false, "Try uploading local files and dirs that should be mounted on the deployment.\nIf enabled it will \"steal\" cookies from your browser to authenticate.")
-	composeUpCmd.Flags().BoolP("detached", "d", false, "Run detached, default behaviour attaches logs from the deployments")
+	composeUpCmd.Flags().BoolP("detached", "d", false, "Run detached, default behaviour attaches logs from the deployments.")
 	viper.BindPFlag("detached", composeUpCmd.Flags().Lookup("detached"))
 
 	// Register subcommands with the main compose command
