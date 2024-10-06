@@ -14,9 +14,16 @@ func ToVolumes(volumes []string, projectRoot string) []body.Volume {
 
 	for _, volume := range volumes {
 		parts := strings.Split(volume, ":")
+		serverPath := path.Join(projectRoot, parts[0])
+
+		if strings.HasSuffix(parts[0], "/") {
+			// make sure trailing slashes arnt lost
+			serverPath += "/"
+		}
+
 		v := body.Volume{
 			Name:       "kth-cli-generated",
-			ServerPath: path.Join(projectRoot, parts[0]),
+			ServerPath: serverPath,
 			AppPath:    parts[0],
 		}
 
