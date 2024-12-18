@@ -106,6 +106,54 @@ func TrackDel(deploymentName string, job *body.DeploymentDeleted, tickerInterval
 	}
 }
 
+func TrackDelW(ctx context.Context, deploymentName string, job *body.DeploymentDeleted, tickerInterval time.Duration, s *spinner.Spinner, onCancel func()) error {
+	c := client.Get().Client()
+	ticker := time.NewTicker(tickerInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			logrus.Debugf("deployment %s was cancelled\n", deploymentName)
+			onCancel()
+			return fmt.Errorf("deployment %s was cancelled", deploymentName)
+		case <-ticker.C:
+			jobResp, err := c.R().Get("/v2/jobs/" + job.JobID)
+			if err != nil {
+				s.Color("red")
+				s.Stop()
+				return fmt.Errorf("failed to get job status for deployment %s: %w", deploymentName, err)
+			}
+
+			jobStatus, err := util.ProcessResponse[body.JobRead](jobResp.String())
+			if err != nil {
+				s.Color("red")
+				s.Stop()
+				return fmt.Errorf("error processing job status for deployment %s: %w", deploymentName, err)
+			}
+
+			switch jobStatus.Status {
+			case "finished":
+				s.Color("green")
+				s.Stop()
+				log.Infof("Deployment %s deleted successfully", deploymentName)
+				return nil
+			case "terminated":
+				s.Color("yellow")
+				s.Stop()
+				log.Infof("Job for deployment %s was terminated", deploymentName)
+				return nil
+			}
+
+			if jobStatus.LastError != nil {
+				s.Color("red")
+				s.Stop()
+				return fmt.Errorf("failed to delete deployment %s: %s", deploymentName, *jobStatus.LastError)
+			}
+		}
+	}
+}
+
 func TrackDeploymentCreation(deploymentName string, job *body.DeploymentCreated, wg *sync.WaitGroup, s *spinner.Spinner) {
 	c := client.Get().Client()
 
