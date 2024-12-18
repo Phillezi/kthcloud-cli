@@ -17,6 +17,7 @@ func MonitorJobStates(jobIDs map[string]string, sched *scheduler.Sched, spinner 
 		select {
 		case <-ticker.C:
 			allDone := true
+			allCancelled := true
 			allCancelledOrErrored := true
 
 			var states string
@@ -29,7 +30,9 @@ func MonitorJobStates(jobIDs map[string]string, sched *scheduler.Sched, spinner 
 				}
 
 				states += fmt.Sprintf("\t%s has state %s\n", name, state.String())
-
+				if state != scheduler.Cancelled {
+					allCancelled = false
+				}
 				if state != scheduler.Cancelled && state != scheduler.Errored {
 					allCancelledOrErrored = false
 				}
@@ -40,8 +43,12 @@ func MonitorJobStates(jobIDs map[string]string, sched *scheduler.Sched, spinner 
 
 			if allDone {
 				spinner.FinalMSG = "All jobs have completed successfully\n"
-				spinner.Color("red")
+				spinner.Color("green")
 				return nil
+			} else if allCancelled {
+				spinner.FinalMSG = "Cancelled\n"
+				spinner.Color("yellow")
+				return fmt.Errorf("cancelled")
 			} else if allCancelledOrErrored {
 				spinner.FinalMSG = "Error\n"
 				spinner.Color("red")

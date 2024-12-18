@@ -20,6 +20,7 @@ type Sched struct {
 	mu         sync.Mutex
 	runnableQ  chan *Job
 	resultChan chan *Job
+	revertOnce sync.Once
 }
 
 func NewSched(ctx context.Context) *Sched {
@@ -41,28 +42,38 @@ func (s *Sched) Start() {
 		select {
 		case <-s.ctx.Done():
 			// stop everything and wait
-			/*var wg sync.WaitGroup
-
-			for _, job := range s.jobs {
-				logrus.Debugln("cancelling job")
-				wg.Add(1)
-				go func() {
-					job.cancel()
-					<-job.ctx.Done()
-					wg.Done()
-				}()
-			}
-			wg.Wait()*/
 			logrus.Debugln("scheduler cancelled")
 			return
 		case runnable := <-s.runnableQ:
-			startJob(runnable, s.resultChan)
+			logrus.Debugln("new runnable job")
+			s.startJob(runnable, s.resultChan)
 		case job := <-s.resultChan:
 			if job != nil {
-				s.handleJobResult(job)
+				go s.handleJobResult(job)
 			}
 		}
 	}
+}
+
+func (s *Sched) revertJobs() {
+	s.revertOnce.Do(func() {
+		for _, j := range s.jobs {
+			switch j.State {
+			case Created:
+				j.mu.Lock()
+				j.State = Cancelled
+				j.mu.Unlock()
+			case Done:
+				j.mu.Lock()
+				j.State = Cancelling
+				j.mu.Unlock()
+				j.CancelCallback()
+				j.mu.Lock()
+				j.State = Cancelled
+				j.mu.Unlock()
+			}
+		}
+	})
 }
 
 func (s *Sched) getRunnable() *Job {
@@ -96,7 +107,7 @@ func (s *Sched) handleJobResult(job *Job) {
 				hasUnfinishedDeps := false
 				if v.Dependencies != nil {
 					for _, dep := range v.Dependencies {
-						if dep.State != Done {
+						if dep != nil && dep.State != Done {
 							// job has a dep that isnt done
 							hasUnfinishedDeps = true
 							break
@@ -104,7 +115,11 @@ func (s *Sched) handleJobResult(job *Job) {
 					}
 				}
 				if !hasUnfinishedDeps {
+					logrus.Debugln("found ready job")
 					s.runnableQ <- v
+					logrus.Debugln("sent")
+				} else {
+					logrus.Debugln("unable to find ready job")
 				}
 			}
 		}
@@ -112,7 +127,10 @@ func (s *Sched) handleJobResult(job *Job) {
 		logrus.Debugln("job with id: " + job.ID + " was cancelled")
 		for _, v := range s.depMap[job] {
 			if v != nil && v.cancel != nil {
-				v.cancel()
+				v.mu.Lock()
+				v.State = Cancelling
+				v.mu.Unlock()
+				v.CancelCallback()
 				v.mu.Lock()
 				v.State = Cancelled
 				v.mu.Unlock()
@@ -142,7 +160,11 @@ func (s *Sched) queueIfRunnable(job *Job) {
 	s.runnableQ <- job
 }
 
-func startJob(runnable *Job, onDone chan *Job) {
+func (s *Sched) startJob(runnable *Job, onDone chan *Job) {
+	if runnable.State != Created {
+		logrus.Debugln("tried to start job that cant be started")
+		return
+	}
 	runnable.mu.Lock()
 	runnable.State = Started
 	runnable.mu.Unlock()
@@ -162,6 +184,7 @@ func startJob(runnable *Job, onDone chan *Job) {
 		}()
 
 		if err := job.Action(job.ctx, func() {
+			s.revertJobs()
 			logrus.Debugln("Cancelling job with id: " + runnable.ID)
 			job.mu.Lock()
 			job.State = Cancelling

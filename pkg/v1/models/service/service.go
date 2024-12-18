@@ -12,11 +12,12 @@ import (
 )
 
 type Service struct {
-	Image       string   `yaml:"image,omitempty"`
-	Environment EnvVars  `yaml:"environment,omitempty"`
-	Ports       []string `yaml:"ports,omitempty"`
-	Volumes     []string `yaml:"volumes,omitempty"`
-	Command     []string `yaml:"command,omitempty"`
+	Image        string   `yaml:"image,omitempty"`
+	Environment  EnvVars  `yaml:"environment,omitempty"`
+	Ports        []string `yaml:"ports,omitempty"`
+	Volumes      []string `yaml:"volumes,omitempty"`
+	Command      []string `yaml:"command,omitempty"`
+	Dependencies []string `yaml:"depends_on,omitempty"`
 }
 
 func (s *Service) ToDeployment(name string, projectDir string) *body.DeploymentCreate {

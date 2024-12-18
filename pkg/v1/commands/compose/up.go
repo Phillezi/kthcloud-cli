@@ -83,9 +83,10 @@ func Up(detached, tryToCreateVolumes bool) {
 	s.Start()
 	defer s.Stop()
 
+	jobMap := make(map[string]*scheduler.Job)
 	jobIDs := make(map[string]string, 1)
 
-	deployments := composeInstance.ToDeployments()
+	deployments, dependencies := composeInstance.ToDeploymentsWDeps()
 	for _, deployment := range deployments {
 
 		job := scheduler.NewJob(func(ctx context.Context, cancelCallback func()) error {
@@ -142,8 +143,23 @@ func Up(detached, tryToCreateVolumes bool) {
 			}
 			logrus.Debugln("tracking removal of depl")
 			jobs.TrackDel(deployment.Name, rmJob, time.Millisecond*500, s)
-		}, nil)
-		jobIDs[deployment.Name] = sched.AddJob(job)
+		})
+		jobMap[deployment.Name] = job
+
+	}
+
+	for depl, deps := range dependencies {
+		job := jobMap[depl]
+		for _, dep := range deps {
+			if depJob, ok := jobMap[dep]; !ok {
+				logrus.Errorln("A dependency was found with no associated job")
+			} else if depJob != nil {
+				job.After(depJob)
+			}
+		}
+		logrus.Debugf("%s has  %d dependencies\n", depl, len(job.Dependencies))
+
+		jobIDs[depl] = sched.AddJob(job)
 	}
 
 	if err := jobs.MonitorJobStates(jobIDs, sched, s); err != nil {
