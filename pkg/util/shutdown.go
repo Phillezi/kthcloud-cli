@@ -1,4 +1,4 @@
-package compose
+package util
 
 import (
 	"os"
@@ -6,7 +6,7 @@ import (
 	"syscall"
 )
 
-func setupSignalHandler(done chan bool, handler func()) {
+func SetupSignalHandler(done chan bool, handler func()) {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT)
 

@@ -6,6 +6,7 @@ require (
 	github.com/briandowns/spinner v1.23.1
 	github.com/browserutils/kooky v0.2.2
 	github.com/go-resty/resty/v2 v2.15.3
+	github.com/google/uuid v1.6.0
 	github.com/jedib0t/go-pretty/v6 v6.6.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
