@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/manifoldco/promptui"
 	"github.com/spf13/viper"
 )
 
@@ -66,4 +67,54 @@ func GetLatestRelease() (*GitHubRelease, error) {
 	}
 
 	return &release, nil
+}
+
+func GetReleases() ([]GitHubRelease, error) {
+	url := "https://api.github.com/repos/Phillezi/kthcloud-cli/releases"
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching release info: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to fetch release info, status: %s", resp.Status)
+	}
+
+	var releases []GitHubRelease
+	err = json.NewDecoder(resp.Body).Decode(&releases)
+	if err != nil {
+		return nil, fmt.Errorf("error decoding releases: %v", err)
+	}
+
+	return releases, nil
+}
+
+func SelectReleaseInteractively(releases []GitHubRelease) (*GitHubRelease, error) {
+	if len(releases) == 0 {
+		return nil, fmt.Errorf("no releases available for selection")
+	}
+
+	current := viper.GetString("release")
+	startIndex := 0
+
+	releaseItems := make([]string, len(releases))
+	for i, r := range releases {
+		if r.TagName == current {
+			startIndex = i
+		}
+		releaseItems[i] = fmt.Sprintf("%s", r.TagName)
+	}
+
+	prompt := promptui.Select{
+		Label:     "Select a Release\nCurrent:" + current,
+		Items:     releaseItems,
+		CursorPos: startIndex,
+	}
+	index, _, err := prompt.Run()
+	if err != nil {
+		return nil, fmt.Errorf("failed to select release: %v", err)
+	}
+
+	return &releases[index], nil
 }

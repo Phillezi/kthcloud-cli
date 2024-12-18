@@ -8,12 +8,13 @@ import (
 )
 
 var autoApprove bool
+var interactive bool
 
 var updateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update to latest version",
 	Run: func(cmd *cobra.Command, args []string) {
-		updated, err := update.Update(autoApprove)
+		updated, err := update.Update(autoApprove, interactive)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -26,4 +27,5 @@ var updateCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(updateCmd)
 	updateCmd.Flags().BoolVarP(&autoApprove, "yes", "y", false, "Skip prompt, automatically approve")
+	updateCmd.Flags().BoolVarP(&interactive, "interactive", "i", false, "Select a specific version")
 }
