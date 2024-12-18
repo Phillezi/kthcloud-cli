@@ -21,6 +21,7 @@ type Sched struct {
 	runnableQ  chan *Job
 	resultChan chan *Job
 	revertOnce sync.Once
+	disabled   bool
 }
 
 func NewSched(ctx context.Context) *Sched {
@@ -57,8 +58,18 @@ func (s *Sched) Start() {
 
 func (s *Sched) revertJobs() {
 	s.revertOnce.Do(func() {
+		s.disabled = true
 		for _, j := range s.jobs {
 			switch j.State {
+			case Started:
+				j.mu.Lock()
+				j.State = Cancelling
+				j.mu.Unlock()
+				j.cancel()
+				j.CancelCallback()
+				j.mu.Lock()
+				j.State = Cancelled
+				j.mu.Unlock()
 			case Created:
 				j.mu.Lock()
 				j.State = Cancelled
@@ -123,7 +134,9 @@ func (s *Sched) handleJobResult(job *Job) {
 				}
 			}
 		}
-	case Errored, Cancelled:
+	case Errored:
+
+	case Cancelled:
 		logrus.Debugln("job with id: " + job.ID + " was cancelled")
 		for _, v := range s.depMap[job] {
 			if v != nil && v.cancel != nil {
@@ -165,6 +178,9 @@ func (s *Sched) startJob(runnable *Job, onDone chan *Job) {
 		logrus.Debugln("tried to start job that cant be started")
 		return
 	}
+	if s.disabled {
+		return
+	}
 	runnable.mu.Lock()
 	runnable.State = Started
 	runnable.mu.Unlock()
@@ -192,7 +208,10 @@ func (s *Sched) startJob(runnable *Job, onDone chan *Job) {
 			job.CancelCallback()
 		}); err != nil {
 			logrus.Debugln("Error occurred on job with id: " + runnable.ID)
+			job.mu.Lock()
 			job.State = Errored
+			job.mu.Unlock()
+			s.revertJobs()
 		}
 	}(runnable, onDone)
 }
