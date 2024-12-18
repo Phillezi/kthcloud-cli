@@ -24,38 +24,28 @@ func Track(ctx context.Context, deploymentName string, job *body.DeploymentCreat
 		case <-ctx.Done():
 			logrus.Debugf("deployment %s was cancelled\n", deploymentName)
 			onCancel()
-			return fmt.Errorf("deployment %s was cancelled", deploymentName)
+			return nil
 		case <-ticker.C:
 			jobResp, err := c.R().Get("/v2/jobs/" + job.JobID)
 			if err != nil {
-				s.Color("red")
-				s.Stop()
 				return fmt.Errorf("failed to get job status for deployment %s: %w", deploymentName, err)
 			}
 
 			jobStatus, err := util.ProcessResponse[body.JobRead](jobResp.String())
 			if err != nil {
-				s.Color("red")
-				s.Stop()
 				return fmt.Errorf("error processing job status for deployment %s: %w", deploymentName, err)
 			}
 
 			switch jobStatus.Status {
 			case "finished":
-				s.Color("green")
-				s.Stop()
-				log.Infof("Deployment %s created successfully", deploymentName)
+				log.Debugf("Deployment %s created successfully", deploymentName)
 				return nil
 			case "terminated":
-				s.Color("yellow")
-				s.Stop()
-				log.Infof("Job for deployment %s was terminated", deploymentName)
+				log.Debugf("Job for deployment %s was terminated", deploymentName)
 				return nil
 			}
 
 			if jobStatus.LastError != nil {
-				s.Color("red")
-				s.Stop()
 				return fmt.Errorf("failed to create deployment %s: %s", deploymentName, *jobStatus.LastError)
 			}
 		}
@@ -72,34 +62,24 @@ func TrackDel(deploymentName string, job *body.DeploymentDeleted, tickerInterval
 		case <-ticker.C:
 			jobResp, err := c.R().Get("/v2/jobs/" + job.JobID)
 			if err != nil {
-				s.Color("red")
-				s.Stop()
 				return fmt.Errorf("failed to get job status for deployment %s: %w", deploymentName, err)
 			}
 
 			jobStatus, err := util.ProcessResponse[body.JobRead](jobResp.String())
 			if err != nil {
-				s.Color("red")
-				s.Stop()
 				return fmt.Errorf("error processing job status for deployment %s: %w", deploymentName, err)
 			}
 
 			switch jobStatus.Status {
 			case "finished":
-				s.Color("green")
-				s.Stop()
-				log.Infof("Deployment %s deleted successfully", deploymentName)
+				log.Debugf("Deployment %s deleted successfully", deploymentName)
 				return nil
 			case "terminated":
-				s.Color("yellow")
-				s.Stop()
-				log.Infof("Job for deployment %s was terminated", deploymentName)
+				log.Debugf("Job for deployment %s was terminated", deploymentName)
 				return nil
 			}
 
 			if jobStatus.LastError != nil {
-				s.Color("red")
-				s.Stop()
 				return fmt.Errorf("failed to delete deployment %s: %s", deploymentName, *jobStatus.LastError)
 			}
 		}
@@ -116,7 +96,7 @@ func TrackDelW(ctx context.Context, deploymentName string, job *body.DeploymentD
 		case <-ctx.Done():
 			logrus.Debugf("deployment %s was cancelled\n", deploymentName)
 			onCancel()
-			return fmt.Errorf("deployment %s was cancelled", deploymentName)
+			return nil
 		case <-ticker.C:
 			jobResp, err := c.R().Get("/v2/jobs/" + job.JobID)
 			if err != nil {

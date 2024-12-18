@@ -88,7 +88,7 @@ func Up(detached, tryToCreateVolumes bool) {
 	deployments := composeInstance.ToDeployments()
 	for _, deployment := range deployments {
 
-		job := scheduler.NewJob(func(ctx context.Context, callback func(cArg interface{})) error {
+		job := scheduler.NewJob(func(ctx context.Context, cancelCallback func()) error {
 			resp, err := c.Create(deployment)
 			if err != nil {
 				logrus.Error(err)
@@ -104,45 +104,45 @@ func Up(detached, tryToCreateVolumes bool) {
 				logrus.Error(err)
 				return err
 			}
-			return jobs.Track(ctx, deployment.Name, job, time.Millisecond*500, s, func() {
-				logrus.Debugln("removing depl")
-				var found *body.DeploymentRead
-				func() {
-					for i := 0; i < 2; i++ {
-						depls, err := c.Deployments()
-						if err != nil {
-							logrus.Fatal(err)
-						}
-
-						for _, depl := range depls {
-							if depl.Name == deployment.Name {
-								found = &depl
-								return
-							}
-						}
-						c.DropDeploymentsCache()
+			return jobs.Track(ctx, deployment.Name, job, time.Millisecond*500, s, cancelCallback)
+		}, func() {
+			logrus.Debugln("removing depl")
+			var found *body.DeploymentRead
+			func() {
+				for i := 0; i < 2; i++ {
+					depls, err := c.Deployments()
+					if err != nil {
+						logrus.Fatal(err)
 					}
-				}()
-				if found == nil {
-					return
-				}
 
-				delResp, err := c.Remove(found)
-				if err != nil {
-					logrus.Fatal(err)
+					for _, depl := range depls {
+						if depl.Name == deployment.Name {
+							found = &depl
+							return
+						}
+					}
+					c.DropDeploymentsCache()
 				}
-				err = response.IsError(resp.String())
-				if err != nil {
-					logrus.Fatal(err)
-				}
-				rmJob, err := util.ProcessResponse[body.DeploymentDeleted](delResp.String())
-				if err != nil {
-					logrus.Fatal(err)
-				}
-				logrus.Debugln("tracking removal of depl")
-				jobs.TrackDel(deployment.Name, rmJob, time.Millisecond*500, s)
-			})
-		}, func(cArg interface{}) {}, nil)
+			}()
+			if found == nil {
+				return
+			}
+
+			resp, err := c.Remove(found)
+			if err != nil {
+				logrus.Fatal(err)
+			}
+			err = response.IsError(resp.String())
+			if err != nil {
+				logrus.Fatal(err)
+			}
+			rmJob, err := util.ProcessResponse[body.DeploymentDeleted](resp.String())
+			if err != nil {
+				logrus.Fatal(err)
+			}
+			logrus.Debugln("tracking removal of depl")
+			jobs.TrackDel(deployment.Name, rmJob, time.Millisecond*500, s)
+		}, nil)
 		jobIDs[deployment.Name] = sched.AddJob(job)
 	}
 

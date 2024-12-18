@@ -12,38 +12,58 @@ const (
 	Started
 	Done
 	Errored
+	Cancelling
 	Cancelled
 )
 
+func (s JobState) String() string {
+	switch s {
+	case Created:
+		return "Created"
+	case Started:
+		return "Started"
+	case Done:
+		return "Done"
+	case Errored:
+		return "Errored"
+	case Cancelling:
+		return "Cancelling"
+	case Cancelled:
+		return "Cancelled"
+	default:
+		return "unknown"
+	}
+}
+
 // Job represents a unit of work in the scheduler.
 type Job struct {
-	ID           string
-	Dependencies []*Job
-	State        JobState
-	Action       func(ctx context.Context, callback func(cArg interface{})) error
-	Callback     func(cArg interface{})
-	ctx          context.Context
-	cancel       context.CancelFunc
-	mu           sync.Mutex
+	ID             string
+	Dependencies   []*Job
+	State          JobState
+	Action         func(ctx context.Context, callback func()) error
+	CancelCallback func()
+	ctx            context.Context
+	cancel         context.CancelFunc
+	mu             sync.Mutex
 }
 
 func NewJob(
 	action func(
 		ctx context.Context,
-		callback func(cArg interface{}),
+		callback func(),
 	) error,
-	callback func(cArg interface{}),
+	cancelCallback func(),
 	dependencies ...*Job,
 ) *Job {
 	if dependencies == nil {
 		dependencies = []*Job{}
 	}
 	return &Job{
-		ID:           "",
-		Dependencies: dependencies,
-		State:        Created,
-		Action:       action,
-		Callback:     callback,
+		ID:             "",
+		Dependencies:   dependencies,
+		State:          Created,
+		Action:         action,
+		CancelCallback: cancelCallback,
 	}
 }
 

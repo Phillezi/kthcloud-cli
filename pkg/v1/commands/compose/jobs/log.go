@@ -17,6 +17,7 @@ func MonitorJobStates(jobIDs map[string]string, sched *scheduler.Sched, spinner 
 		select {
 		case <-ticker.C:
 			allDone := true
+			allCancelledOrErrored := true
 
 			var states string
 
@@ -27,22 +28,24 @@ func MonitorJobStates(jobIDs map[string]string, sched *scheduler.Sched, spinner 
 					return fmt.Errorf("failed to get job %s state", name)
 				}
 
-				//logrus.Infof("%s has state %v", name, state)
-				states += fmt.Sprintf("%s has state %v\n", name, state)
+				states += fmt.Sprintf("\t%s has state %s\n", name, state.String())
 
-				if state == scheduler.Errored {
-					logrus.Debugf("job %s is in an ERRORED state\n", name)
-					return fmt.Errorf("job %s is in an ERRORED state", name)
+				if state != scheduler.Cancelled && state != scheduler.Errored {
+					allCancelledOrErrored = false
 				}
-
 				if state != scheduler.Done {
 					allDone = false
 				}
 			}
 
 			if allDone {
-				logrus.Infoln("All jobs have completed successfully")
+				spinner.FinalMSG = "All jobs have completed successfully\n"
+				spinner.Color("red")
 				return nil
+			} else if allCancelledOrErrored {
+				spinner.FinalMSG = "Error\n"
+				spinner.Color("red")
+				return fmt.Errorf("error occurred")
 			} else {
 				spinner.Suffix = states
 			}

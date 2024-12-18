@@ -152,14 +152,23 @@ func startJob(runnable *Job, onDone chan *Job) {
 	go func(job *Job, onDone chan *Job) {
 		defer func() {
 			job.mu.Lock()
-			defer job.mu.Unlock()
 			if job.State == Started {
 				job.State = Done
+			} else if job.State == Cancelling {
+				job.State = Cancelled
 			}
+			job.mu.Unlock()
 			onDone <- job
 		}()
 
-		if err := job.Action(job.ctx, job.Callback); err != nil {
+		if err := job.Action(job.ctx, func() {
+			logrus.Debugln("Cancelling job with id: " + runnable.ID)
+			job.mu.Lock()
+			job.State = Cancelling
+			job.mu.Unlock()
+			job.CancelCallback()
+		}); err != nil {
+			logrus.Debugln("Error occurred on job with id: " + runnable.ID)
 			job.State = Errored
 		}
 	}(runnable, onDone)
