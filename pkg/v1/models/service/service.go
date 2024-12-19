@@ -158,5 +158,14 @@ func (s *Service) String() string {
 		sb.WriteString("  Command: None\n")
 	}
 
+	if len(s.Dependencies) > 0 {
+		sb.WriteString("  Depends On:\n")
+		for _, dep := range s.Dependencies {
+			sb.WriteString(fmt.Sprintf("    %s\n", dep))
+		}
+	} else {
+		sb.WriteString("  Depends On: None\n")
+	}
+
 	return sb.String()
 }
