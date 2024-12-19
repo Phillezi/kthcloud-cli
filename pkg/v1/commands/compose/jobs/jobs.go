@@ -14,7 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func Track(ctx context.Context, deploymentName string, job *body.DeploymentCreated, tickerInterval time.Duration, s *spinner.Spinner, onCancel func()) error {
+func Track(ctx context.Context, deploymentName string, job *body.DeploymentCreated, tickerInterval time.Duration, onCancel func()) error {
 	c := client.Get().Client()
 	ticker := time.NewTicker(tickerInterval)
 	defer ticker.Stop()
@@ -52,7 +52,7 @@ func Track(ctx context.Context, deploymentName string, job *body.DeploymentCreat
 	}
 }
 
-func TrackDel(deploymentName string, job *body.DeploymentDeleted, tickerInterval time.Duration, s *spinner.Spinner) error {
+func TrackDel(deploymentName string, job *body.DeploymentDeleted, tickerInterval time.Duration) error {
 	c := client.Get().Client()
 	ticker := time.NewTicker(tickerInterval)
 	defer ticker.Stop()
