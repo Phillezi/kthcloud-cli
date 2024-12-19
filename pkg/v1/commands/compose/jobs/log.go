@@ -29,7 +29,7 @@ func MonitorJobStates(jobIDs map[string]string, sched *scheduler.Sched, spinner 
 					return fmt.Errorf("failed to get job %s state", name)
 				}
 
-				states += fmt.Sprintf("\t%s has state %s\n", name, state.String())
+				states += fmt.Sprintf("\t%s has state: Job%s\n", name, state.String())
 				if state != scheduler.Cancelled {
 					allCancelled = false
 				}

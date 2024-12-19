@@ -26,11 +26,14 @@ func Up(detached, tryToCreateVolumes bool) {
 	scheduleContext, cancelScheduler := context.WithCancel(ctx)
 	sched := scheduler.NewSched(scheduleContext)
 
+	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+
 	util.SetupSignalHandler(done, func() {
 		sched.CancelJobsBlock()
 		cancelled = true
 		cancelUp()
 		<-ctx.Done()
+		s.Stop()
 		if creationDone && !detached {
 			resp, err := update.PromptYesNo("Do you want to terminate deployments")
 			if err != nil {
@@ -42,6 +45,7 @@ func Up(detached, tryToCreateVolumes bool) {
 		} else if !creationDone {
 			logrus.Infoln("Cancelling creation of deployments")
 		}
+		s.Start()
 	})
 
 	if !detached {
@@ -78,7 +82,6 @@ func Up(detached, tryToCreateVolumes bool) {
 	go sched.Start()
 	defer cancelScheduler()
 
-	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
 	s.Color("blue")
 	s.Start()
 	defer s.Stop()
