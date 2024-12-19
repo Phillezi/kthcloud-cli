@@ -19,6 +19,12 @@ run: build
 	@echo "Running the application..."
 	@./$(BUILD_DIR)/$(BINARY_NAME)
 
+install: build
+	@echo "installing"
+	@mkdir -p ~/.local/kthcloud/bin
+	@cp ./$(BUILD_DIR)/$(BINARY_NAME) ~/.local/kthcloud/bin/$(BINARY_NAME)
+	@echo "add to PATH"
+
 clean:
 	@echo "Cleaning up..."
 	@rm -rf $(BUILD_DIR)

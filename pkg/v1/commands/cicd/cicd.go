@@ -51,13 +51,13 @@ func CICDInit() {
 		}
 	}
 
-	conf, err := getGHACIConf(id)
+	conf, err := GetGHACIConf(id)
 	if err != nil {
 		logrus.Fatal("Error when getting CI config:", err)
 		return
 	}
 
-	username, password, tag, err := extractSecrets(conf)
+	username, password, tag, err := ExtractSecrets(conf)
 	if err != nil {
 		logrus.Fatal("Error when extracting secrets:", err)
 		return

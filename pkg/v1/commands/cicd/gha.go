@@ -15,7 +15,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func getGHACIConf(id string) (*model.GithubActionConfig, error) {
+func GetGHACIConf(id string) (*model.GithubActionConfig, error) {
 	c := client.Get()
 
 	r := c.Client().R()
@@ -45,7 +45,7 @@ func getGHACIConf(id string) (*model.GithubActionConfig, error) {
 	return &config, nil
 }
 
-func extractSecrets(config *model.GithubActionConfig) (username, password, tag string, err error) {
+func ExtractSecrets(config *model.GithubActionConfig) (username, password, tag string, err error) {
 	if config != nil && config.Jobs.Docker.Steps != nil {
 		for i, step := range config.Jobs.Docker.Steps {
 			if step.With.Password != "" {
