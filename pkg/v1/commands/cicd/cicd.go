@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func CICDInit() {
+func CICDInit(saveSecrets bool) {
 	rootdir, upstreamURL, err := GetGitRepoInfo()
 	if err != nil {
 		logrus.Fatal("Error when getting repo info:", err)
@@ -63,27 +63,31 @@ func CICDInit() {
 		return
 	}
 
-	secrets := map[string]string{
-		"username": username,
-		"password": password,
-		"tag":      tag,
-	}
+	if saveSecrets {
 
-	secretsJson, err := json.Marshal(secrets)
-	if err != nil {
-		log.Fatalf("failed to marshal JSON: %v", err)
-	}
+		secrets := map[string]string{
+			"username": username,
+			"password": password,
+			"tag":      tag,
+		}
 
-	err = CreateFile(repoConfDir, ".gitignore", "secrets.json")
-	if err != nil {
-		logrus.Fatal("Error when trying to add gitignore for secrets.json", err)
-		return
-	}
+		secretsJson, err := json.Marshal(secrets)
+		if err != nil {
+			log.Fatalf("failed to marshal JSON: %v", err)
+		}
 
-	err = CreateFile(repoConfDir, "secrets.json", string(secretsJson))
-	if err != nil {
-		logrus.Fatal("Error when trying to add secrets.json", err)
-		return
+		err = CreateFile(repoConfDir, ".gitignore", "secrets.json")
+		if err != nil {
+			logrus.Fatal("Error when trying to add gitignore for secrets.json", err)
+			return
+		}
+
+		err = CreateFile(repoConfDir, "secrets.json", string(secretsJson))
+		if err != nil {
+			logrus.Fatal("Error when trying to add secrets.json", err)
+			return
+		}
+
 	}
 
 	yamlConf, err := yaml.Marshal(conf)
