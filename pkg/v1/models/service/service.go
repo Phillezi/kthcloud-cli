@@ -12,11 +12,12 @@ import (
 )
 
 type Service struct {
-	Image       string   `yaml:"image,omitempty"`
-	Environment EnvVars  `yaml:"environment,omitempty"`
-	Ports       []string `yaml:"ports,omitempty"`
-	Volumes     []string `yaml:"volumes,omitempty"`
-	Command     []string `yaml:"command,omitempty"`
+	Image        string   `yaml:"image,omitempty"`
+	Environment  EnvVars  `yaml:"environment,omitempty"`
+	Ports        []string `yaml:"ports,omitempty"`
+	Volumes      []string `yaml:"volumes,omitempty"`
+	Command      []string `yaml:"command,omitempty"`
+	Dependencies []string `yaml:"depends_on,omitempty"`
 }
 
 func (s *Service) ToDeployment(name string, projectDir string) *body.DeploymentCreate {
@@ -155,6 +156,15 @@ func (s *Service) String() string {
 		}
 	} else {
 		sb.WriteString("  Command: None\n")
+	}
+
+	if len(s.Dependencies) > 0 {
+		sb.WriteString("  Depends On:\n")
+		for _, dep := range s.Dependencies {
+			sb.WriteString(fmt.Sprintf("    %s\n", dep))
+		}
+	} else {
+		sb.WriteString("  Depends On: None\n")
 	}
 
 	return sb.String()

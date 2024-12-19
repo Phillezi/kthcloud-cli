@@ -57,28 +57,48 @@ For example, if i have this `docker-compose.yaml` file:
 
 ```yaml
 services:
-  testingcompose1:
-    image: registry.cloud.cbh.kth.se/waitapp/cicd:latest
+  file-server:
+    image: phillezi/tinyhttpfileserver:latest
+    environment:
+      KTHCLOUD_CORES: 0.1
+      KTHCLOUD_RAM: 0.1
+      KTHCLOUD_VISIBILITY: auth
+      KTHCLOUD_HEALTH_PATH: "/"
     ports:
       - "8080:8080"
-  testingcompose:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: supersecretuserhere
-      POSTGRES_PASSWORD: supersecretpassword
-      POSTGRES_DB: WAIT
-      KTHCLOUD_VISIBILITY: private
-    command: ["sleep", "infinity"]
-    ports:
-      - "5432:5432"
     volumes:
-      - dbdata:/var/lib/postgresql/data
+      - "./testpath:/static"
+
+  log-test-app1:
+    image: phillezi/litelogger:latest
+    environment:
+      KTHCLOUD_CORES: 0.1
+      KTHCLOUD_RAM: 0.1
+      KTHCLOUD_VISIBILITY: private
+    depends_on:
+      - file-server
+
+  log-test-app2:
+    image: phillezi/litelogger:latest
+    environment:
+      KTHCLOUD_CORES: 0.1
+      KTHCLOUD_RAM: 0.1
+      KTHCLOUD_VISIBILITY: private
+    depends_on: [log-test-app1]
+
+  log-test-app3:
+    image: phillezi/litelogger:latest
+    environment:
+      KTHCLOUD_CORES: 0.1
+      KTHCLOUD_RAM: 0.1
+      KTHCLOUD_VISIBILITY: private
+
 ```
 
 > [!NOTE]  
-> The above example showcases what is supported but does not provide a functional application. The database service will simply run the `sleep` command.
+> The above example showcases what is supported but does not provide a functional application. You need to have the ./testpath in your `cwd`.
 
-The tool will create two deployments and set up their environment variables, port, start commands and persistent storage.
+The tool will create four deployments and set up their environment variables, port, start commands and persistent storage.
 
 ## Installation
 
@@ -86,7 +106,7 @@ The tool will create two deployments and set up their environment variables, por
 
 #### Mac and Linux
 
-or Mac and Linux, there is an installation script that can be run to install the CLI.
+For Mac and Linux, there is an installation script that can be run to install the CLI.
 
 ##### Prerequisites
 
@@ -110,15 +130,6 @@ powershell -c "irm https://raw.githubusercontent.com/Phillezi/kthcloud-cli/main/
 ```
 
 Check out what the script does [here](https://github.com/Phillezi/kthcloud-cli/blob/main/scripts/install.ps1).
-
-If the above command fails, you might need to change your `ExecutionPolicy` to run the script. This can be done by running:
-
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-
-```
-
-Before running the install command again.
 
 ### Build it yourself
 
@@ -164,7 +175,7 @@ kthcloud login
 
 #### Compose command
 
-Parses a `docker-compose.yaml` or `docker-compose.yml` file and gives the ability to bring up these services on `kthcloud`.
+Parses a `docker-compose.yaml`, `docker-compose.yml` or `*.docker-compose.yaml` file (will prefer `kthcloud.docker-compose.yaml/yml`) and gives the ability to bring up these services with the specified configuration on [`kthcloud`](https://cloud.cbh.kth.se).
 
 ##### Usage of the compose command
 
@@ -178,18 +189,19 @@ Brings up the services defined in the Docker Compose file.
 
 ##### Compose down command
 
-> [!NOTE]
-> This feature is not implemented yet.
-
-(**TODO**) Brings down the services defined in the Docker Compose file.
+Brings down the services defined in the Docker Compose file.
+> ![NOTE]
+> This will not remove the volumes created on the storagemanager.
 
 ##### Compose parse command
 
-Parses a Docker Compose file and prints the Services, Envs, Ports and Volumes. And prints out the resulting deployments.
+Parses a Docker Compose file and prints the Services, Envs, Ports, Commands, Depends on and Volumes. And prints out the resulting deployments (the json used with the REST API).
 
 #### Update command
 
 Checks for newer releases than the release of the binary running the command. If a newer release is found it will prompt you to install it, (can be bypassed wit the `-y` flag).
+
+Versions can be selected by passing the `-i` flag.
 
 > [!WARNING]
 > This currently doesnt work as expected on Windows.
@@ -220,6 +232,7 @@ The `kthcloud-cli` uses a configuration file named `config.yaml` it is located i
 - `api-url`: The URL of the API endpoint.
 - `api-token`: The api token from kthcloud.
 - `loglevel`: The logging level (info, warn, error, debug) (default "info")
+- `resource-cache-duration duration`: How long resources should be cached when possible (default 1m0s)
 - `session-path`: The filepath where the session should be loaded and saved to (default "~/.config/.kthcloud/session.json")
 - `zone`: The preferred kthcloud zone to use, will use `se-flem2` by default
 

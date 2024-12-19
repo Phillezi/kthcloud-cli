@@ -8,6 +8,7 @@ import (
 
 	"github.com/Phillezi/kthcloud-cli/pkg/config"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/client"
+	"github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -21,6 +22,17 @@ var rootCmd = &cobra.Command{
  /  '_// __/ / _ \/ __/ / / / _ \/ // // _  / /___// __/ / /  / / 
 /_/\_\ \__/ /_//_/\__/ /_/  \___/\_,_/ \_,_/       \__/ /_/  /_/  
                                                                   `,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		level := viper.GetString("loglevel")
+		lvl, err := logrus.ParseLevel(level)
+		if err != nil {
+			logrus.Warnf("Invalid log level %s, falling back to INFO", level)
+			lvl = logrus.InfoLevel
+		}
+		logrus.SetLevel(lvl)
+
+		logrus.Debugf("Logging level set to %s", lvl)
+	},
 }
 
 var versionCmd = &cobra.Command{

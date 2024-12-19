@@ -54,6 +54,23 @@ func (c *Compose) String() string {
 	return sb.String()
 }
 
+func (c *Compose) ToDeploymentsWDeps() ([]*body.DeploymentCreate, map[string][]string) {
+	projectDirectory := c.Hash()
+
+	var depls []*body.DeploymentCreate
+	deps := make(map[string][]string)
+
+	for name, service := range c.Services {
+		depls = append(depls, service.ToDeployment(name, projectDirectory))
+		deps[name] = service.Dependencies
+		if deps[name] == nil {
+			deps[name] = []string{}
+		}
+	}
+
+	return depls, deps
+}
+
 func (c *Compose) ToDeployments() []*body.DeploymentCreate {
 	projectDirectory := c.Hash()
 
