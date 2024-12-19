@@ -12,7 +12,7 @@ import (
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/client"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose/response"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 func getGHACIConf(id string) (*model.GithubActionConfig, error) {

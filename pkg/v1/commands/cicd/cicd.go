@@ -9,7 +9,7 @@ import (
 
 	"github.com/Phillezi/kthcloud-cli/pkg/util"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 func CICDInit() {
