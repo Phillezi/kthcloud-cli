@@ -108,7 +108,7 @@ func Up(detached, tryToCreateVolumes bool) {
 				logrus.Error(err)
 				return err
 			}
-			return jobs.Track(ctx, deployment.Name, job, time.Millisecond*500, s, cancelCallback)
+			return jobs.Track(ctx, deployment.Name, job, time.Millisecond*500, cancelCallback)
 		}, func() {
 			logrus.Debugln("removing depl")
 			var found *body.DeploymentRead
@@ -145,7 +145,7 @@ func Up(detached, tryToCreateVolumes bool) {
 				logrus.Fatal(err)
 			}
 			logrus.Debugln("tracking removal of depl")
-			jobs.TrackDel(deployment.Name, rmJob, time.Millisecond*500, s)
+			jobs.TrackDel(deployment.Name, rmJob, time.Millisecond*500)
 		})
 		jobMap[deployment.Name] = job
 
