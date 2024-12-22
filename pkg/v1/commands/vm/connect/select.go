@@ -8,15 +8,28 @@ import (
 )
 
 func selectVm(vms []body.VmRead) (*body.VmRead, error) {
-	if len(vms) == 0 {
+	if len(vms) < 1 {
 		return nil, fmt.Errorf("no VMs available")
 	}
 
 	startIndex := 0
 
+	availableVMs := []*body.VmRead{}
 	vmItems := make([]string, len(vms))
 	for i, vm := range vms {
-		vmItems[i] = fmt.Sprintf("%s", vm.Name)
+		if vm.SshConnectionString != nil &&
+			vm.Status == "resourceRunning" {
+			vmItems[i] = fmt.Sprintf("%s", vm.Name)
+			availableVMs = append(availableVMs, &vm)
+		}
+	}
+
+	if len(availableVMs) < 1 {
+		return nil, fmt.Errorf("no running VMs")
+	}
+
+	if len(availableVMs) == 1 {
+		return availableVMs[0], nil
 	}
 
 	prompt := promptui.Select{
@@ -29,7 +42,7 @@ func selectVm(vms []body.VmRead) (*body.VmRead, error) {
 		return nil, fmt.Errorf("failed to select a VM: %v", err)
 	}
 
-	return &vms[index], nil
+	return availableVMs[index], nil
 }
 
 func selectNonInteractive(vms []body.VmRead, id string, name string) (*body.VmRead, error) {
