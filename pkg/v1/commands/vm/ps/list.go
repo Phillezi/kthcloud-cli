@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Phillezi/kthcloud-cli/pkg/util"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/client"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/sirupsen/logrus"
@@ -23,15 +22,31 @@ func List(all bool) {
 	renderVmsTable(vms, all)
 }
 
+func getGPUName(gpuNames *map[string]string, groupID string) (string, error) {
+	if name, ok := (*gpuNames)[groupID]; ok {
+		return name, nil
+	}
+	c := client.Get()
+
+	group, err := c.GpuGroupByID(groupID)
+	if err != nil {
+		return "", err
+	}
+
+	return group.DisplayName, nil
+}
+
 func renderVmsTable(vms []body.VmRead, all bool) {
+
+	gpuNames := make(map[string]string)
 
 	t := table.NewWriter()
 	t.SetStyle(table.StyleLight)
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"ID", "Name", "Status", "GPU", "Updated", "Visit"})
+	t.AppendHeader(table.Row{"ID", "Name", "Status", "GPU", "Visit"})
 
 	for _, vm := range vms {
-		if vm.Status == "resourceDisabled" && !all {
+		if vm.Status == "resourceStopped" && !all {
 			continue
 		}
 
@@ -40,7 +55,7 @@ func renderVmsTable(vms []body.VmRead, all bool) {
 		gpu := ""
 		if vm.GPU != nil {
 			logrus.Infoln(*vm.GPU)
-			gpu = vm.GPU.GpuGroupID
+			gpu, _ = getGPUName(&gpuNames, vm.GPU.GpuGroupID)
 		}
 
 		var visitPorts []string
@@ -59,16 +74,15 @@ func renderVmsTable(vms []body.VmRead, all bool) {
 		}
 
 		var rows []table.Row
-
-		rows = append(rows, table.Row{vm.ID, vm.Name, vm.Status, gpu, util.TimeAgo(vm.UpdatedAt), func() string {
+		rows = append(rows, table.Row{vm.ID, vm.Name, vm.Status, gpu, (func() string {
 			if len(visitPorts) > 0 {
 				return visitPorts[0]
 			}
 			return ""
-		}})
+		})()})
 
 		for i := 1; i < len(visitPorts); i++ {
-			rows = append(rows, table.Row{"", "", "", "", "", visitPorts[i]})
+			rows = append(rows, table.Row{"", "", "", "", visitPorts[i]})
 		}
 
 		t.AppendRows(rows)
