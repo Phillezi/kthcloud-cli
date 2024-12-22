@@ -54,7 +54,6 @@ func renderVmsTable(vms []body.VmRead, all bool) {
 
 		gpu := ""
 		if vm.GPU != nil {
-			logrus.Infoln(*vm.GPU)
 			gpu, _ = getGPUName(&gpuNames, vm.GPU.GpuGroupID)
 		}
 
