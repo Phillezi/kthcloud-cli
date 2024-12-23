@@ -13,6 +13,7 @@ import (
 
 type Service struct {
 	Image        string   `yaml:"image,omitempty"`
+	Build        *Build   `yaml:"build,omitempty"`
 	Environment  EnvVars  `yaml:"environment,omitempty"`
 	Ports        []string `yaml:"ports,omitempty"`
 	Volumes      []string `yaml:"volumes,omitempty"`
@@ -120,7 +121,13 @@ func (s *Service) ToDeployment(name string, projectDir string) *body.DeploymentC
 func (s *Service) String() string {
 	var sb strings.Builder
 
-	sb.WriteString(fmt.Sprintf("  Image: %s\n", s.Image))
+	if s.Image != "" {
+		sb.WriteString(fmt.Sprintf("  Image: %s\n", s.Image))
+	}
+
+	if s.Build != nil {
+		sb.WriteString(fmt.Sprintf("  Build: %s\n", strings.Join(strings.Split(s.Build.String(), "\n"), "\n  ")))
+	}
 
 	if len(s.Environment) > 0 {
 		sb.WriteString("  Environment:\n")

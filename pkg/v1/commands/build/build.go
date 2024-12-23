@@ -12,7 +12,7 @@ import (
 )
 
 func Build() {
-	if _, err := hasDockerCommands(); err != nil {
+	if _, err := HasDockerCommands(); err != nil {
 		logrus.Fatal(err)
 	}
 
@@ -44,7 +44,7 @@ func Build() {
 		return
 	}
 
-	err = runBuildPushCommands(username, password, tag)
+	err = RunBuildPushCommands(username, password, tag, "", "")
 	if err != nil {
 		logrus.Fatal("Error running build and push command:", err)
 		return
@@ -60,8 +60,22 @@ func loginToRegistry(registry, username, password string) error {
 	return cmd.Run()
 }
 
-func buildPush(tag string) error {
-	cmd := exec.Command("docker", "buildx", "build", "--platform=linux/amd64", "--tag="+tag, "--push", ".")
+func buildPush(tag, dockerfile, context string) error {
+	cmdParts := []string{
+		"buildx", "build", "--platform=linux/amd64", "--tag=" + tag, "--push",
+	}
+
+	if dockerfile != "" {
+		cmdParts = append(cmdParts, "--dockerfile="+dockerfile)
+	}
+
+	if context != "" {
+		cmdParts = append(cmdParts, context)
+	} else {
+		cmdParts = append(cmdParts, ".")
+	}
+
+	cmd := exec.Command("docker", cmdParts...)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -69,15 +83,15 @@ func buildPush(tag string) error {
 	return cmd.Run()
 }
 
-func runBuildPushCommands(username, password, tag string) error {
+func RunBuildPushCommands(username, password, tag, dockerfile, context string) error {
 	registry := strings.Split(tag, "/")[0]
 	if err := loginToRegistry(registry, username, password); err != nil {
 		return err
 	}
-	return buildPush(tag)
+	return buildPush(tag, dockerfile, context)
 }
 
-func hasDockerCommands() (bool, error) {
+func HasDockerCommands() (bool, error) {
 	if _, err := exec.LookPath("docker"); err != nil {
 		return false, fmt.Errorf("docker is not installed or not in PATH")
 	}

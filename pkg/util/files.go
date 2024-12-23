@@ -49,3 +49,14 @@ func EnsureFileExists(path string) error {
 	}
 	return nil
 }
+
+func FileExists(path string) (bool, error) {
+	var err error
+	if _, err = os.Stat(path); os.IsNotExist(err) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}

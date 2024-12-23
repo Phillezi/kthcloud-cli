@@ -8,9 +8,14 @@ import (
 )
 
 func GetGitRepoInfo() (repoRoot string, upstreamURL string, err error) {
+	path, _ := os.Getwd()
 
+	return GetGitRepoInfoFrom(path)
+}
+
+func GetGitRepoInfoFrom(path string) (repoRoot string, upstreamURL string, err error) {
 	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
-	cmd.Dir, _ = os.Getwd()
+	cmd.Dir = path
 	repoRootBytes, err := cmd.Output()
 	if err != nil {
 		return "", "", fmt.Errorf("failed to get repo root: %v", err)
