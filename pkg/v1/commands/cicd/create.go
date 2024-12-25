@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/client"
 	"github.com/sirupsen/logrus"
@@ -90,4 +91,13 @@ func Create(rootdir string, createWF bool, name string) {
 	if strings.Contains(upstreamURL, "github.com") {
 		promptUserAddSecrets(upstreamURL, username, password, tag)
 	}
+
+	for checks := 0; checks < 5; checks++ {
+		if FileExists(repoConfDir, "DEPLOYMENT") {
+			break
+		}
+		logrus.Debugln("waiting on fs...")
+		time.Sleep(100 * time.Millisecond)
+	}
+
 }
