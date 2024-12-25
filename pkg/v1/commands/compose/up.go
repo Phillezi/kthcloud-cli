@@ -106,7 +106,10 @@ func Up(detached, tryToCreateVolumes, buildAll, nonInteractive bool, servicesToB
 		}
 	}
 
-	buildsReq := builder.GetBuildsRequired(*composeInstance)
+	buildsReq, err := builder.GetBuildsRequired(*composeInstance)
+	if err != nil {
+		logrus.Fatalln("Error getting builds required:", err)
+	}
 	for n, needsBuild := range buildsReq {
 		if needsBuild {
 			if err := builder.Build(n, composeInstance.Services[n], nonInteractive); err != nil {

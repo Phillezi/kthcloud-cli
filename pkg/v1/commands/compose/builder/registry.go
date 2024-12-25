@@ -12,11 +12,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func GetBuildsRequired(compose compose.Compose) map[string]bool {
+func GetBuildsRequired(compose compose.Compose) (map[string]bool, error) {
 	logrus.Traceln("builder.GetBuildsRequired")
 	var wg sync.WaitGroup
 	var mu sync.Mutex
-	var erroccurred bool
+	var globErr error
 	needsRebuildMap := make(map[string]bool)
 	for name, service := range compose.Services {
 		if service.Build != nil {
@@ -28,18 +28,23 @@ func GetBuildsRequired(compose compose.Compose) map[string]bool {
 				continue
 			}
 			conf, err := cicd.GetGHACIConf(id)
+			if err != nil {
+				if strings.Contains(err.Error(), "404") {
+					logrus.Info("try re-running with \"--build " + name + "\"")
+				}
+				return nil, err
+			}
 			username, password, tag, err := cicd.ExtractSecrets(conf)
 			wg.Add(1)
 			go func() {
-				HasDockerImage(username, password, tag, func() {
+				_, err = HasDockerImage(username, password, tag, func() {
 					mu.Lock()
 					needsRebuildMap[name] = true
 					mu.Unlock()
-				}, func() {
-					// TODO: handle better
-					erroccurred = true
-					logrus.Errorln("error could not check docker image status on registry for", name)
 				})
+				if err != nil {
+					globErr = err
+				}
 				wg.Done()
 			}()
 
@@ -47,14 +52,14 @@ func GetBuildsRequired(compose compose.Compose) map[string]bool {
 	}
 
 	wg.Wait()
-	if erroccurred {
-		return nil
+	if globErr != nil {
+		return nil, globErr
 	}
-	return needsRebuildMap
+	return needsRebuildMap, nil
 }
 
 // tag contains the registry
-func HasDockerImage(username, password, tag string, onNotExists func(), onError func()) (bool, error) {
+func HasDockerImage(username, password, tag string, onNotExists func()) (bool, error) {
 	logrus.Traceln("builder.HasDockerImage")
 	parts := strings.Split(tag, "/")
 	if len(parts) < 2 {
@@ -70,7 +75,6 @@ func HasDockerImage(username, password, tag string, onNotExists func(), onError 
 	}
 	if len(repoParts) != 2 {
 		logrus.Errorln("repoparts", repoParts)
-		onError()
 		return false, fmt.Errorf("tag must include an image and tag (e.g., repository/image:tag): %s", repoAndTag)
 	}
 
