@@ -51,8 +51,15 @@ func Build() {
 	}
 }
 
-func loginToRegistry(registry, username, password string) error {
+func loginToRegistry(registry, username, password, tag string) error {
 	cmd := exec.Command("docker", "login", registry, "-u", username, "-p", password)
+
+	dockerctx, err := mkDockerContext(tag)
+	if err != nil {
+		return err
+	}
+
+	cmd.Env = append(os.Environ(), "DOCKER_CONTEXT="+dockerctx)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -80,6 +87,13 @@ func buildPush(tag, dockerfile, context string) error {
 
 	cmd := exec.Command("docker", cmdParts...)
 
+	dockerctx, err := getDockerContext(tag)
+	if err != nil {
+		return err
+	}
+
+	cmd.Env = append(os.Environ(), "DOCKER_CONTEXT="+dockerctx)
+
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -88,7 +102,7 @@ func buildPush(tag, dockerfile, context string) error {
 
 func RunBuildPushCommands(username, password, tag, dockerfile, context string) error {
 	registry := strings.Split(tag, "/")[0]
-	if err := loginToRegistry(registry, username, password); err != nil {
+	if err := loginToRegistry(registry, username, password, tag); err != nil {
 		return err
 	}
 	return buildPush(tag, dockerfile, context)
@@ -106,4 +120,40 @@ func HasDockerCommands() (bool, error) {
 	}
 
 	return true, nil
+}
+
+func mkDockerContext(tag string) (string, error) {
+	tagParts := strings.Split(tag, "/")
+	ctxName := tagParts[len(tagParts)-1]
+
+	// Check if the context already exists
+	cmd := exec.Command("docker", "context", "inspect", ctxName)
+	err := cmd.Run()
+	if err == nil {
+		// Context already exists
+		return ctxName, nil
+	}
+
+	cmd = exec.Command(
+		"docker", "context", "create", ctxName,
+	)
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("failed to create Docker context: %s\n%s", err, string(output))
+	}
+
+	return ctxName, nil
+}
+
+func getDockerContext(tag string) (string, error) {
+	tagParts := strings.Split(tag, "/")
+	ctxName := tagParts[len(tagParts)-1]
+
+	cmd := exec.Command("docker", "context", "inspect", ctxName)
+	err := cmd.Run()
+	if err != nil {
+		return "", err
+	}
+	return ctxName, nil
 }
