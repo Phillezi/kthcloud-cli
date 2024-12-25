@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"strings"
 
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/client"
 	"github.com/sirupsen/logrus"
@@ -11,7 +12,7 @@ import (
 )
 
 func Create(rootdir string, createWF bool, name string) {
-	gitDir, _, err := GetGitRepoInfoFrom(rootdir)
+	gitDir, upstreamURL, err := GetGitRepoInfoFrom(rootdir)
 	if err != nil {
 		gitDir = rootdir
 	}
@@ -61,6 +62,12 @@ func Create(rootdir string, createWF bool, name string) {
 		return
 	}
 
+	username, password, tag, err := ExtractSecrets(conf)
+	if err != nil {
+		logrus.Fatal("Error when trying remove secrets from workflow", err)
+		return
+	}
+
 	yamlConf, err := yaml.Marshal(conf)
 	if err != nil {
 		logrus.Fatalf("error marshalling YAML: %v", err)
@@ -78,5 +85,9 @@ func Create(rootdir string, createWF bool, name string) {
 	if err != nil {
 		logrus.Fatal("Error when trying save cicd config", err)
 		return
+	}
+
+	if strings.Contains(upstreamURL, "github.com") {
+		promptUserAddSecrets(upstreamURL, username, password, tag)
 	}
 }
