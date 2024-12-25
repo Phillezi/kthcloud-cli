@@ -22,25 +22,28 @@ func GetCICDDeploymentID(contextPath string, onDeplNotCICDConfigured func(baseDi
 		return "", errors.New("fullcontextpath is empty")
 	}
 	medadataDir := fullpath + "/.kthcloud"
-	var deplfileExists bool
 	callbackCalls := 0 // could be bool but might want retries?
 
-	for !deplfileExists {
-		if callbackCalls >= 1 {
-			return "", errors.New("max callback calls reached but cicd config still doesnt exist")
-		}
-		deplfileExists, err = util.FileExists(medadataDir + "/DEPLOYMENT")
+	for {
+		deplfileExists, err := util.FileExists(medadataDir + "/DEPLOYMENT")
 		if err != nil {
 			return "", err
 		}
-		if !deplfileExists {
-			if onDeplNotCICDConfigured == nil {
-				return "", err
-			}
-			// id file doesnt exist call the callback to handle it
-			onDeplNotCICDConfigured(fullpath)
-			callbackCalls++
+
+		if deplfileExists {
+			break
 		}
+
+		if callbackCalls >= 1 {
+			return "", errors.New("max callback calls reached but CICD config still doesn't exist")
+		}
+
+		if onDeplNotCICDConfigured == nil {
+			return "", errors.New("callback function is not defined")
+		}
+
+		onDeplNotCICDConfigured(fullpath)
+		callbackCalls++
 	}
 	content, err := os.ReadFile(medadataDir + "/DEPLOYMENT")
 	if err != nil {
