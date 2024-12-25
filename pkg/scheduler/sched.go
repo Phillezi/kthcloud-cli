@@ -207,7 +207,7 @@ func (s *Sched) startJob(runnable *Job, onDone chan *Job) {
 			job.mu.Unlock()
 			job.CancelCallback()
 		}); err != nil {
-			logrus.Debugln("Error occurred on job with id: " + runnable.ID)
+			logrus.Debugln("Error occurred on job with id: "+runnable.ID, "err:", err)
 			job.mu.Lock()
 			job.State = Errored
 			job.mu.Unlock()

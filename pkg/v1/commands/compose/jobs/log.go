@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	hook "github.com/Phillezi/kthcloud-cli/pkg/progress/spinner"
 	"github.com/Phillezi/kthcloud-cli/pkg/scheduler"
 	"github.com/briandowns/spinner"
 	"github.com/sirupsen/logrus"
@@ -12,6 +13,9 @@ import (
 func MonitorJobStates(jobIDs map[string]string, sched *scheduler.Sched, spinner *spinner.Spinner) error {
 	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()
+	defer spinner.Disable()
+
+	logrus.AddHook(hook.NewSpinnerHook(spinner))
 
 	for {
 		select {

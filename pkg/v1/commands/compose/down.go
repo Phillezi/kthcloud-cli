@@ -35,12 +35,6 @@ func Down() {
 		deploymentMap[depl.Name] = &depl
 	}
 
-	for name := range composeInstance.Services {
-		if depl, exists := deploymentMap[name]; exists {
-			c.Remove(depl)
-		}
-	}
-
 	var wg sync.WaitGroup
 
 	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
@@ -50,6 +44,10 @@ func Down() {
 
 	for name := range composeInstance.Services {
 		if deployment, exists := deploymentMap[name]; exists {
+			if deployment.Image == nil {
+				logrus.Infoln("Skipping deletion of deployment:", deployment.Name, ". Since it is a custom deployment (cicd)")
+				continue
+			}
 			resp, err := c.Remove(deployment)
 			if err != nil {
 				logrus.Fatal(err)

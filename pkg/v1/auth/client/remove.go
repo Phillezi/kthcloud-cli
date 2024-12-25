@@ -5,6 +5,7 @@ import (
 	"go-deploy/dto/v2/body"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/sirupsen/logrus"
 )
 
 func (c *Client) Remove(data any) (*resty.Response, error) {
@@ -19,6 +20,7 @@ func (c *Client) Remove(data any) (*resty.Response, error) {
 		return nil, fmt.Errorf("unsupported data type: %T", v)
 	}
 
+	logrus.Debugln("removing deployment:", path)
 	resp, err := c.client.R().
 		SetHeader("Content-Type", "application/json").
 		Delete(c.baseURL + path)
