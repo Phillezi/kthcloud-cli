@@ -133,10 +133,16 @@ func Up(detached, tryToCreateVolumes, buildAll, nonInteractive bool, servicesToB
 			var err error
 			service := composeInstance.Services[deployment.Name]
 
-			if service.Build == nil {
+			deplExistsWithSameName, deplWithSameNameID, deplWithSameNameHasSameImage := client.Get().DeploymentExistsByNameWFilter(deployment.Name, func(depl body.DeploymentRead) bool {
+				if depl.Image != nil && deployment.Image != nil {
+					return *depl.Image == *deployment.Image
+				}
+				return depl.Image == nil && deployment.Image == nil
+			})
+
+			if !deplExistsWithSameName {
 				resp, err = c.Create(deployment)
-			} else {
-				logrus.Debugln("custom deployment:", deployment.Name)
+			} else if service.Build != nil {
 				deplID, erro := builder.GetCICDDeploymentID(service.Build.Context, nil)
 				if erro != nil {
 					logrus.Error(erro)
@@ -148,6 +154,12 @@ func Up(detached, tryToCreateVolumes, buildAll, nonInteractive bool, servicesToB
 				}
 				updateDepl := util.DeploymentCreateToUpdate(deployment)
 				resp, err = c.Update(&updateDepl, deplID)
+			} else if deplWithSameNameHasSameImage {
+				logrus.Debugln("deployment found with the specified service name and image, will update it to match the specification")
+				updateDepl := util.DeploymentCreateToUpdate(deployment)
+				resp, err = c.Update(&updateDepl, deplWithSameNameID)
+			} else {
+				return errors.New("service " + deployment.Name + " is not unique, (you already have a deployment with that name, and it doesnt have the same image)")
 			}
 			if err != nil {
 				logrus.Error(err)
