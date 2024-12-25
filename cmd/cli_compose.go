@@ -26,7 +26,13 @@ var composeUpCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		detached, _ := cmd.Flags().GetBool("detached")
 		tryToCreateVolumes, _ := cmd.Flags().GetBool("try-volumes")
-		compose.Up(detached, tryToCreateVolumes)
+		servicesToBuild, _ := cmd.Flags().GetStringSlice("build")
+		nonInteractive, _ := cmd.Flags().GetBool("non-interactive")
+		buildAll := false
+		if servicesToBuild != nil && len(servicesToBuild) == 0 && false {
+			buildAll = true
+		}
+		compose.Up(detached, tryToCreateVolumes, buildAll, nonInteractive, servicesToBuild)
 	},
 }
 var composeDownCmd = &cobra.Command{
@@ -60,6 +66,10 @@ func init() {
 	composeUpCmd.Flags().BoolP("try-volumes", "", false, "Try uploading local files and dirs that should be mounted on the deployment.\nIf enabled it will \"steal\" cookies from your browser to authenticate.")
 	composeUpCmd.Flags().BoolP("detached", "d", false, "Run detached, default behaviour attaches logs from the deployments.")
 	viper.BindPFlag("detached", composeUpCmd.Flags().Lookup("detached"))
+
+	composeUpCmd.Flags().Bool("non-interactive", false, "Yes to all options and run non interactively")
+
+	composeUpCmd.Flags().StringSlice("build", nil, "Build services and push to registry, can be followed by service name to specify which should be built")
 
 	// Register subcommands with the main compose command
 	composeCmd.AddCommand(composeParseCmd)

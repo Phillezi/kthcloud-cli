@@ -66,10 +66,13 @@ func buildPush(tag, dockerfile, context string) error {
 	}
 
 	if dockerfile != "" {
-		cmdParts = append(cmdParts, "--dockerfile="+dockerfile)
+		dockerfilePath := path.Join(context, dockerfile)
+		logrus.Debugln("using dockerfile:", dockerfilePath)
+		cmdParts = append(cmdParts, "--file="+dockerfilePath)
 	}
 
 	if context != "" {
+		logrus.Debugln("using context:", context)
 		cmdParts = append(cmdParts, context)
 	} else {
 		cmdParts = append(cmdParts, ".")

@@ -2,6 +2,7 @@ package compose
 
 import (
 	"context"
+	"errors"
 	"go-deploy/dto/v2/body"
 	"time"
 
@@ -9,15 +10,17 @@ import (
 	"github.com/Phillezi/kthcloud-cli/pkg/scheduler"
 	"github.com/Phillezi/kthcloud-cli/pkg/util"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/client"
+	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose/builder"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose/jobs"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose/parser"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose/response"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose/storage"
 	"github.com/briandowns/spinner"
+	"github.com/go-resty/resty/v2"
 	"github.com/sirupsen/logrus"
 )
 
-func Up(detached, tryToCreateVolumes bool) {
+func Up(detached, tryToCreateVolumes, buildAll, nonInteractive bool, servicesToBuild []string) {
 	ctx, cancelUp := context.WithCancel(context.Background())
 	var creationDone bool
 	var cancelled bool
@@ -79,6 +82,40 @@ func Up(detached, tryToCreateVolumes bool) {
 		logrus.Infoln("use --try-volumes to try")
 	}
 
+	if buildAll {
+		logrus.Debugln("buildAll is true")
+		for n, s := range composeInstance.Services {
+			if s.Build != nil {
+				if err := builder.Build(n, s, nonInteractive); err != nil {
+					logrus.Fatalln("Could not build service:", n, "Error:", err)
+				}
+				logrus.Debugln("build of", n, "is done!")
+			}
+		}
+	} else if servicesToBuild != nil && len(servicesToBuild) > 0 {
+		logrus.Debugln("services to build are specified")
+		for n, s := range composeInstance.Services {
+			if s.Build != nil {
+				if util.Contains(servicesToBuild, n) {
+					if err := builder.Build(n, s, nonInteractive); err != nil {
+						logrus.Fatalln("Could not build service:", n, "Error:", err)
+					}
+					logrus.Debugln("build of", n, "is done!")
+				}
+			}
+		}
+	}
+
+	buildsReq := builder.GetBuildsRequired(*composeInstance)
+	for n, needsBuild := range buildsReq {
+		if needsBuild {
+			if err := builder.Build(n, composeInstance.Services[n], nonInteractive); err != nil {
+				logrus.Fatalln("Could not build service:", n, "Error:", err)
+			}
+			logrus.Debugln("build of", n, "is done!")
+		}
+	}
+
 	go sched.Start()
 	defer cancelScheduler()
 
@@ -91,9 +128,27 @@ func Up(detached, tryToCreateVolumes bool) {
 
 	deployments, dependencies := composeInstance.ToDeploymentsWDeps()
 	for _, deployment := range deployments {
-
 		job := scheduler.NewJob(func(ctx context.Context, cancelCallback func()) error {
-			resp, err := c.Create(deployment)
+			var resp *resty.Response
+			var err error
+			service := composeInstance.Services[deployment.Name]
+
+			if service.Build == nil {
+				resp, err = c.Create(deployment)
+			} else {
+				logrus.Debugln("custom deployment:", deployment.Name)
+				deplID, erro := builder.GetCICDDeploymentID(service.Build.Context, nil)
+				if erro != nil {
+					logrus.Error(erro)
+					return erro
+				}
+				if !c.DeploymentExists(deplID) {
+					logrus.Error("deployment for build of ", deployment.Name, " does not exist\n\tre-run with \"--build ", deployment.Name, "\" to ensure cicd deployment exists")
+					return errors.New("cicd deployment doesnt exist")
+				}
+				updateDepl := util.DeploymentCreateToUpdate(deployment)
+				resp, err = c.Update(&updateDepl, deplID)
+			}
 			if err != nil {
 				logrus.Error(err)
 				return err

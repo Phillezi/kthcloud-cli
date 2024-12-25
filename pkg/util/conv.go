@@ -32,3 +32,29 @@ func ProcessResponse[T any](responseBody string) (*T, error) {
 
 	return &item, nil
 }
+
+func DeploymentCreateToUpdate(create *body.DeploymentCreate) body.DeploymentUpdate {
+
+	return body.DeploymentUpdate{
+		// skipping name here
+		CpuCores:        create.CpuCores,
+		RAM:             create.RAM,
+		Replicas:        create.Replicas,
+		Envs:            toPointerSlice(create.Envs),
+		Volumes:         toPointerSlice(create.Volumes),
+		InitCommands:    toPointerSlice(create.InitCommands),
+		Args:            toPointerSlice(create.Args),
+		Visibility:      &create.Visibility,
+		Private:         &create.Private,
+		Image:           create.Image,
+		HealthCheckPath: create.HealthCheckPath,
+		CustomDomain:    create.CustomDomain,
+	}
+}
+
+func toPointerSlice[T any](slice []T) *[]T {
+	if len(slice) == 0 {
+		return nil
+	}
+	return &slice
+}

@@ -8,7 +8,7 @@ import (
 	"github.com/Phillezi/kthcloud-cli/pkg/util"
 )
 
-func getCICDDeploymentID(contextPath string, onDeplNotCICDConfigured func(baseDir string)) (string, error) {
+func GetCICDDeploymentID(contextPath string, onDeplNotCICDConfigured func(baseDir string)) (string, error) {
 	if contextPath == "" {
 		contextPath = "."
 	}
@@ -24,6 +24,7 @@ func getCICDDeploymentID(contextPath string, onDeplNotCICDConfigured func(baseDi
 	medadataDir := fullpath + "/.kthcloud"
 	var deplfileExists bool
 	callbackCalls := 0 // could be bool but might want retries?
+
 	for !deplfileExists {
 		if callbackCalls >= 1 {
 			return "", errors.New("max callback calls reached but cicd config still doesnt exist")
@@ -33,6 +34,9 @@ func getCICDDeploymentID(contextPath string, onDeplNotCICDConfigured func(baseDi
 			return "", err
 		}
 		if !deplfileExists {
+			if onDeplNotCICDConfigured == nil {
+				return "", err
+			}
 			// id file doesnt exist call the callback to handle it
 			onDeplNotCICDConfigured(fullpath)
 			callbackCalls++

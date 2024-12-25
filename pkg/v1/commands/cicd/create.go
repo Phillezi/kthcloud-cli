@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/Phillezi/kthcloud-cli/pkg/util"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
@@ -22,11 +21,6 @@ func Create(rootdir string, createWF bool, name string) {
 	var id string
 
 	if !FileExists(repoConfDir, "DEPLOYMENT") {
-		name, err := util.GetNameFromUser()
-		if err != nil {
-			logrus.Fatal("Error when getting name from user:", err)
-			return
-		}
 		id, err = createDeployment(context.Background(), name)
 		if err != nil {
 			logrus.Fatal("Error when creating empty deployment:", err)

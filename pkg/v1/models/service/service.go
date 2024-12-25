@@ -103,13 +103,19 @@ func (s *Service) ToDeployment(name string, projectDir string) *body.DeploymentC
 		}
 	}
 
+	image := &s.Image
+
+	if s.Build != nil {
+		image = nil
+	}
+
 	return &body.DeploymentCreate{
 		Name:            name,
 		CpuCores:        cores,
 		RAM:             ram,
 		Replicas:        replicas,
 		Envs:            envs,
-		Image:           &s.Image,
+		Image:           image,
 		Visibility:      visibility,
 		Args:            s.Command,
 		Zone:            zone,
