@@ -39,9 +39,24 @@ var composeUpCmd = &cobra.Command{
 }
 var composeDownCmd = &cobra.Command{
 	Use:   "down",
+	Short: "Bring down compose configuration to cloud",
+	Run: func(cmd *cobra.Command, args []string) {
+		all, err := cmd.Flags().GetBool("all")
+		if err != nil {
+			logrus.Fatal(err)
+		}
+		volumes, err := cmd.Flags().GetBool("volumes")
+		if err != nil {
+			logrus.Fatal(err)
+		}
+		compose.Down(all, volumes)
+	},
+}
+var composeStopCmd = &cobra.Command{
+	Use:   "stop",
 	Short: "Stop compose configuration to cloud",
 	Run: func(cmd *cobra.Command, args []string) {
-		compose.Down()
+		compose.Stop()
 	},
 }
 var composeLogsCmd = &cobra.Command{
@@ -75,10 +90,14 @@ func init() {
 	buildF := composeUpCmd.Flags().Lookup("build")
 	buildF.NoOptDefVal = "__all__"
 
+	composeDownCmd.Flags().BoolP("all", "a", false, "Remove all")
+	composeDownCmd.Flags().BoolP("volumes", "v", false, "Remove volumes")
+
 	// Register subcommands with the main compose command
 	composeCmd.AddCommand(composeParseCmd)
 	composeCmd.AddCommand(composeUpCmd)
 	composeCmd.AddCommand(composeDownCmd)
+	composeCmd.AddCommand(composeStopCmd)
 	composeCmd.AddCommand(composeLogsCmd)
 	composeCmd.AddCommand(testSMAuthCmd)
 

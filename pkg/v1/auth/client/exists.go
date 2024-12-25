@@ -51,7 +51,7 @@ func (c *Client) DeploymentExistsByNameWFilter(name string, filter func(depl bod
 		}
 		for _, depl := range depls {
 			if depl.Name == name && filter(depl) {
-				return true, depl.ID, false
+				return true, depl.ID, true
 			} else if depl.Name == name {
 				// depl with the same name exists but it doesnt match the filter
 				return true, depl.ID, false

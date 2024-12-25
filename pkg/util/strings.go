@@ -24,3 +24,11 @@ func TimeAgo(t *time.Time) string {
 		return fmt.Sprintf("%dd ago", int(duration.Hours()/24))
 	}
 }
+
+func IsEmptyOrNil(image *string) bool {
+	return image == nil || *image == ""
+}
+
+func NotNilOrEmpty(image *string) bool {
+	return image != nil && *image != ""
+}

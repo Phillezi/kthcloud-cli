@@ -38,12 +38,12 @@ func Up(detached, tryToCreateVolumes, buildAll, nonInteractive bool, servicesToB
 		<-ctx.Done()
 		s.Stop()
 		if creationDone && !detached {
-			resp, err := update.PromptYesNo("Do you want to terminate deployments")
+			resp, err := update.PromptYesNo("Do you want to stop deployments")
 			if err != nil {
 				return
 			}
 			if resp {
-				Down()
+				Stop()
 			}
 		} else if !creationDone {
 			logrus.Infoln("Cancelling creation of deployments")
@@ -137,14 +137,17 @@ func Up(detached, tryToCreateVolumes, buildAll, nonInteractive bool, servicesToB
 			service := composeInstance.Services[deployment.Name]
 
 			deplExistsWithSameName, deplWithSameNameID, deplWithSameNameHasSameImage := client.Get().DeploymentExistsByNameWFilter(deployment.Name, func(depl body.DeploymentRead) bool {
-				if depl.Image != nil && deployment.Image != nil {
+				if util.NotNilOrEmpty(depl.Image) && util.NotNilOrEmpty(deployment.Image) {
 					return *depl.Image == *deployment.Image
 				}
-				return depl.Image == nil && deployment.Image == nil
+				return util.IsEmptyOrNil(depl.Image) && util.IsEmptyOrNil(deployment.Image)
 			})
+
+			var mode string
 
 			if !deplExistsWithSameName {
 				resp, err = c.Create(deployment)
+				mode = "create"
 			} else if service.Build != nil {
 				deplID, erro := builder.GetCICDDeploymentID(service.Build.Context, nil)
 				if erro != nil {
@@ -157,10 +160,12 @@ func Up(detached, tryToCreateVolumes, buildAll, nonInteractive bool, servicesToB
 				}
 				updateDepl := util.DeploymentCreateToUpdate(deployment)
 				resp, err = c.Update(&updateDepl, deplID)
+				mode = "update"
 			} else if deplWithSameNameHasSameImage {
 				logrus.Debugln("deployment found with the specified service name and image, will update it to match the specification")
 				updateDepl := util.DeploymentCreateToUpdate(deployment)
 				resp, err = c.Update(&updateDepl, deplWithSameNameID)
+				mode = "update"
 			} else {
 				return errors.New("service " + deployment.Name + " is not unique, (you already have a deployment with that name, and it doesnt have the same image)")
 			}
@@ -173,12 +178,23 @@ func Up(detached, tryToCreateVolumes, buildAll, nonInteractive bool, servicesToB
 				logrus.Error(err)
 				return err
 			}
-			job, err := util.ProcessResponse[body.DeploymentCreated](resp.String())
+
+			job, err := func() (any, error) {
+				switch mode {
+				case "create":
+					return util.ProcessResponse[body.DeploymentCreated](resp.String())
+				case "update":
+					return util.ProcessResponse[body.DeploymentUpdated](resp.String())
+				default:
+					return nil, errors.ErrUnsupported
+				}
+			}()
+
 			if err != nil {
 				logrus.Error(err)
 				return err
 			}
-			return jobs.Track(ctx, deployment.Name, job, time.Millisecond*500, cancelCallback)
+			return jobs.From(job).Track(ctx, deployment.Name, time.Millisecond*500, cancelCallback)
 		}, func() {
 			logrus.Debugln("removing depl")
 			var found *body.DeploymentRead
@@ -215,7 +231,7 @@ func Up(detached, tryToCreateVolumes, buildAll, nonInteractive bool, servicesToB
 				logrus.Fatal(err)
 			}
 			logrus.Debugln("tracking removal of depl")
-			jobs.TrackDel(deployment.Name, rmJob, time.Millisecond*500)
+			jobs.From(rmJob).Track(ctx, deployment.Name, time.Millisecond*500, nil)
 		})
 		jobMap[deployment.Name] = job
 
