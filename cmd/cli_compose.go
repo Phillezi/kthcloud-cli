@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose/storage"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -29,7 +30,8 @@ var composeUpCmd = &cobra.Command{
 		servicesToBuild, _ := cmd.Flags().GetStringSlice("build")
 		nonInteractive, _ := cmd.Flags().GetBool("non-interactive")
 		buildAll := false
-		if servicesToBuild != nil && len(servicesToBuild) == 0 && false {
+		if len(servicesToBuild) == 1 && servicesToBuild[0] == "__all__" {
+			logrus.Debugln("build all is set")
 			buildAll = true
 		}
 		compose.Up(detached, tryToCreateVolumes, buildAll, nonInteractive, servicesToBuild)
@@ -70,6 +72,8 @@ func init() {
 	composeUpCmd.Flags().Bool("non-interactive", false, "Yes to all options and run non interactively")
 
 	composeUpCmd.Flags().StringSlice("build", nil, "Build services and push to registry, can be followed by service name to specify which should be built")
+	buildF := composeUpCmd.Flags().Lookup("build")
+	buildF.NoOptDefVal = "__all__"
 
 	// Register subcommands with the main compose command
 	composeCmd.AddCommand(composeParseCmd)
