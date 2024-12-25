@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/client"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
@@ -31,6 +32,14 @@ func Create(rootdir string, createWF bool, name string) {
 		if err != nil {
 			logrus.Fatal("Error when trying to get deployment id", err)
 			return
+		}
+		if !client.Get().DeploymentExists(id) {
+			logrus.Debugln("file exists but contains ID of deployment that doesnt")
+			id, err = createDeployment(context.Background(), name)
+			if err != nil {
+				logrus.Fatal("Error when creating empty deployment:", err)
+				return
+			}
 		}
 	}
 

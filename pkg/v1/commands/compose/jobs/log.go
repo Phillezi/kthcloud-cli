@@ -13,6 +13,7 @@ import (
 func MonitorJobStates(jobIDs map[string]string, sched *scheduler.Sched, spinner *spinner.Spinner) error {
 	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()
+	defer spinner.Disable()
 
 	logrus.AddHook(hook.NewSpinnerHook(spinner))
 

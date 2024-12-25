@@ -16,11 +16,24 @@ import (
 )
 
 func GetGHACIConf(id string) (*model.GithubActionConfig, error) {
+	if id == "" {
+		return nil, errors.New("id cant be empty")
+	}
 	c := client.Get()
 
 	r := c.Client().R()
 	resp, err := r.Get("/v2/deployments/" + id + "/ciConfig")
 	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode() >= 300 {
+		err := fmt.Errorf("received unexpected status code %d: %s", resp.StatusCode(), resp.Status())
+		logrus.WithFields(logrus.Fields{
+			"status_code": resp.StatusCode(),
+			"response":    resp.String(),
+			"called with": fmt.Sprintf("id:\"%s\"", id),
+		}).Error("get ciConfig failed")
 		return nil, err
 	}
 
@@ -35,11 +48,14 @@ func GetGHACIConf(id string) (*model.GithubActionConfig, error) {
 		return nil, fmt.Errorf("error processing ci config for deployment %s: %w", id, err)
 	}
 
+	logrus.Debugln("Got GHA config:", ciConf)
+
 	var config model.GithubActionConfig
 
 	err = yaml.Unmarshal([]byte(ciConf.Config), &config)
 	if err != nil {
 		log.Fatalf("error unmarshalling YAML: %v", err)
+		return nil, err
 	}
 
 	return &config, nil

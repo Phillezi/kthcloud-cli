@@ -3,8 +3,10 @@ package builder
 import (
 	"errors"
 	"fmt"
+	"go-deploy/models/model"
 	"os"
 	"path"
+	"time"
 
 	"github.com/Phillezi/kthcloud-cli/internal/update"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/client"
@@ -26,6 +28,7 @@ func Build(serviceName string, service *service.Service, yesToAll bool) error {
 
 	exists := false
 	deploymentID := ""
+	var err error
 
 	for !exists {
 		onCicdNotConfigured := func(baseDir string) {
@@ -44,7 +47,7 @@ func Build(serviceName string, service *service.Service, yesToAll bool) error {
 				cicd.Create(baseDir, true, serviceName)
 			}
 		}
-		deploymentID, err := GetCICDDeploymentID(service.Build.Context, onCicdNotConfigured)
+		deploymentID, err = GetCICDDeploymentID(service.Build.Context, onCicdNotConfigured)
 		if err != nil {
 			return err
 		}
@@ -58,17 +61,40 @@ func Build(serviceName string, service *service.Service, yesToAll bool) error {
 			wd, _ := os.Getwd()
 			fullpath := path.Join(wd, contextPath)
 			onCicdNotConfigured(fullpath)
+			logrus.Debugln("cicd configured")
 		}
 	}
 
-	conf, err := cicd.GetGHACIConf(deploymentID)
-	if err != nil {
-		return err
-	}
+	var errGettingConf error = errors.New("tmp")
+	var username string
+	var password string
+	var tag string
+	var conf *model.GithubActionConfig
+	maxRetries := 10
 
-	username, password, tag, err := cicd.ExtractSecrets(conf)
-	if err != nil {
-		return err
+	for try := 0; errGettingConf != nil && try < maxRetries; try++ {
+		conf, errGettingConf = cicd.GetGHACIConf(deploymentID)
+		if errGettingConf != nil {
+			logrus.Infof("could not get GHA config for cicd deployment, retrying in 500ms, retry [%d]\n", try)
+			time.Sleep(500 * time.Millisecond)
+			continue
+			//return errGettingConf
+		}
+
+		username, password, tag, errGettingConf = cicd.ExtractSecrets(conf)
+		if errGettingConf != nil {
+			logrus.Infof("could not extract secrets from GHA config, retrying in 500ms, retry [%d]\n", try)
+			if try < maxRetries {
+				time.Sleep(500 * time.Millisecond)
+			}
+			//return errGettingConf
+		}
+	}
+	if errGettingConf != nil {
+		return errGettingConf
+	}
+	if username == "" || password == "" || tag == "" {
+		return errors.New("username, password or tag is empty")
 	}
 
 	logrus.Debugln("starting build and push of", tag)
