@@ -10,6 +10,7 @@ import (
 	"github.com/Phillezi/kthcloud-cli/pkg/util"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/client"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/exp/rand"
 )
 
 type DeploymentJob struct {
@@ -107,6 +108,64 @@ func (job *DeploymentJob) Track(ctx context.Context, deploymentName string, tick
 
 			if jobStatus.LastError != nil {
 				return fmt.Errorf("failed to %s deployment %s: %s", strings.ToLower(strings.TrimSuffix(job.Type, "d")), deploymentName, *jobStatus.LastError)
+			}
+		}
+	}
+}
+
+func (m *DeploymentJob) MockTrack(ctx context.Context, deploymentName string, tickerInterval time.Duration, onCancel func()) error {
+	// Randomize the sleep duration to simulate random waiting between job checks
+	waitTime := time.Duration(rand.Intn(5)+1) * time.Second
+	time.Sleep(waitTime)
+
+	// Simulate the process of tracking the deployment job status
+	logrus.Debugf("Started tracking deployment: %s", deploymentName)
+	ticker := time.NewTicker(tickerInterval)
+	ticker2 := time.NewTicker(700 * time.Millisecond)
+	defer ticker.Stop()
+	defer ticker2.Stop()
+
+	var status string
+	var i int
+
+	for {
+		select {
+		case <-ctx.Done():
+			logrus.Debugf("Deployment %s was cancelled\n", deploymentName)
+			if onCancel != nil {
+				onCancel()
+			}
+			return nil
+		case <-ticker2.C:
+			randomNumber := rand.Intn(100)
+			if randomNumber < 20 {
+				status = "errored"
+			} else {
+				status = []string{"in-progress", "in-progress", "finished"}[i]
+				i++
+			}
+		case <-ticker.C:
+			jobStatus := &body.JobRead{
+				Status: status,
+			}
+
+			// Process the job status and handle it
+			switch jobStatus.Status {
+			case "finished":
+				logrus.Debugf("Deployment %s completed successfully", deploymentName)
+				return nil
+			case "terminated":
+				logrus.Debugf("Job for deployment %s was terminated", deploymentName)
+				return nil
+			case "errored":
+				// Simulate an error during the job process
+				logrus.Debugf("Deployment %s encountered an error", deploymentName)
+				return fmt.Errorf("failed to track deployment %s due to an error", deploymentName)
+			}
+
+			// If the job is still in progress, log the status
+			if jobStatus.Status == "in-progress" {
+				logrus.Debugf("Deployment %s is still in progress", deploymentName)
 			}
 		}
 	}

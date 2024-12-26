@@ -3,6 +3,7 @@ package scheduler
 import (
 	"context"
 	"sync"
+	"time"
 )
 
 type JobState int64
@@ -38,6 +39,7 @@ func (s JobState) String() string {
 // Job represents a unit of work in the scheduler.
 type Job struct {
 	ID             string
+	DisplayName    string
 	Dependencies   []*Job
 	State          JobState
 	Action         func(ctx context.Context, callback func()) error
@@ -45,6 +47,7 @@ type Job struct {
 	ctx            context.Context
 	cancel         context.CancelFunc
 	mu             sync.Mutex
+	Start          *time.Time
 }
 
 func NewJob(
@@ -58,13 +61,18 @@ func NewJob(
 	if dependencies == nil {
 		dependencies = []*Job{}
 	}
-	return &Job{
+	this := &Job{
 		ID:             "",
 		Dependencies:   dependencies,
 		State:          Created,
-		Action:         action,
 		CancelCallback: cancelCallback,
 	}
+	this.Action = func(ctx context.Context, callback func()) error {
+		now := time.Now()
+		this.Start = &now
+		return action(ctx, callback)
+	}
+	return this
 }
 
 // After adds dependencies that the job depends on

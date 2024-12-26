@@ -37,6 +37,14 @@ func NewSched(ctx context.Context) *Sched {
 	}
 }
 
+func (s *Sched) NumJobs() int {
+	return len(s.jobs)
+}
+
+func (s *Sched) GetJobs() map[string]*Job {
+	return s.jobs
+}
+
 // blocking function
 func (s *Sched) Start() {
 	for {

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/Phillezi/kthcloud-cli/pkg/progress"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose/storage"
 	"github.com/sirupsen/logrus"
@@ -75,6 +76,14 @@ var testSMAuthCmd = &cobra.Command{
 		storage.Check()
 	},
 }
+var composeSpinCmd = &cobra.Command{
+	Use:    "spin",
+	Short:  "Test spinner",
+	Hidden: true,
+	Run: func(cmd *cobra.Command, args []string) {
+		progress.Test()
+	},
+}
 
 func init() {
 	composeCmd.PersistentFlags().StringP("file", "", "", "Specify which docker-compose file to use.")
@@ -100,6 +109,7 @@ func init() {
 	composeCmd.AddCommand(composeStopCmd)
 	composeCmd.AddCommand(composeLogsCmd)
 	composeCmd.AddCommand(testSMAuthCmd)
+	composeCmd.AddCommand(composeSpinCmd)
 
 	// Register the compose command in root
 	rootCmd.AddCommand(composeCmd)
