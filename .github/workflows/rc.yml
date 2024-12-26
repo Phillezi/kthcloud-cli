@@ -40,5 +40,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: binaries
-          path: bin/
+          path: bin/**
           if-no-files-found: error
