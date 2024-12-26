@@ -43,7 +43,7 @@ jobs:
             linux)
               GOOS=linux GOARCH=amd64 make BINARY_NAME=kthcloud_amd64_linux BUILDTIMESTAMP=${{ env.TIMESTAMP }} ;;
             windows)
-              GOOS=windows GOARCH=amd64 make BINARY_NAME=kthcloud_amd64_windows.exe BUILDTIMESTAMP=${{ env.TIMESTAMP }} ;;
+              GOOS=windows GOARCH=amd64 make BINARY_NAME=kthcloud_amd64_windows BUILDTIMESTAMP=${{ env.TIMESTAMP }} ;;
             darwin)
               GOOS=darwin GOARCH=arm64 make BINARY_NAME=kthcloud_arm64_macos BUILDTIMESTAMP=${{ env.TIMESTAMP }} ;;
           esac

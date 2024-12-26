@@ -3,6 +3,7 @@ BINARY_NAME=kthcloud
 BUILD_DIR=bin
 MAIN_FILE=main.go
 BUILDTIMESTAMP=$(shell date -u +%Y%m%d%H%M%S)
+EXT=$(if $(filter windows,$(GOOS)),.exe,)
 
 # Targets
 .PHONY: all clean build run
@@ -12,12 +13,12 @@ all: build
 build:
 	@echo "Building the application..."
 	@mkdir -p $(BUILD_DIR)
-	@CGO_ENABLED=0 go build -ldflags "-X main.buildTimestamp=$(BUILDTIMESTAMP)" -o $(BUILD_DIR)/$(BINARY_NAME) .
+	@CGO_ENABLED=0 go build -ldflags "-X main.buildTimestamp=$(BUILDTIMESTAMP)" -o $(BUILD_DIR)/$(BINARY_NAME)$(EXT) .
 	@echo "Build complete."
 
 run: build
 	@echo "Running the application..."
-	@./$(BUILD_DIR)/$(BINARY_NAME)
+	@./$(BUILD_DIR)/$(BINARY_NAME)$(EXT)
 
 test:
 	@go test ./...
@@ -25,13 +26,13 @@ test:
 release:
 	@echo "Building the application..."
 	@mkdir -p $(BUILD_DIR)
-	@CGO_ENABLED=0 go build -mod=readonly -ldflags "-w -s -X main.buildTimestamp=$(BUILDTIMESTAMP)" -o $(BUILD_DIR)/$(BINARY_NAME) .
+	@CGO_ENABLED=0 go build -mod=readonly -ldflags "-w -s -X main.buildTimestamp=$(BUILDTIMESTAMP)" -o $(BUILD_DIR)/$(BINARY_NAME)$(EXT) .
 	@echo "Build complete."
 
 install: release
 	@echo "installing"
 	@mkdir -p ~/.local/kthcloud/bin
-	@cp ./$(BUILD_DIR)/$(BINARY_NAME) ~/.local/kthcloud/bin/$(BINARY_NAME)
+	@cp ./$(BUILD_DIR)/$(BINARY_NAME)$(EXT) ~/.local/kthcloud/bin/$(BINARY_NAME)$(EXT)
 	@echo "add to PATH"
 
 all-platforms:
