@@ -42,7 +42,7 @@ all-platforms:
 	@GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -mod=readonly -ldflags "-w -s -X main.buildTimestamp=$(BUILDTIMESTAMP)" -o $(BUILD_DIR)/kthcloud_amd64_windows.exe . &
 	@GOOS=windows GOARCH=arm64 CGO_ENABLED=0 go build -mod=readonly -ldflags "-w -s -X main.buildTimestamp=$(BUILDTIMESTAMP)" -o $(BUILD_DIR)/kthcloud_amd64_windows.exe . &
 	@GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -mod=readonly -ldflags "-w -s -X main.buildTimestamp=$(BUILDTIMESTAMP)" -o $(BUILD_DIR)/kthcloud_amd64_macos . &
-	@GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -mod=readonly -ldflags "-w -s -X main.buildTimestamp=$(BUILDTIMESTAMP)" -o $(BUILD_DIR)/kthcloud_arm4_macos . &
+	@GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -mod=readonly -ldflags "-w -s -X main.buildTimestamp=$(BUILDTIMESTAMP)" -o $(BUILD_DIR)/kthcloud_arm64_macos . &
 	@wait
 	@echo "All builds complete."
 
