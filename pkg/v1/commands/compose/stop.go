@@ -15,7 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func Down(all, volumes bool) {
+func Stop() {
 	ctx, cancelStop := context.WithCancel(context.Background())
 	done := make(chan bool)
 	scheduleContext, cancelScheduler := context.WithCancel(ctx)
@@ -33,10 +33,20 @@ func Down(all, volumes bool) {
 	if err != nil {
 		logrus.Fatal(err)
 	}
+
 	c := client.Get()
 	if !c.HasValidSession() {
-		logrus.Fatal("login")
+		logrus.Fatal("no valid session, log in and try again")
 	}
+
+	go sched.Start()
+	defer cancelScheduler()
+
+	s.Color("blue")
+	s.Start()
+	defer s.Stop()
+
+	jobIDs := make(map[string]string)
 
 	c.DropDeploymentsCache()
 	depls, err := c.Deployments()
@@ -49,24 +59,13 @@ func Down(all, volumes bool) {
 		deploymentMap[depl.Name] = &depl
 	}
 
-	go sched.Start()
-	defer cancelScheduler()
-
-	s.Color("blue")
-	s.Start()
-	defer s.Stop()
-
-	jobIDs := make(map[string]string)
-
 	for name := range composeInstance.Services {
 		if deployment, exists := deploymentMap[name]; exists {
-			if !all && deployment.Image == nil {
-				logrus.Infoln("Skipping deletion of deployment:", deployment.Name, ". Since it is a custom deployment (cicd)\n\nUse:\n\t--all\n\nTo remove CICD deployments too")
-				continue
-			}
-
-			jobIDs[name] = sched.AddJob(scheduler.NewJob(func(ctx context.Context, cancelCallback func()) error {
-				resp, err := c.Remove(deployment)
+			sjob := scheduler.NewJob(func(ctx context.Context, cancelCallback func()) error {
+				disableDepl := &body.DeploymentUpdate{
+					Replicas: util.IntPointer(0),
+				}
+				resp, err := c.Update(disableDepl, deployment.ID)
 				if err != nil {
 					logrus.Error(err)
 					return err
@@ -76,15 +75,17 @@ func Down(all, volumes bool) {
 					logrus.Error(err)
 					return err
 				}
-				job, err := util.ProcessResponse[body.DeploymentDeleted](resp.String())
+				job, err := util.ProcessResponse[body.DeploymentUpdated](resp.String())
 				if err != nil {
 					logrus.Error(err)
 					return err
 				}
 				return jobs.From(job).Track(ctx, deployment.Name, time.Millisecond*500, cancelCallback)
-			}, func() {}))
+			}, func() {})
+			jobIDs[name] = sched.AddJob(sjob)
 		}
 	}
+
 	if err := jobs.MonitorJobStates(jobIDs, sched, s); err != nil {
 		logrus.Debugln("erroccurred")
 		s.Color("red")
