@@ -44,7 +44,7 @@ func Test() {
 				JobID: uuid.NewString(),
 			}).MockTrack(ctx, deployment.Name, time.Millisecond*500, cancelCallback)
 		}, func() {})
-
+		jobMap[deployment.Name].DisplayName = deployment.Name
 	}
 
 	for depl, deps := range dependencies {

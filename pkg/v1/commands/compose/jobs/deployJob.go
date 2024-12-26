@@ -138,7 +138,7 @@ func (m *DeploymentJob) MockTrack(ctx context.Context, deploymentName string, ti
 			return nil
 		case <-ticker2.C:
 			randomNumber := rand.Intn(100)
-			if randomNumber < 20 {
+			if randomNumber < 2 {
 				status = "errored"
 			} else {
 				status = []string{"in-progress", "in-progress", "finished"}[i]

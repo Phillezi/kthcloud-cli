@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Phillezi/kthcloud-cli/pkg/progress/concurrent"
 	"github.com/Phillezi/kthcloud-cli/pkg/progress/spinner"
 	"github.com/Phillezi/kthcloud-cli/pkg/scheduler"
 	"github.com/pterm/pterm"
@@ -20,7 +21,7 @@ type Tracker struct {
 func New(scheduler *scheduler.Sched) *Tracker {
 	return &Tracker{
 		Scheduler:  scheduler,
-		multi:      pterm.DefaultMultiPrinter,
+		multi:      *pterm.DefaultMultiPrinter.WithWriter(concurrent.NewWriter(pterm.DefaultMultiPrinter.Writer)),
 		idIndexMap: make(map[string]int),
 	}
 }
@@ -28,6 +29,9 @@ func New(scheduler *scheduler.Sched) *Tracker {
 func (t *Tracker) createRows() {
 	t.idIndexMap = make(map[string]int)
 	jobs := t.Scheduler.GetJobs()
+	for _, row := range t.Rows {
+		row.Printer.Stop()
+	}
 	t.Rows = make([]*spinner.Spinner, len(jobs))
 	i := 0
 	for id, job := range jobs {
@@ -35,6 +39,7 @@ func (t *Tracker) createRows() {
 		t.idIndexMap[id] = i
 		i++
 	}
+	logrus.Infoln(t.idIndexMap)
 }
 
 func (t *Tracker) createRow(row *spinner.Spinner, job *scheduler.Job) {
@@ -61,26 +66,25 @@ func (t *Tracker) createRow(row *spinner.Spinner, job *scheduler.Job) {
 
 func (t *Tracker) renderRow(row *spinner.Spinner, job *scheduler.Job) {
 	if row == nil || job == nil {
-		return
-	}
-	if row.PrevState != job.State {
-		t.createRow(row, job)
+		logrus.Errorln("row or job is nil")
 		return
 	}
 
 	switch job.State {
 	case scheduler.Errored:
-		row.Printer.UpdateText(fmt.Sprintf("%s - Job%s", job.DisplayName, job.State.String()))
+		row.Printer.UpdateText(fmt.Sprintf("\t%s - Job%s", job.DisplayName, job.State.String()))
+		row.Printer.Fail()
 	case scheduler.Cancelled:
-		row.Printer.UpdateText(fmt.Sprintf("%s - Job%s", job.DisplayName, job.State.String()))
+		row.Printer.UpdateText(fmt.Sprintf("\t%s - Job%s", job.DisplayName, job.State.String()))
 	case scheduler.Cancelling:
-		row.Printer.UpdateText(fmt.Sprintf("%s - Job%s", job.DisplayName, job.State.String()))
+		row.Printer.UpdateText(fmt.Sprintf("\t%s - Job%s", job.DisplayName, job.State.String()))
 	case scheduler.Done:
-		row.Printer.UpdateText(fmt.Sprintf("%s - Job%s", job.DisplayName, job.State.String()))
+		row.Printer.UpdateText(fmt.Sprintf("\t%s - Job%s", job.DisplayName, job.State.String()))
+		row.Printer.Success()
 	case scheduler.Created:
-		row.Printer.UpdateText(fmt.Sprintf("%s - Job%s", job.DisplayName, job.State.String()))
+		row.Printer.UpdateText(fmt.Sprintf("\t%s - Job%s", job.DisplayName, job.State.String()))
 	default:
-		row.Printer.UpdateText(fmt.Sprintf("%s - Job%s", job.DisplayName, job.State.String()))
+		row.Printer.UpdateText(fmt.Sprintf("\t%s - Job%s", job.DisplayName, job.State.String()))
 	}
 }
 
@@ -91,7 +95,15 @@ func (t *Tracker) Render() {
 	}
 
 	for id, job := range t.Scheduler.GetJobs() {
-		t.renderRow(t.Rows[t.idIndexMap[id]], job)
+		if i, ok := t.idIndexMap[id]; ok {
+			if t.Rows[i] == nil {
+				logrus.Errorln("row at index ", i, "is nil")
+			} else {
+				t.renderRow(t.Rows[i], job)
+			}
+		} else {
+			logrus.Errorln("unknown id ", id)
+		}
 	}
 
 }
@@ -101,10 +113,15 @@ func (t *Tracker) TrackJobs() error {
 	defer ticker.Stop()
 	defer t.multi.Stop()
 
-	t.multi.Start()
-	//logrus.AddHook(NewTrackerHook(t))
-	logrus.SetOutput(t.multi.NewWriter())
+	//th := NewTrackerHook(t)
+
+	//logrus.AddHook(th)
+
+	// need to make this work when logs are coming from gorutines
+	logrus.SetOutput(concurrent.NewWriter(t.multi.NewWriter()))
 	defer logrus.SetOutput(logrus.StandardLogger().Out)
+
+	t.multi.Start()
 
 	for {
 		select {
@@ -115,11 +132,20 @@ func (t *Tracker) TrackJobs() error {
 
 			if t.Scheduler.NumJobs() != len(t.idIndexMap) {
 				t.createRows()
+				logrus.Debugln("len changed")
 				continue
 			}
 
 			for id, job := range t.Scheduler.GetJobs() {
-				t.renderRow(t.Rows[t.idIndexMap[id]], job)
+				if i, ok := t.idIndexMap[id]; ok {
+					if t.Rows[i] == nil {
+						logrus.Errorln("row at index ", i, "is nil")
+					} else {
+						t.renderRow(t.Rows[i], job)
+					}
+				} else {
+					logrus.Errorln("unknown id ", id)
+				}
 				state := job.State
 				if state != scheduler.Cancelled {
 					allCancelled = false
