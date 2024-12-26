@@ -1,8 +1,8 @@
-name: Go
+name: RC
 
 on:
   push:
-    branches: ["main"]
+    branches: ["rc"]
     paths-ignore:
       - README.md
       - .gitignore
@@ -53,33 +53,3 @@ jobs:
           name: ${{ matrix.arch }}_${{ matrix.os }}_bins
           path: bin/*
           if-no-files-found: error
-
-  release:
-    needs:
-      - setup
-      - build
-    runs-on: ubuntu-latest
-    env:
-      TIMESTAMP: ${{ needs.setup.outputs.timestamp }}
-    outputs:
-      upload_url: ${{ steps.step_upload_url.outputs.upload_url }}
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: "./artifacts"
-          if-no-files-found: error
-
-      - name: Create Release
-        id: create_release
-        uses: softprops/action-gh-release@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        with:
-          tag_name: release-${{ env.TIMESTAMP }}
-          release_name: Release ${{ env.TIMESTAMP }}
-          generate_release_notes: true
-          files: artifacts/**/*
-
-      - id: step_upload_url
-        run: echo "::set-output name=upload_url::${{ steps.create_release.outputs.upload_url }}"
