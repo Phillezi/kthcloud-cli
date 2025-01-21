@@ -1,8 +1,9 @@
 package resources
 
 import (
-	"go-deploy/dto/v2/body"
 	"time"
+
+	"github.com/kthcloud/go-deploy/dto/v2/body"
 )
 
 type CachedResource[T any] struct {

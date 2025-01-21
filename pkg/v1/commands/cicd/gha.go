@@ -3,10 +3,11 @@ package cicd
 import (
 	"errors"
 	"fmt"
-	"go-deploy/dto/v2/body"
-	"go-deploy/models/model"
 	"log"
 	"strings"
+
+	"github.com/kthcloud/go-deploy/dto/v2/body"
+	"github.com/kthcloud/go-deploy/models/model"
 
 	"github.com/Phillezi/kthcloud-cli/pkg/util"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/client"

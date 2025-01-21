@@ -1,8 +1,9 @@
 package connect
 
 import (
-	"go-deploy/dto/v2/body"
 	"strings"
+
+	"github.com/kthcloud/go-deploy/dto/v2/body"
 
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/client"
 	"github.com/sirupsen/logrus"

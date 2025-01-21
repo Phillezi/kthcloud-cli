@@ -6,7 +6,7 @@ BUILDTIMESTAMP=$(shell date -u +%Y%m%d%H%M%S)
 EXT=$(if $(filter windows,$(GOOS)),.exe,)
 
 # Targets
-.PHONY: all clean build run
+.PHONY: all build run test release install all-platforms clean lint
 
 all: build
 
@@ -51,3 +51,6 @@ clean:
 	@echo "Cleaning up..."
 	@rm -rf $(BUILD_DIR)
 	@echo "Clean complete."
+
+lint:
+	@./scripts/util/check-lint.sh

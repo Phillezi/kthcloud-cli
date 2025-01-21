@@ -3,7 +3,8 @@ package util
 import (
 	"encoding/json"
 	"fmt"
-	"go-deploy/dto/v2/body"
+
+	"github.com/kthcloud/go-deploy/dto/v2/body"
 )
 
 func ProcessUserReadResponse(responseBody string) ([]body.UserRead, error) {

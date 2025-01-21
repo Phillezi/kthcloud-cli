@@ -1,6 +1,6 @@
 package util
 
-import "go-deploy/dto/v2/body"
+import "github.com/kthcloud/go-deploy/dto/v2/body"
 
 func Float64Pointer(f float64) *float64 {
 	return &f
