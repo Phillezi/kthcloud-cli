@@ -73,6 +73,18 @@ func init() {
 	rootCmd.PersistentFlags().String("api-url", "https://api.cloud.cbh.kth.se/deploy", "Base URL of the API")
 	viper.BindPFlag("api-url", rootCmd.PersistentFlags().Lookup("api-url"))
 
+	rootCmd.PersistentFlags().String("keycloak-host", "https://iam.cloud.cbh.kth.se", "Keycloak server endpoint")
+	viper.BindPFlag("keycloak-host", rootCmd.PersistentFlags().Lookup("keycloak-host"))
+
+	rootCmd.PersistentFlags().String("client-id", "landing", "Keycloak client ID")
+	viper.BindPFlag("client-id", rootCmd.PersistentFlags().Lookup("client-id"))
+
+	rootCmd.PersistentFlags().String("client-secret", "", "Keycloak client secret")
+	viper.BindPFlag("client-secret", rootCmd.PersistentFlags().Lookup("client-secret"))
+
+	rootCmd.PersistentFlags().String("keycloak-realm", "cloud", "Keycloak realm")
+	viper.BindPFlag("keycloak-realm", rootCmd.PersistentFlags().Lookup("keycloak-realm"))
+
 	rootCmd.Flags().StringP("api-token", "x", "", "kthcloud api token")
 	viper.BindPFlag("api-token", rootCmd.PersistentFlags().Lookup("api-token"))
 
