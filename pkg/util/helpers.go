@@ -26,3 +26,11 @@ func GetNames(apiKeys []body.ApiKey) []string {
 	}
 	return names
 }
+
+func OrNil[T comparable](value T) *T {
+	var zeroValue T
+	if value == zeroValue {
+		return nil
+	}
+	return &value
+}

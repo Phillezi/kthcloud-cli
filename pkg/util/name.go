@@ -4,7 +4,27 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
+
+	"golang.org/x/exp/rand"
 )
+
+func GenerateRandomName() string {
+	rand.Seed(uint64(time.Now().Unix()))
+	var sb strings.Builder
+
+	characters := "abcdefghijklmnopqrstuvwxyz0123456789"
+
+	nameLength := rand.Intn(26) + 5 // Random length between 5 and 30
+
+	sb.WriteByte(characters[rand.Intn(26)]) // Ensuring it starts with a letter
+
+	for i := 1; i < nameLength; i++ {
+		sb.WriteByte(characters[rand.Intn(len(characters))])
+	}
+
+	return sb.String()
+}
 
 func IsValidDeplName(name string) bool {
 	if len(name) > 30 {
