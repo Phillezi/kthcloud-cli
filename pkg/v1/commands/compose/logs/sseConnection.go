@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"go-deploy/dto/v2/body"
 	"log"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/kthcloud/go-deploy/dto/v2/body"
 
 	"github.com/Phillezi/kthcloud-cli/pkg/util"
 	"github.com/sirupsen/logrus"

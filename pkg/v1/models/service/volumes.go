@@ -1,9 +1,10 @@
 package service
 
 import (
-	"go-deploy/dto/v2/body"
 	"path"
 	"strings"
+
+	"github.com/kthcloud/go-deploy/dto/v2/body"
 
 	log "github.com/sirupsen/logrus"
 )

@@ -8,16 +8,18 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func Parse() {
+func Parse(jsonOnly bool) {
 	composeInstance, err := parser.GetCompose()
 	if err != nil {
 		logrus.Fatal(err)
 	}
 
-	fmt.Println("Parsed Compose file:")
-	fmt.Println(composeInstance.String() + "\n")
+	if !jsonOnly {
+		fmt.Println("Parsed Compose file:")
+		fmt.Println(composeInstance.String() + "\n")
 
-	fmt.Println("kthcloud deployments:")
+		fmt.Println("kthcloud deployments:")
+	}
 	deployments := composeInstance.ToDeployments()
 	for _, deployment := range deployments {
 		data, err := json.MarshalIndent(deployment, "", "  ")

@@ -4,10 +4,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"go-deploy/dto/v2/body"
 	"os"
 	"sort"
 	"strings"
+
+	"github.com/kthcloud/go-deploy/dto/v2/body"
 
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/models/service"
 	"gopkg.in/yaml.v3"

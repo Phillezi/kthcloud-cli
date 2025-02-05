@@ -17,7 +17,11 @@ var composeParseCmd = &cobra.Command{
 	Use:   "parse",
 	Short: "Parse a docker-compose.yaml or docker-compose.yml file",
 	Run: func(cmd *cobra.Command, args []string) {
-		compose.Parse()
+		json, err := cmd.Flags().GetBool("json")
+		if err != nil {
+			logrus.Fatal(err)
+		}
+		compose.Parse(json)
 	},
 }
 
@@ -92,6 +96,8 @@ func init() {
 
 	composeDownCmd.Flags().BoolP("all", "a", false, "Remove all")
 	composeDownCmd.Flags().BoolP("volumes", "v", false, "Remove volumes")
+
+	composeParseCmd.Flags().Bool("json", false, "Specify if output should be only the parsed json")
 
 	// Register subcommands with the main compose command
 	composeCmd.AddCommand(composeParseCmd)

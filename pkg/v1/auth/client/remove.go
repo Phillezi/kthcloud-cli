@@ -2,7 +2,8 @@ package client
 
 import (
 	"fmt"
-	"go-deploy/dto/v2/body"
+
+	"github.com/kthcloud/go-deploy/dto/v2/body"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/sirupsen/logrus"

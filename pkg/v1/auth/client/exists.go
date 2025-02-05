@@ -1,7 +1,7 @@
 package client
 
 import (
-	"go-deploy/dto/v2/body"
+	"github.com/kthcloud/go-deploy/dto/v2/body"
 
 	"github.com/sirupsen/logrus"
 )

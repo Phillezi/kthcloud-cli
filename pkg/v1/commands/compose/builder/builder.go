@@ -3,10 +3,11 @@ package builder
 import (
 	"errors"
 	"fmt"
-	"go-deploy/models/model"
 	"os"
 	"path"
 	"time"
+
+	"github.com/kthcloud/go-deploy/models/model"
 
 	"github.com/Phillezi/kthcloud-cli/internal/update"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/client"

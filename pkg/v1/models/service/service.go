@@ -2,8 +2,9 @@ package service
 
 import (
 	"fmt"
-	"go-deploy/dto/v2/body"
 	"strings"
+
+	"github.com/kthcloud/go-deploy/dto/v2/body"
 
 	"github.com/Phillezi/kthcloud-cli/pkg/util"
 	"github.com/spf13/viper"

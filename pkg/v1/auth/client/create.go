@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"go-deploy/dto/v2/body"
+
+	"github.com/kthcloud/go-deploy/dto/v2/body"
 
 	"github.com/go-resty/resty/v2"
 )

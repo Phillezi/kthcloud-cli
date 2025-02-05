@@ -3,8 +3,9 @@ package compose
 import (
 	"context"
 	"errors"
-	"go-deploy/dto/v2/body"
 	"time"
+
+	"github.com/kthcloud/go-deploy/dto/v2/body"
 
 	"github.com/Phillezi/kthcloud-cli/internal/update"
 	"github.com/Phillezi/kthcloud-cli/pkg/scheduler"

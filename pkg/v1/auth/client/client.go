@@ -121,6 +121,11 @@ func (c *Client) Login() (*session.Session, error) {
 	return session, nil
 }
 
+func (c *Client) Logout() error {
+	c.Session = nil
+	return c.Session.Save(viper.GetString("session-path"))
+}
+
 func (c *Client) fetchOAuthToken(redirectURI, code string) (*http.Response, error) {
 	tokenURL := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", c.kcBaseURL, c.realm)
 

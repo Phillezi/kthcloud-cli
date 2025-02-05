@@ -2,7 +2,8 @@ package compose
 
 import (
 	"context"
-	"go-deploy/dto/v2/body"
+
+	"github.com/kthcloud/go-deploy/dto/v2/body"
 
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/client"
 	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose/logs"

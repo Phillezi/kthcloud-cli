@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/Phillezi/kthcloud-cli/pkg/util"
+	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/browser"
 	"github.com/browserutils/kooky"
 	_ "github.com/browserutils/kooky/browser/all"
 	"github.com/sirupsen/logrus"
@@ -73,23 +74,42 @@ func (c *Client) loadCookies() (bool, error) {
 		return false, err
 	}
 
-	cookies := kooky.ReadCookies(kooky.Valid, kooky.DomainHasSuffix(commonDomain))
-	iamCookies := make([]*http.Cookie, 0)
-	storageCookies := make([]*http.Cookie, 0)
-	for _, cookie := range cookies {
-		cookie.Value = strings.Trim(cookie.Value, "\"")
-		if cookie.Domain == storageURL.Host {
-			storageCookies = append(storageCookies, &cookie.Cookie)
-		}
-		if cookie.Domain == kcURL.Host {
-			iamCookies = append(iamCookies, &cookie.Cookie)
-		}
-	}
-	c.client.Jar.SetCookies(storageURL, storageCookies)
-	c.client.Jar.SetCookies(kcURL, iamCookies)
+	try := 0
 
-	if len(iamCookies) == 0 {
-		logrus.Warn("no cookies from keycloak, try to log in")
+	for {
+		allCookies := kooky.AllCookies(kooky.Valid, kooky.DomainHasSuffix(commonDomain))
+
+		iamCookies := make([]*http.Cookie, 0)
+		storageCookies := make([]*http.Cookie, 0)
+
+		for _, cookie := range allCookies {
+			cookie.Value = strings.Trim(cookie.Value, "\"")
+			if cookie.Domain == storageURL.Host {
+				storageCookies = append(storageCookies, &cookie.Cookie)
+			}
+			if cookie.Domain == kcURL.Host {
+				iamCookies = append(iamCookies, &cookie.Cookie)
+			}
+		}
+		c.client.Jar.SetCookies(storageURL, storageCookies)
+		c.client.Jar.SetCookies(kcURL, iamCookies)
+
+		if len(iamCookies) == 0 || len(storageCookies) == 0 {
+			logrus.Warn("no cookies from keycloak, try to log in")
+			if try >= 3 {
+				return false, errors.New("Could not get required cookies")
+			}
+			browser.Open(c.storageURL)
+			logrus.Info("retrying in 5s...")
+			time.Sleep(5 * time.Second)
+			try++
+			continue
+		} else {
+			logrus.Debugln("cookies found")
+			logrus.Debugln(iamCookies)
+			logrus.Debugln(storageCookies)
+		}
+		break
 	}
 
 	return true, nil

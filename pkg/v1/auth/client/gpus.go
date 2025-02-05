@@ -2,7 +2,8 @@ package client
 
 import (
 	"errors"
-	"go-deploy/dto/v2/body"
+
+	"github.com/kthcloud/go-deploy/dto/v2/body"
 
 	"github.com/Phillezi/kthcloud-cli/pkg/util"
 )
