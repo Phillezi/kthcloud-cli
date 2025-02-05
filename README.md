@@ -131,7 +131,19 @@ powershell -c "irm https://raw.githubusercontent.com/Phillezi/kthcloud-cli/main/
 
 Check out what the script does [here](https://github.com/Phillezi/kthcloud-cli/blob/main/scripts/install.ps1).
 
+### Installing using `go install`
+
+If you have `go` installed and with `GOBIN` set and added to `PATH` you can install the cli using:
+
+```bash
+go install github.com/Phillezi/kthcloud-cli@latest
+``` 
+> [!NOTE]  
+> The cli executable will be named `kthcloud-cli` from the module / repo name instead of `kthcloud`.
+
 ### Build it yourself
+
+If your OS and architecture combo isnt available as a pre-built binary and you dont want to use `go install` you can build the cli from source.
 
 #### Prerequisites
 
@@ -150,6 +162,9 @@ Check out what the script does [here](https://github.com/Phillezi/kthcloud-cli/b
 
    ```bash
    make
+   # or
+   # make install
+   # make install adds it to the same dir as the install script does, but you will manually have to add it to your PATH.
    ```
 
 3. Run the application:
