@@ -74,7 +74,6 @@ func (c *Client) loadCookies() (bool, error) {
 		return false, err
 	}
 
-	//kooky.DomainHasSuffix(commonDomain)
 	try := 0
 
 	for {
@@ -105,6 +104,10 @@ func (c *Client) loadCookies() (bool, error) {
 			time.Sleep(5 * time.Second)
 			try++
 			continue
+		} else {
+			logrus.Debugln("cookies found")
+			logrus.Debugln(iamCookies)
+			logrus.Debugln(storageCookies)
 		}
 		break
 	}
