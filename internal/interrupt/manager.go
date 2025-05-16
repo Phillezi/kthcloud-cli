@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"go.uber.org/zap"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -42,7 +42,7 @@ func (im *Manager) listenForSignals() {
 
 	go func() {
 		sig := <-sigs
-		zap.L().Info("Received shutdown signal", zap.String("signal", sig.String()))
+		logrus.Infoln("Received shutdown signal", sig.String())
 		im.Shutdown()
 	}()
 }
@@ -62,18 +62,18 @@ func (im *Manager) Shutdown() {
 	im.mu.Lock()
 	defer im.mu.Unlock()
 
-	zap.L().Info("Shutting down, executing hooks...")
+	logrus.Infoln("Shutting down, executing hooks...")
 	for _, hook := range im.shutdowns {
 		hook()
 	}
-	zap.L().Info("Shutdown complete.")
+	logrus.Infoln("Shutdown complete.")
 }
 
 func (im *Manager) Wait(timeout time.Duration) {
 	select {
 	case <-im.ctx.Done():
-		zap.L().Info("Context canceled, exiting.")
+		logrus.Infoln("Context canceled, exiting.")
 	case <-time.After(timeout):
-		zap.L().Warn("Timeout reached, forcing exit.")
+		logrus.Warnln("Timeout reached, forcing exit.")
 	}
 }
