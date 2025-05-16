@@ -1,11 +1,10 @@
 package cmd
 
 import (
-	"log"
-
 	"github.com/Phillezi/kthcloud-cli/internal/interrupt"
 	"github.com/Phillezi/kthcloud-cli/internal/options"
 	"github.com/Phillezi/kthcloud-cli/pkg/commands/upload"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -65,7 +64,7 @@ Arguments:
 	Args:    cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 2 {
-			log.Fatal(cmd.Usage())
+			logrus.Fatal(cmd.Usage())
 		}
 		if err := upload.New(upload.CommandOpts{
 			Client: options.DefaultClient(),
@@ -73,7 +72,7 @@ Arguments:
 			SrcPath:  &args[0],
 			DestPath: &args[1],
 		}).WithContext(interrupt.GetInstance().Context()).Run(); err != nil {
-			// log err here
+			logrus.Errorln(err)
 			return
 		}
 	},

@@ -5,7 +5,7 @@ import (
 	"github.com/Phillezi/kthcloud-cli/internal/options"
 	"github.com/Phillezi/kthcloud-cli/pkg/commands/ps"
 	"github.com/Phillezi/kthcloud-cli/pkg/deploy"
-	"github.com/kthcloud/go-deploy/pkg/log"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +15,7 @@ var psCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		all, err := cmd.Flags().GetBool("all")
 		if err != nil {
-			log.Errorln(err)
+			logrus.Errorln(err)
 			return
 		}
 		if err := ps.New(ps.CommandOpts{
@@ -28,7 +28,7 @@ var psCmd = &cobra.Command{
 		}).WithContext(
 			interrupt.GetInstance().Context(),
 		).Run(); err != nil {
-			log.Errorln(err)
+			logrus.Errorln(err)
 			return
 		}
 	},

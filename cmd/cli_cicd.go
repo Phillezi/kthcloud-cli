@@ -1,8 +1,8 @@
 package cmd
 
 import (
+	"github.com/Phillezi/kthcloud-cli/internal/options"
 	cicd "github.com/Phillezi/kthcloud-cli/pkg/commands/cicd/init"
-	"github.com/kthcloud/go-deploy/pkg/log"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -16,9 +16,10 @@ var cicdCmd = &cobra.Command{
 			logrus.Fatal(err)
 		}
 		if err := cicd.New(cicd.CommandOpts{
+			Client:      options.DefaultClient(),
 			SaveSecrets: &save,
 		}).Run(); err != nil {
-			log.Errorln(err)
+			logrus.Errorln(err)
 			return
 		}
 	},

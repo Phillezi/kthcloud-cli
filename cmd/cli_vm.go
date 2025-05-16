@@ -5,7 +5,6 @@ import (
 	"github.com/Phillezi/kthcloud-cli/internal/options"
 	"github.com/Phillezi/kthcloud-cli/pkg/commands/vm/ps"
 	"github.com/Phillezi/kthcloud-cli/pkg/commands/vm/ssh"
-	"github.com/kthcloud/go-deploy/pkg/log"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -27,7 +26,7 @@ var vmPsCmd = &cobra.Command{
 			Client: options.DefaultClient(),
 			All:    &all,
 		}).WithContext(interrupt.GetInstance().Context()).Run(); err != nil {
-			log.Errorln(err)
+			logrus.Errorln(err)
 			return
 		}
 	},
@@ -50,7 +49,7 @@ var vmSSHCmd = &cobra.Command{
 			ID:     &id,
 			Name:   &name,
 		}).WithContext(interrupt.GetInstance().Context()).Run(); err != nil {
-			log.Errorln(err)
+			logrus.Errorln(err)
 			return
 		}
 	},

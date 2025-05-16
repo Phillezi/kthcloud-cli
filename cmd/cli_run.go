@@ -5,7 +5,7 @@ import (
 	"github.com/Phillezi/kthcloud-cli/internal/options"
 	"github.com/Phillezi/kthcloud-cli/pkg/commands/run"
 	"github.com/Phillezi/kthcloud-cli/pkg/defaults"
-	"github.com/kthcloud/go-deploy/pkg/log"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -16,57 +16,57 @@ var runCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		i, err := cmd.Flags().GetBool("interactive")
 		if err != nil {
-			log.Errorln("Error parsing flag 'interactive':", err)
+			logrus.Errorln("Error parsing flag 'interactive':", err)
 			return
 		}
 		t, err := cmd.Flags().GetBool("tty")
 		if err != nil {
-			log.Errorln("Error parsing flag 'tty':", err)
+			logrus.Errorln("Error parsing flag 'tty':", err)
 			return
 		}
 		rm, err := cmd.Flags().GetBool("rm")
 		if err != nil {
-			log.Errorln("Error parsing flag 'rm':", err)
+			logrus.Errorln("Error parsing flag 'rm':", err)
 			return
 		}
 		d, err := cmd.Flags().GetBool("detatch")
 		if err != nil {
-			log.Errorln("Error parsing flag 'detatch':", err)
+			logrus.Errorln("Error parsing flag 'detatch':", err)
 			return
 		}
 		e, err := cmd.Flags().GetStringToString("env")
 		if err != nil {
-			log.Errorln("Error parsing flag 'env':", err)
+			logrus.Errorln("Error parsing flag 'env':", err)
 			return
 		}
 		p, err := cmd.Flags().GetIntSlice("port")
 		if err != nil {
-			log.Errorln("Error parsing flag 'port':", err)
+			logrus.Errorln("Error parsing flag 'port':", err)
 			return
 		}
 		v, err := cmd.Flags().GetString("visibility")
 		if err != nil {
-			log.Errorln("Error parsing flag 'visibility':", err)
+			logrus.Errorln("Error parsing flag 'visibility':", err)
 			return
 		}
 		m, err := cmd.Flags().GetFloat64("memory")
 		if err != nil {
-			log.Errorln("Error parsing flag 'memory':", err)
+			logrus.Errorln("Error parsing flag 'memory':", err)
 			return
 		}
 		c, err := cmd.Flags().GetFloat64("cores")
 		if err != nil {
-			log.Errorln("Error parsing flag 'cores':", err)
+			logrus.Errorln("Error parsing flag 'cores':", err)
 			return
 		}
 		r, err := cmd.Flags().GetInt("replicas")
 		if err != nil {
-			log.Errorln("Error parsing flag 'replicas':", err)
+			logrus.Errorln("Error parsing flag 'replicas':", err)
 			return
 		}
 		n, err := cmd.Flags().GetString("name")
 		if err != nil {
-			log.Errorln("Error parsing flag 'name':", err)
+			logrus.Errorln("Error parsing flag 'name':", err)
 			return
 		}
 
@@ -85,7 +85,7 @@ var runCmd = &cobra.Command{
 			Replicas:    &r,
 			Name:        &n,
 		}).WithContext(interrupt.GetInstance().Context()).Run(); err != nil {
-			log.Errorln(err)
+			logrus.Errorln(err)
 		}
 	},
 }
