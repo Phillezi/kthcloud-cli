@@ -1,8 +1,16 @@
 package cmd
 
 import (
-	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose"
-	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/compose/storage"
+	"github.com/Phillezi/kthcloud-cli/internal/interrupt"
+	"github.com/Phillezi/kthcloud-cli/internal/options"
+	"github.com/Phillezi/kthcloud-cli/pkg/commands/compose/down"
+	"github.com/Phillezi/kthcloud-cli/pkg/commands/compose/logs"
+	"github.com/Phillezi/kthcloud-cli/pkg/commands/compose/parse"
+	"github.com/Phillezi/kthcloud-cli/pkg/commands/compose/stop"
+	"github.com/Phillezi/kthcloud-cli/pkg/commands/compose/up"
+	"github.com/Phillezi/kthcloud-cli/pkg/parser"
+	"github.com/Phillezi/kthcloud-cli/pkg/storage"
+	"github.com/kthcloud/go-deploy/pkg/log"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -21,7 +29,19 @@ var composeParseCmd = &cobra.Command{
 		if err != nil {
 			logrus.Fatal(err)
 		}
-		compose.Parse(json)
+		compose, err := parser.GetCompose()
+		if err != nil {
+			logrus.Error(err)
+			return
+		}
+		if err := parse.New(parse.CommandOpts{
+			Client:  options.DefaultClient(),
+			Compose: compose,
+			Json:    &json,
+		}).WithContext(interrupt.GetInstance().Context()).Run(); err != nil {
+			logrus.Errorln(err)
+			return
+		}
 	},
 }
 
@@ -38,7 +58,25 @@ var composeUpCmd = &cobra.Command{
 			logrus.Debugln("build all is set")
 			buildAll = true
 		}
-		compose.Up(detached, tryToCreateVolumes, buildAll, nonInteractive, servicesToBuild)
+
+		compose, err := parser.GetCompose()
+		if err != nil {
+			logrus.Errorln(err)
+			return
+		}
+		if err := up.New(up.CommandOpts{
+			Client:  options.DefaultClient(),
+			Compose: compose,
+			//Services: ,
+			ServicesToBuild: servicesToBuild,
+			BuildAll:        &buildAll,
+			Detatched:       &detached,
+			TryVolumes:      &tryToCreateVolumes,
+			NonInteractive:  &nonInteractive,
+		}).WithContext(interrupt.GetInstance().Context()).Run(); err != nil {
+			log.Errorln(err)
+			return
+		}
 	},
 }
 var composeDownCmd = &cobra.Command{
@@ -49,25 +87,55 @@ var composeDownCmd = &cobra.Command{
 		if err != nil {
 			logrus.Fatal(err)
 		}
-		volumes, err := cmd.Flags().GetBool("volumes")
+		compose, err := parser.GetCompose()
 		if err != nil {
-			logrus.Fatal(err)
+			logrus.Errorln(err)
+			return
 		}
-		compose.Down(all, volumes)
+		if err := down.New(down.CommandOpts{
+			Client:  options.DefaultClient(),
+			Compose: compose,
+			All:     &all,
+		}).WithContext(interrupt.GetInstance().Context()).Run(); err != nil {
+			logrus.Errorln(err)
+			return
+		}
 	},
 }
 var composeStopCmd = &cobra.Command{
 	Use:   "stop",
 	Short: "Stop compose configuration to cloud",
 	Run: func(cmd *cobra.Command, args []string) {
-		compose.Stop()
+		compose, err := parser.GetCompose()
+		if err != nil {
+			logrus.Errorln(err)
+			return
+		}
+		if err := stop.New(stop.CommandOpts{
+			Client:  options.DefaultClient(),
+			Compose: compose,
+		}).WithContext(interrupt.GetInstance().Context()).Run(); err != nil {
+			logrus.Errorln(err)
+			return
+		}
 	},
 }
 var composeLogsCmd = &cobra.Command{
 	Use:   "logs",
 	Short: "Get logs from deployments in the compose file",
 	Run: func(cmd *cobra.Command, args []string) {
-		compose.Logs()
+		compose, err := parser.GetCompose()
+		if err != nil {
+			logrus.Errorln(err)
+			return
+		}
+		if err := logs.New(logs.CommandOpts{
+			Client:  options.DefaultClient(),
+			Compose: compose,
+		}).WithContext(interrupt.GetInstance().Context()).Run(); err != nil {
+			logrus.Errorln(err)
+			return
+		}
 	},
 }
 
@@ -76,7 +144,7 @@ var testSMAuthCmd = &cobra.Command{
 	Short:  "Test authentication against storage manager",
 	Hidden: true,
 	Run: func(cmd *cobra.Command, args []string) {
-		storage.Check()
+		storage.Check(options.DefaultClient())
 	},
 }
 

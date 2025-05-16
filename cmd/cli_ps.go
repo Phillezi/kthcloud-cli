@@ -1,9 +1,11 @@
 package cmd
 
 import (
-	"log"
-
-	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/ps"
+	"github.com/Phillezi/kthcloud-cli/internal/interrupt"
+	"github.com/Phillezi/kthcloud-cli/internal/options"
+	"github.com/Phillezi/kthcloud-cli/pkg/commands/ps"
+	"github.com/Phillezi/kthcloud-cli/pkg/deploy"
+	"github.com/kthcloud/go-deploy/pkg/log"
 	"github.com/spf13/cobra"
 )
 
@@ -13,9 +15,22 @@ var psCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		all, err := cmd.Flags().GetBool("all")
 		if err != nil {
-			log.Fatal(err)
+			log.Errorln(err)
+			return
 		}
-		ps.Ps(all)
+		if err := ps.New(ps.CommandOpts{
+			All: &all,
+			Client: deploy.GetInstance(
+				options.DeployOpts(),
+			).WithContext(
+				interrupt.GetInstance().Context(),
+			),
+		}).WithContext(
+			interrupt.GetInstance().Context(),
+		).Run(); err != nil {
+			log.Errorln(err)
+			return
+		}
 	},
 }
 
