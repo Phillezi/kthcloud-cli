@@ -2,6 +2,7 @@ package interrupt
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"sync"
@@ -42,6 +43,7 @@ func (im *Manager) listenForSignals() {
 
 	go func() {
 		sig := <-sigs
+		fmt.Println()
 		logrus.Infoln("Received shutdown signal", sig.String())
 		im.Shutdown()
 	}()

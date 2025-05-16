@@ -31,7 +31,8 @@ func GenerateRandomName(minLen, maxLen int) string {
 		name.WriteByte(validChars[rand.Intn(len(validChars))])
 	}
 
-	name.WriteByte(letters[rand.Intn(len(letters))+rand.Intn(len(digits))])
+	lastChars := letters + digits
+	name.WriteByte(lastChars[rand.Intn(len(lastChars))])
 
 	return name.String()
 }
