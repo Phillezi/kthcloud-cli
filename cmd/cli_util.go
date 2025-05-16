@@ -1,18 +1,11 @@
 package cmd
 
 import (
-	"fmt"
-	"log"
-	"time"
-
-	"github.com/kthcloud/go-deploy/dto/v2/body"
-
-	"github.com/Phillezi/kthcloud-cli/pkg/util"
-	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/client"
-	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/upload"
+	"github.com/Phillezi/kthcloud-cli/internal/interrupt"
+	"github.com/Phillezi/kthcloud-cli/internal/options"
+	"github.com/Phillezi/kthcloud-cli/pkg/commands/upload"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var utilCmd = &cobra.Command{
@@ -20,11 +13,11 @@ var utilCmd = &cobra.Command{
 	Short: "Utility functionality",
 }
 
-var tokenCmd = &cobra.Command{
+/*var tokenCmd = &cobra.Command{
 	Use:   "api-key",
 	Short: "Generate and save a new api key",
 	Run: func(cmd *cobra.Command, args []string) {
-		c := client.Get()
+		c := options.DefaultClient()
 		name := "cli-access"
 		c.DropUserCache()
 		user, err := c.User()
@@ -57,7 +50,8 @@ var tokenCmd = &cobra.Command{
 		}
 		logrus.Infoln("Successfully generated and added an api token")
 	},
-}
+}*/
+
 var uploadCmd = &cobra.Command{
 	Use:   "upload <local-file-path> <server-file-path>",
 	Short: "Upload a file",
@@ -70,14 +64,22 @@ Arguments:
 	Args:    cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 2 {
-			log.Fatal(cmd.Usage())
+			logrus.Fatal(cmd.Usage())
 		}
-		upload.Upload(args[0], args[1])
+		if err := upload.New(upload.CommandOpts{
+			Client: options.DefaultClient(),
+			//KeycloakBaseURL: ,
+			SrcPath:  &args[0],
+			DestPath: &args[1],
+		}).WithContext(interrupt.GetInstance().Context()).Run(); err != nil {
+			logrus.Errorln(err)
+			return
+		}
 	},
 }
 
 func init() {
-	utilCmd.AddCommand(tokenCmd)
+	//utilCmd.AddCommand(tokenCmd)
 	utilCmd.AddCommand(uploadCmd)
 
 	rootCmd.AddCommand(utilCmd)

@@ -103,7 +103,7 @@ func SelectReleaseInteractively(releases []GitHubRelease) (*GitHubRelease, error
 		if r.TagName == current {
 			startIndex = i
 		}
-		releaseItems[i] = fmt.Sprintf("%s", r.TagName)
+		releaseItems[i] = r.TagName
 	}
 
 	prompt := promptui.Select{

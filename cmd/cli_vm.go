@@ -1,8 +1,10 @@
 package cmd
 
 import (
-	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/vm/connect"
-	"github.com/Phillezi/kthcloud-cli/pkg/v1/commands/vm/ps"
+	"github.com/Phillezi/kthcloud-cli/internal/interrupt"
+	"github.com/Phillezi/kthcloud-cli/internal/options"
+	"github.com/Phillezi/kthcloud-cli/pkg/commands/vm/ps"
+	"github.com/Phillezi/kthcloud-cli/pkg/commands/vm/ssh"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -20,7 +22,13 @@ var vmPsCmd = &cobra.Command{
 		if err != nil {
 			logrus.Fatal(err)
 		}
-		ps.List(all)
+		if err := ps.New(ps.CommandOpts{
+			Client: options.DefaultClient(),
+			All:    &all,
+		}).WithContext(interrupt.GetInstance().Context()).Run(); err != nil {
+			logrus.Errorln(err)
+			return
+		}
 	},
 }
 
@@ -36,7 +44,14 @@ var vmSSHCmd = &cobra.Command{
 		if err != nil {
 			logrus.Fatal(err)
 		}
-		connect.SSH(id, name)
+		if err := ssh.New(ssh.CommandOpts{
+			Client: options.DefaultClient(),
+			ID:     &id,
+			Name:   &name,
+		}).WithContext(interrupt.GetInstance().Context()).Run(); err != nil {
+			logrus.Errorln(err)
+			return
+		}
 	},
 }
 

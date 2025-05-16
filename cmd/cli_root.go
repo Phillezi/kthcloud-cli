@@ -6,8 +6,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Phillezi/kthcloud-cli/internal/options"
 	"github.com/Phillezi/kthcloud-cli/pkg/config"
-	"github.com/Phillezi/kthcloud-cli/pkg/v1/auth/client"
+	"github.com/Phillezi/kthcloud-cli/pkg/defaults"
 	"github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
@@ -47,14 +48,14 @@ var whoamiCmd = &cobra.Command{
 	Use:   "whoami",
 	Short: "See who you are",
 	Run: func(cmd *cobra.Command, args []string) {
-		c := client.Get()
+		c := options.DefaultClient()
 		if !c.HasValidSession() {
 			fmt.Println("I dont know...")
 			return
 		}
 		user, err := c.User()
 		if err != nil {
-			fmt.Println("I dont know...")
+			logrus.Errorln(err)
 			return
 		}
 		fmt.Println("Name:\t" + strings.Split(user.FirstName, " ")[0] + " " + user.LastName + "\n\nEmail:\t" + user.Email + "\nRole:\t" + user.Role.Name)
@@ -70,20 +71,26 @@ func init() {
 	rootCmd.PersistentFlags().String("loglevel", "info", "Set the logging level (info, warn, error, debug)")
 	viper.BindPFlag("loglevel", rootCmd.PersistentFlags().Lookup("loglevel"))
 
-	rootCmd.PersistentFlags().String("api-url", "https://api.cloud.cbh.kth.se/deploy", "Base URL of the API")
+	rootCmd.PersistentFlags().String("api-url", defaults.DefaultDeployBaseURL, "Base URL of the API")
 	viper.BindPFlag("api-url", rootCmd.PersistentFlags().Lookup("api-url"))
 
-	rootCmd.PersistentFlags().String("keycloak-host", "https://iam.cloud.cbh.kth.se", "Keycloak server endpoint")
+	rootCmd.PersistentFlags().String("keycloak-host", defaults.DefaultKeycloakBaseURL, "Keycloak server endpoint")
 	viper.BindPFlag("keycloak-host", rootCmd.PersistentFlags().Lookup("keycloak-host"))
 
-	rootCmd.PersistentFlags().String("client-id", "landing", "Keycloak client ID")
+	rootCmd.PersistentFlags().String("client-id", defaults.DefaultKeycloakClientID, "Keycloak client ID")
 	viper.BindPFlag("client-id", rootCmd.PersistentFlags().Lookup("client-id"))
 
-	rootCmd.PersistentFlags().String("client-secret", "", "Keycloak client secret")
+	rootCmd.PersistentFlags().String("client-secret", defaults.DefaultKeycloakClientSecret, "Keycloak client secret")
 	viper.BindPFlag("client-secret", rootCmd.PersistentFlags().Lookup("client-secret"))
 
-	rootCmd.PersistentFlags().String("keycloak-realm", "cloud", "Keycloak realm")
+	rootCmd.PersistentFlags().String("keycloak-realm", defaults.DefaultKeycloakRealm, "Keycloak realm")
 	viper.BindPFlag("keycloak-realm", rootCmd.PersistentFlags().Lookup("keycloak-realm"))
+
+	rootCmd.PersistentFlags().String("redirect-uri", defaults.DefaultRedirectSchemeHostPort+defaults.DefaultRedirectBasePath, "Keycloak redirect endpoint URI")
+	viper.BindPFlag("redirect-uri", rootCmd.PersistentFlags().Lookup("redirect-uri"))
+
+	rootCmd.PersistentFlags().Duration("request-timeout", defaults.DefaultRequestTimeout, "The timeout for requests")
+	viper.BindPFlag("request-timeout", rootCmd.PersistentFlags().Lookup("request-timeout"))
 
 	rootCmd.Flags().StringP("api-token", "x", "", "kthcloud api token")
 	viper.BindPFlag("api-token", rootCmd.PersistentFlags().Lookup("api-token"))

@@ -87,28 +87,6 @@ func (s *Sched) revertJobs() {
 	})
 }
 
-func (s *Sched) getRunnable() *Job {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	for _, v := range s.jobs {
-		if v != nil && v.State == Created {
-			hasUnfinishedDeps := false
-			for _, dep := range v.Dependencies {
-				if dep.State != Done {
-					// job has a dep that isnt done
-					hasUnfinishedDeps = true
-					break
-				}
-			}
-			if !hasUnfinishedDeps {
-				return v
-			}
-		}
-	}
-	logrus.Debugln("no jobs available to be scheduled")
-	return nil
-}
-
 func (s *Sched) handleJobResult(job *Job) {
 	switch job.State {
 	case Done:
@@ -151,13 +129,6 @@ func (s *Sched) handleJobResult(job *Job) {
 		}
 	default:
 		logrus.Warnln("Unexpected state to handle, ", job.State)
-	}
-}
-
-func (s *Sched) updateRunnable() {
-	job := s.getRunnable()
-	if job != nil {
-		s.runnableQ <- job
 	}
 }
 
