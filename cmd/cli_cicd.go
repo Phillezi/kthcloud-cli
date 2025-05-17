@@ -10,6 +10,8 @@ import (
 var cicdCmd = &cobra.Command{
 	Use:   "cicd",
 	Short: "Generate CICD for gh repo",
+	Long: `
+This command allows you to setup cicd for your git repo, it creates a custom deployments and adds a workflow for building and pushing to the kthcloud registry on push / merge to main ".github/workflows/".`,
 	Run: func(cmd *cobra.Command, args []string) {
 		save, err := cmd.Flags().GetBool("save-secrets")
 		if err != nil {

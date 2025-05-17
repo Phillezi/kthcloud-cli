@@ -17,6 +17,8 @@ var vmCmd = &cobra.Command{
 var vmPsCmd = &cobra.Command{
 	Use:   "ps",
 	Short: "List VMs",
+	Long: `
+This command lets you list your VMs that are running, adding the -a or --all flag will list all VMs and wont filter to only the ones with resourceRunning status.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		all, err := cmd.Flags().GetBool("all")
 		if err != nil {
@@ -35,6 +37,13 @@ var vmPsCmd = &cobra.Command{
 var vmSSHCmd = &cobra.Command{
 	Use:   "ssh",
 	Short: "Connect to vm",
+	Long: `
+This command will let you ssh into a VM on kthcloud. It can be used by specifying the VMs name, id or if you dont specify a VM it will: if you only have one VM running, select that one, otherwise it will bring up a TUI selector that allows you to select the VM you want to ssh into.
+
+What does it achieve? You dont have to look up the connectionstring yourself. In short it is basically just a wrapper around the ssh executable on your system that gets the connectionstring for you.
+
+[!NOTE]: This requires you to have "ssh" installed on your machine.`,
+	Example: "kthcloud vm ssh --name foo",
 	Run: func(cmd *cobra.Command, args []string) {
 		name, err := cmd.Flags().GetString("name")
 		if err != nil {
