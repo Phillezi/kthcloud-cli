@@ -37,8 +37,12 @@ var rootCmd = &cobra.Command{
 }
 
 var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "See the version of the binary",
+	Use:     "version",
+	Aliases: []string{"v"},
+	Short:   "See the version of the binary",
+	Long: `
+Prints out the version of the binary that you are running. The version uses the build timestamp but in the future this might change to semantic versioning since it is more supported with gos versioning of packages.`,
+	Example: "kthcloud version",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("version: " + viper.GetString("release"))
 	},
@@ -47,6 +51,9 @@ var versionCmd = &cobra.Command{
 var whoamiCmd = &cobra.Command{
 	Use:   "whoami",
 	Short: "See who you are",
+	Long: `
+Prints out your user information from your current session, if not logged in you will get "I dont know...".`,
+	Example: "kthcloud whoami",
 	Run: func(cmd *cobra.Command, args []string) {
 		c := options.DefaultClient()
 		if !c.HasValidSession() {

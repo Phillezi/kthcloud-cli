@@ -11,7 +11,6 @@ import (
 	"github.com/Phillezi/kthcloud-cli/pkg/session"
 	"github.com/Phillezi/kthcloud-cli/pkg/util"
 	"github.com/go-resty/resty/v2"
-	"github.com/sirupsen/logrus"
 )
 
 type Client struct {
@@ -70,7 +69,6 @@ func New(opts ...ClientOpts) *Client {
 		if err != nil || sess.IsExpired() {
 			// TODO: try to refresh token here later
 			sess = nil
-			logrus.Warn(err)
 		}
 		c.session = sess
 	}

@@ -12,6 +12,11 @@ import (
 var psCmd = &cobra.Command{
 	Use:   "ps",
 	Short: "List deployments",
+	Long: `
+This command lets you list your deploymentss that are running, adding the -a or --all flag will list all deploymentss and wont filter to only the ones with resourceRunning status.
+
+For VMs you can use the "kthcloud vm ps" command instead.`,
+	Example: "kthcloud ps -a",
 	Run: func(cmd *cobra.Command, args []string) {
 		all, err := cmd.Flags().GetBool("all")
 		if err != nil {

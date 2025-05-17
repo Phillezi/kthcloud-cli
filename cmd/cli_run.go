@@ -12,7 +12,12 @@ import (
 var runCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Run a container",
-	Args:  cobra.MinimumNArgs(1),
+	Long: `
+This command allows you to start up containers similarly to dockers run command. It has options to remove it when you exit (with ctrl + c), get logs and more.
+
+Ports can be added with the -p or --p flag, you can just like docker add multiple ports, but in this case only the first port is used for the ingress (the one you can reach from outside the cluster) the rest of the ports are added as "internal" ports and are only exposed internally to the cluster.`,
+	Example: "kthcloud run --rm -it -p 80 nginx:latest",
+	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		i, err := cmd.Flags().GetBool("interactive")
 		if err != nil {
