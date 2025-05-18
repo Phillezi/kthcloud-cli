@@ -4,7 +4,7 @@ import (
 	"github.com/Phillezi/kthcloud-cli/internal/interrupt"
 	"github.com/Phillezi/kthcloud-cli/internal/options"
 	"github.com/Phillezi/kthcloud-cli/pkg/commands/build"
-	"github.com/kthcloud/go-deploy/pkg/log"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +21,7 @@ It uses the file ".kthcloud/DEPLOYMENT" to figure out which deployment your cwd 
 		if err := build.New(build.CommandOpts{
 			Client: options.DefaultClient(),
 		}).WithContext(interrupt.GetInstance().Context()).Run(); err != nil {
-			log.Errorln(err)
+			logrus.Errorln(err)
 		}
 	},
 }

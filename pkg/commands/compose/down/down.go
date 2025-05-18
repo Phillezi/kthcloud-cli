@@ -40,7 +40,7 @@ func (c *Command) down() error {
 		deploymentMap[depl.Name] = &depl
 	}
 
-	for name := range c.compose.Services {
+	for name := range c.compose.Source.Services {
 		if deployment, exists := deploymentMap[name]; exists {
 			if !c.all && deployment.Image == nil {
 				logrus.Infoln("Skipping deletion of deployment:", deployment.Name, ". Since it is a custom deployment (cicd)\n\nUse:\n\t--all\n\nTo remove CICD deployments too")

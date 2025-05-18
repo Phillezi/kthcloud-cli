@@ -5,49 +5,50 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Phillezi/kthcloud-cli/pkg/models/compose"
-	"github.com/Phillezi/kthcloud-cli/pkg/models/service"
+	"github.com/Phillezi/kthcloud-cli/pkg/convert"
 	"github.com/Phillezi/kthcloud-cli/pkg/util"
+	"github.com/compose-spec/compose-go/v2/types"
+	"github.com/kthcloud/go-deploy/utils"
 )
 
 func TestComposeConversion(t *testing.T) {
-	comp := &compose.Compose{
-		Services: map[string]*service.Service{
+	comp := &types.Project{
+		Services: types.Services{
 			"app": {
 				Image: "nginx:latest",
-				Environment: service.EnvVars{
-					"foo": "bar",
+				Environment: types.MappingWithEquals{
+					"foo": utils.PtrOf("bar"),
 				},
-				Ports: []string{
-					"8080:8080",
-					"9090:9090",
+				Ports: []types.ServicePortConfig{
+					{Target: 8080},
+					{Target: 9090},
 				},
-				Volumes: []string{
-					"./data:/app/data",
+				Volumes: []types.ServiceVolumeConfig{
+					{Source: "./data", Target: "/app/data"},
 				},
-				Command: []string{
+				Command: types.ShellCommand{
 					"bash -c",
 					"\"echo 'hello world'\"",
 				},
-				Dependencies: []string{
-					"otherapp",
+				DependsOn: types.DependsOnConfig{
+					"otherapp": types.ServiceDependency{},
 				},
 			},
 			"otherapp": {
 				Image: "nginx:latest",
-				Environment: service.EnvVars{
-					"foo":            "bar",
-					"KTHCLOUD_CORES": "99",
-					"KTHCLOUD_RAM":   "99",
+				Environment: types.MappingWithEquals{
+					"foo":            utils.PtrOf("bar"),
+					"KTHCLOUD_CORES": utils.PtrOf("99"),
+					"KTHCLOUD_RAM":   utils.PtrOf("99"),
 				},
-				Ports: []string{
-					"8080:8080",
-					"9090:9090",
+				Ports: []types.ServicePortConfig{
+					{Target: 8080},
+					{Target: 9090},
 				},
-				Volumes: []string{
-					"./data:/app/data",
+				Volumes: []types.ServiceVolumeConfig{
+					{Source: "./data", Target: "/app/data"},
 				},
-				Command: []string{
+				Command: types.ShellCommand{
 					"bash -c",
 					"\"echo 'hello world'\"",
 				},
@@ -55,16 +56,20 @@ func TestComposeConversion(t *testing.T) {
 		},
 	}
 
-	depls, deps := comp.ToDeploymentsWDeps()
+	var out convert.Wrap
+	if err := convert.ToCloud(comp, &out); err != nil {
+		t.Error(err)
+		return
+	}
 
 	t.Run("dependencies match", func(t *testing.T) {
-		if !util.Contains(deps["app"], "otherapp") || len(deps["app"]) != 1 {
+		if !util.Contains(out.Dependencies["app"], "otherapp") || len(out.Dependencies["app"]) != 1 {
 			t.Error("dependencies does not match")
 		}
 	})
 
 	t.Run("service conversion", func(t *testing.T) {
-		for _, depl := range depls {
+		for _, depl := range out.Deployments {
 			associatedService, ok := comp.Services[depl.Name]
 			if !ok {
 				t.Error("could not find associated service")
@@ -86,14 +91,14 @@ func TestComposeConversion(t *testing.T) {
 			}
 
 			if val, ok := associatedService.Environment["KTHCLOUD_CORES"]; ok && depl.CpuCores != nil {
-				if fmt.Sprintf("%v", *depl.CpuCores) != val {
-					t.Errorf("CPU cores mismatch for deployment %s: expected %s, got %v", depl.Name, val, *depl.CpuCores)
+				if fmt.Sprintf("%v", *depl.CpuCores) != *val {
+					t.Errorf("CPU cores mismatch for deployment %s: expected %s, got %v", depl.Name, *val, *depl.CpuCores)
 				}
 			}
 
 			if val, ok := associatedService.Environment["KTHCLOUD_RAM"]; ok && depl.RAM != nil {
-				if fmt.Sprintf("%v", *depl.RAM) != val {
-					t.Errorf("RAM mismatch for deployment %s: expected %s, got %v", depl.Name, val, *depl.RAM)
+				if fmt.Sprintf("%v", *depl.RAM) != *val {
+					t.Errorf("RAM mismatch for deployment %s: expected %s, got %v", depl.Name, *val, *depl.RAM)
 				}
 			}
 		}

@@ -1,21 +1,26 @@
-## kthcloud cicd
+## kthcloud logs
 
-Generate CICD for gh repo
+Get logs from deployments you specify
 
 ### Synopsis
 
 
-This command allows you to setup cicd for your git repo, it creates a custom deployments and adds a workflow for building and pushing to the kthcloud registry on push / merge to main ".github/workflows/".
+Allows you to get logs from specified deployments.
 
 ```
-kthcloud cicd [flags]
+kthcloud logs [services] [flags]
+```
+
+### Examples
+
+```
+kthcloud logs myapp myotherapp
 ```
 
 ### Options
 
 ```
-  -h, --help           help for cicd
-  -j, --save-secrets   Save secrets in json file
+  -h, --help   help for logs
 ```
 
 ### Options inherited from parent commands

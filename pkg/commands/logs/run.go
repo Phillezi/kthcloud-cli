@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/Phillezi/kthcloud-cli/pkg/logs"
-	"github.com/Phillezi/kthcloud-cli/pkg/util"
 	"github.com/kthcloud/go-deploy/dto/v2/body"
 	"github.com/sirupsen/logrus"
 )
@@ -14,8 +13,8 @@ func (c *Command) Run() error {
 	if c.client == nil {
 		return fmt.Errorf("client is nil")
 	}
-	if c.compose == nil {
-		return fmt.Errorf("compose is nil")
+	if len(c.services) == 0 {
+		return fmt.Errorf("no deployments provided")
 	}
 
 	c.client.DropDeploymentsCache()
@@ -31,20 +30,11 @@ func (c *Command) Run() error {
 	}
 
 	var deploymentsToLog []*body.DeploymentRead
-	if len(c.services) > 0 {
-		for name := range c.compose.Source.Services {
-			if !util.Contains(c.services, name) {
-				continue
-			}
-			if depl, exists := deploymentMap[name]; exists {
-				deploymentsToLog = append(deploymentsToLog, depl)
-			}
-		}
-	} else {
-		for name := range c.compose.Source.Services {
-			if depl, exists := deploymentMap[name]; exists {
-				deploymentsToLog = append(deploymentsToLog, depl)
-			}
+	for _, name := range c.services {
+		if depl, exists := deploymentMap[name]; exists {
+			deploymentsToLog = append(deploymentsToLog, depl)
+		} else {
+			logrus.Warnln("deployment with ", name, " not found")
 		}
 	}
 

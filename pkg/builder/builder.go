@@ -8,6 +8,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/kthcloud/go-deploy/models/model"
 
 	"github.com/Phillezi/kthcloud-cli/internal/update"
@@ -16,12 +17,11 @@ import (
 	"github.com/Phillezi/kthcloud-cli/pkg/docker"
 	"github.com/Phillezi/kthcloud-cli/pkg/file"
 	"github.com/Phillezi/kthcloud-cli/pkg/github"
-	"github.com/Phillezi/kthcloud-cli/pkg/models/service"
 	"github.com/sirupsen/logrus"
 )
 
 // build a service
-func Build(client *deploy.Client, ctx context.Context, serviceName string, service *service.Service, yesToAll bool) error {
+func Build(client *deploy.Client, ctx context.Context, serviceName string, service types.ServiceConfig, yesToAll bool) error {
 	if client == nil {
 		return fmt.Errorf("client is nil")
 	}

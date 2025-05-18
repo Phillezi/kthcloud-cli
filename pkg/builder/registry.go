@@ -9,11 +9,11 @@ import (
 
 	"github.com/Phillezi/kthcloud-cli/pkg/deploy"
 	"github.com/Phillezi/kthcloud-cli/pkg/github"
-	"github.com/Phillezi/kthcloud-cli/pkg/models/compose"
+	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/sirupsen/logrus"
 )
 
-func GetBuildsRequired(client *deploy.Client, compose compose.Compose) (map[string]bool, error) {
+func GetBuildsRequired(client *deploy.Client, compose types.Project) (map[string]bool, error) {
 	logrus.Traceln("builder.GetBuildsRequired")
 	var wg sync.WaitGroup
 	var mu sync.Mutex

@@ -4,10 +4,9 @@ import (
 	"errors"
 	"os"
 	"path"
-	"strings"
 
+	"github.com/Phillezi/kthcloud-cli/pkg/convert"
 	"github.com/Phillezi/kthcloud-cli/pkg/deploy"
-	"github.com/Phillezi/kthcloud-cli/pkg/models/compose"
 )
 
 type FileType int
@@ -22,8 +21,8 @@ func (ft FileType) String() string {
 	return [...]string{"Nonexistent", "File", "Dir"}[ft]
 }
 
-func CreateVolumes(c *deploy.Client, composeInstance *compose.Compose) (string, error) {
-	projectDir := composeInstance.Hash()
+func CreateVolumes(c *deploy.Client, compose *convert.Wrap) (string, error) {
+	projectDir := convert.HashServices(compose.Source.Services)
 	user, err := c.User()
 	if err != nil {
 		return "", err
@@ -49,7 +48,7 @@ func CreateVolumes(c *deploy.Client, composeInstance *compose.Compose) (string, 
 		return "", errors.New("did not create the dir: " + projectDir)
 	}
 
-	volumes, err := checkLocalPaths(composeInstance)
+	volumes, err := checkLocalPaths(compose)
 	if err != nil {
 		return "", err
 	}
@@ -64,30 +63,22 @@ func CreateVolumes(c *deploy.Client, composeInstance *compose.Compose) (string, 
 	return projectDir, nil
 }
 
-func checkLocalPaths(composeInstance *compose.Compose) (map[string]FileType, error) {
+func checkLocalPaths(compose *convert.Wrap) (map[string]FileType, error) {
 	pathsStatus := make(map[string]FileType)
 
-	for _, service := range composeInstance.Services {
+	for _, service := range compose.Source.Services {
 		for _, volume := range service.Volumes {
-			// Split the volume by ':'
-			paths := strings.Split(volume, ":")
-			if len(paths) == 0 {
-				continue
-			}
-
-			// Check the first part of the volume (local path)
-			localPath := paths[0]
 
 			// Determine if it's a file, directory, or nonexistent
-			fileInfo, err := os.Stat(localPath)
+			fileInfo, err := os.Stat(volume.Source)
 			if os.IsNotExist(err) {
-				pathsStatus[localPath] = Nonexistent
+				pathsStatus[volume.Source] = Nonexistent
 			} else if err != nil {
 				return nil, err
 			} else if fileInfo.IsDir() {
-				pathsStatus[localPath] = Dir
+				pathsStatus[volume.Source] = Dir
 			} else {
-				pathsStatus[localPath] = File
+				pathsStatus[volume.Source] = File
 			}
 		}
 	}

@@ -34,7 +34,7 @@ func ProcessResponse[T any](responseBody string) (*T, error) {
 	return &item, nil
 }
 
-func DeploymentCreateToUpdate(create *body.DeploymentCreate) body.DeploymentUpdate {
+func DeploymentCreateToUpdate(create body.DeploymentCreate) body.DeploymentUpdate {
 
 	return body.DeploymentUpdate{
 		// skipping name here
