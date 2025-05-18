@@ -2,13 +2,13 @@ package cmd
 
 import (
 	"github.com/Phillezi/kthcloud-cli/internal/interrupt"
+	"github.com/Phillezi/kthcloud-cli/internal/load"
 	"github.com/Phillezi/kthcloud-cli/internal/options"
 	"github.com/Phillezi/kthcloud-cli/pkg/commands/compose/down"
 	"github.com/Phillezi/kthcloud-cli/pkg/commands/compose/logs"
 	"github.com/Phillezi/kthcloud-cli/pkg/commands/compose/parse"
 	"github.com/Phillezi/kthcloud-cli/pkg/commands/compose/stop"
 	"github.com/Phillezi/kthcloud-cli/pkg/commands/compose/up"
-	"github.com/Phillezi/kthcloud-cli/pkg/parser"
 	"github.com/Phillezi/kthcloud-cli/pkg/storage"
 	"github.com/kthcloud/go-deploy/pkg/log"
 	"github.com/sirupsen/logrus"
@@ -40,7 +40,7 @@ Adding the --json flag will return pure json as response.`,
 		if err != nil {
 			logrus.Fatal(err)
 		}
-		compose, err := parser.GetCompose()
+		compose, err := load.GetCompose()
 		if err != nil {
 			logrus.Error(err)
 			return
@@ -84,7 +84,7 @@ Default behaviour of this command will after creating all the deployments setup 
 			buildAll = true
 		}
 
-		compose, err := parser.GetCompose()
+		compose, err := load.GetCompose()
 		if err != nil {
 			logrus.Errorln(err)
 			return
@@ -115,7 +115,7 @@ This command will bring down all services specified in the compose file. By defa
 		if err != nil {
 			logrus.Fatal(err)
 		}
-		compose, err := parser.GetCompose()
+		compose, err := load.GetCompose()
 		if err != nil {
 			logrus.Errorln(err)
 			return
@@ -138,7 +138,7 @@ This command will disable all services specified in the compose file. This is do
 
 [!NOTE]: At the time of writing this there is currently a but that when trying to re-enable these services later requires you to change more than just setting replicas back to 1 or whatever value it was before.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		compose, err := parser.GetCompose()
+		compose, err := load.GetCompose()
 		if err != nil {
 			logrus.Errorln(err)
 			return
@@ -158,7 +158,7 @@ var composeLogsCmd = &cobra.Command{
 	Long: `
 This command allows you to get all logs from the services specified in the compose file.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		compose, err := parser.GetCompose()
+		compose, err := load.GetCompose()
 		if err != nil {
 			logrus.Errorln(err)
 			return

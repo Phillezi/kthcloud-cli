@@ -63,7 +63,7 @@ func (c *Command) stopAllServices(
 	addJob func(job *scheduler.Job,
 	) string) error {
 
-	for name := range c.compose.Services {
+	for name := range c.compose.Source.Services {
 		if deployment, exists := deploymentMap[name]; exists {
 			sjob := scheduler.NewJob(func(ctx context.Context, cancelCallback func()) error {
 				disableDepl := &body.DeploymentUpdate{
@@ -108,7 +108,7 @@ func (c *Command) stopSpecifiedServices(
 		return fmt.Errorf("no specified services")
 	}
 
-	for name := range c.compose.Services {
+	for name := range c.compose.Source.Services {
 		if !util.Contains(c.services, name) {
 			continue
 		}

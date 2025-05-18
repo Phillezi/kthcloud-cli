@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/Phillezi/kthcloud-cli/pkg/deploy"
-	"github.com/Phillezi/kthcloud-cli/pkg/util"
 )
 
 type Command struct {
@@ -18,7 +17,7 @@ func New(opts ...CommandOpts) *Command {
 		opt = opts[0]
 	}
 	return &Command{
-		ctx:    util.PtrOr(opt.Context, context.Background()),
+		ctx:    context.Background(),
 		client: opt.Client,
 	}
 }

@@ -21,7 +21,7 @@ func New(opts ...CommandOpts) *Command {
 		opt = opts[0]
 	}
 	return &Command{
-		ctx:    util.PtrOr(opt.Context, context.Background()),
+		ctx:    context.Background(),
 		client: opt.Client,
 
 		all: util.PtrOr(opt.All, defaults.DefaultPsAll),

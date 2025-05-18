@@ -33,12 +33,11 @@ func (c *Command) up() error {
 	jobMap := make(map[string]*scheduler.Job)
 	jobIDs := make(map[string]string, 1)
 
-	deployments, dependencies := c.compose.ToDeploymentsWDeps()
-	for _, deployment := range deployments {
+	for _, deployment := range c.compose.Deployments {
 		job := scheduler.NewJob(func(ctx context.Context, cancelCallback func()) error {
 			var resp *resty.Response
 			var err error
-			service := c.compose.Services[deployment.Name]
+			service := c.compose.Source.Services[deployment.Name]
 
 			deplExistsWithSameName, deplWithSameNameID, deplWithSameNameHasSameImage := c.client.DeploymentExistsByNameWFilter(deployment.Name, func(depl body.DeploymentRead) bool {
 				if util.NotNilOrEmpty(depl.Image) && util.NotNilOrEmpty(deployment.Image) {
@@ -141,7 +140,7 @@ func (c *Command) up() error {
 
 	}
 
-	for depl, deps := range dependencies {
+	for depl, deps := range c.compose.Dependencies {
 		job := jobMap[depl]
 		for _, dep := range deps {
 			if depJob, ok := jobMap[dep]; !ok {

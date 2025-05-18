@@ -1,18 +1,16 @@
-package ps
+package logs
 
 import (
 	"context"
 
-	"github.com/Phillezi/kthcloud-cli/pkg/defaults"
 	"github.com/Phillezi/kthcloud-cli/pkg/deploy"
-	"github.com/Phillezi/kthcloud-cli/pkg/util"
 )
 
 type Command struct {
 	ctx    context.Context
 	client *deploy.Client
 
-	all bool
+	services []string
 }
 
 func New(opts ...CommandOpts) *Command {
@@ -24,7 +22,7 @@ func New(opts ...CommandOpts) *Command {
 		ctx:    context.Background(),
 		client: opt.Client,
 
-		all: util.PtrOr(opt.All, defaults.DefaultPsAll),
+		services: opt.Services,
 	}
 }
 

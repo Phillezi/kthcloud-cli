@@ -3,9 +3,9 @@ package parse
 import (
 	"context"
 
+	"github.com/Phillezi/kthcloud-cli/pkg/convert"
 	"github.com/Phillezi/kthcloud-cli/pkg/defaults"
 	"github.com/Phillezi/kthcloud-cli/pkg/deploy"
-	"github.com/Phillezi/kthcloud-cli/pkg/models/compose"
 	"github.com/Phillezi/kthcloud-cli/pkg/util"
 )
 
@@ -13,7 +13,7 @@ type Command struct {
 	ctx    context.Context
 	client *deploy.Client
 
-	compose *compose.Compose
+	compose *convert.Wrap
 	json    bool
 }
 
@@ -23,7 +23,7 @@ func New(opts ...CommandOpts) *Command {
 		opt = opts[0]
 	}
 	return &Command{
-		ctx:    util.PtrOr(opt.Context, context.Background()),
+		ctx:    context.Background(),
 		client: opt.Client,
 
 		compose: opt.Compose,

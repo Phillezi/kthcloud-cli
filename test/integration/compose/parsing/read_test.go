@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Phillezi/kthcloud-cli/pkg/models/compose"
+	"github.com/Phillezi/kthcloud-cli/internal/load"
 )
 
 const (
@@ -32,7 +32,7 @@ func TestComposeParsing(t *testing.T) {
 				t.Fatalf("error reading file: %s", tc.filePath)
 			}
 
-			comp, err := compose.New(tc.filePath)
+			comp, err := load.InternalGetCompose(load.LoadOpts{File: tc.filePath})
 			if err != nil && !tc.expectErr {
 				t.Fatalf("unexpected error status: %v", err)
 			}
@@ -41,8 +41,8 @@ func TestComposeParsing(t *testing.T) {
 				return
 			}
 
-			if len(comp.Services) != tc.serviceCount {
-				t.Errorf("expected %d services, got %d", tc.serviceCount, len(comp.Services))
+			if len(comp.Source.Services) != tc.serviceCount {
+				t.Errorf("expected %d services, got %d", tc.serviceCount, len(comp.Source.Services))
 			}
 		})
 	}
