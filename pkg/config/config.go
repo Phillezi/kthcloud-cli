@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -53,7 +54,7 @@ func getConfigPath() (string, error) {
 func GetConfigPath() string {
 	configPath, err := getConfigPath()
 	if err != nil {
-		log.Errorln(err)
+		logrus.Errorln(err)
 		configPath = "."
 	}
 	return configPath

@@ -34,6 +34,8 @@ func ToCloud(in *types.Project, out *Wrap) error {
 		out.Deployments = append(out.Deployments, *depl)
 		if len(deps) > 0 {
 			out.Dependencies[depl.Name] = deps
+		} else {
+			out.Dependencies[depl.Name] = make([]string, 0)
 		}
 	}
 

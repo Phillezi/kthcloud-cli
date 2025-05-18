@@ -17,11 +17,11 @@ func (c *Client) Create(data any) (*resty.Response, error) {
 	var path string
 
 	switch v := data.(type) {
-	case *body.DeploymentCreate:
+	case *body.DeploymentCreate, body.DeploymentCreate:
 		path = "/v2/deployments"
-	case *body.VmCreate:
+	case *body.VmCreate, body.VmCreate:
 		path = "/v2/vms"
-	case *body.ApiKeyCreate:
+	case *body.ApiKeyCreate, body.ApiKeyCreate:
 		user, err := c.User()
 		if err != nil {
 			return nil, err

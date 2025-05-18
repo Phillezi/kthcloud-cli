@@ -10,7 +10,6 @@ import (
 	"github.com/Phillezi/kthcloud-cli/pkg/commands/compose/stop"
 	"github.com/Phillezi/kthcloud-cli/pkg/commands/compose/up"
 	"github.com/Phillezi/kthcloud-cli/pkg/storage"
-	"github.com/kthcloud/go-deploy/pkg/log"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -99,7 +98,7 @@ Default behaviour of this command will after creating all the deployments setup 
 			TryVolumes:      &tryToCreateVolumes,
 			NonInteractive:  &nonInteractive,
 		}).WithContext(interrupt.GetInstance().Context()).Run(); err != nil {
-			log.Errorln(err)
+			logrus.Errorln(err)
 			return
 		}
 	},
