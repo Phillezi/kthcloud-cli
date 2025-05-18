@@ -5,6 +5,7 @@ import (
 
 	"github.com/Phillezi/kthcloud-cli/internal/interrupt"
 	"github.com/Phillezi/kthcloud-cli/pkg/convert"
+	"github.com/Phillezi/kthcloud-cli/pkg/defaults"
 	"github.com/Phillezi/kthcloud-cli/pkg/util"
 	"github.com/compose-spec/compose-go/v2/cli"
 	"github.com/spf13/viper"
@@ -42,6 +43,7 @@ func InternalGetCompose(opts ...LoadOpts) (*convert.Wrap, error) {
 				return cli.NewProjectOptions(
 					[]string{composeFilePath},
 					WithDefaultConfigPath,
+					WithEnvFiles(defaults.DefaultComposeDotEnvFileNames...),
 					cli.WithOsEnv,
 					cli.WithDotEnv,
 					cli.WithName(projectName),
@@ -50,6 +52,7 @@ func InternalGetCompose(opts ...LoadOpts) (*convert.Wrap, error) {
 			return cli.NewProjectOptions(
 				nil,
 				WithDefaultConfigPath,
+				WithEnvFiles(defaults.DefaultComposeDotEnvFileNames...),
 				cli.WithOsEnv,
 				cli.WithDotEnv,
 				cli.WithName(projectName),
