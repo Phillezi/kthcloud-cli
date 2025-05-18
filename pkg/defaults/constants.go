@@ -41,4 +41,6 @@ const (
 	DefaultDeploymentRunTTY         bool = false
 	DefaultDeploymentRunRemove      bool = false
 	DefaultDeploymentRunDetatch     bool = false
+
+	DefaultDeploymentZone string = "se-flem-2"
 )
