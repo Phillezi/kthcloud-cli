@@ -118,6 +118,7 @@ func ServiceToDeployment(in *types.ServiceConfig, additionalInfo ...ServiceToDep
 	if in.Deploy != nil {
 		if in.Deploy.Resources.Limits != nil {
 			// TODO: implement
+			logrus.Warnln("service.Deploy.Resources.Limits is not implemented")
 		}
 	}
 
@@ -160,6 +161,10 @@ func ServiceToDeployment(in *types.ServiceConfig, additionalInfo ...ServiceToDep
 
 	if in.Gpus != nil {
 		logrus.Warnln("service.Gpus is not implemented, yet ;)")
+	}
+
+	if in.DNS != nil {
+		logrus.Warnln("service.DNS is not implemented")
 	}
 
 	return out, dependencies, nil

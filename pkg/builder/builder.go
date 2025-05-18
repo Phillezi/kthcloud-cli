@@ -55,11 +55,15 @@ func Build(client *deploy.Client, ctx context.Context, serviceName string, servi
 			} else {
 				addWorkflow = true
 			}
-			create.New(create.CommandOpts{
+			if err := create.New(create.CommandOpts{
+				Client:         client,
 				RootDir:        &baseDir,
 				CreateWorkFlow: &addWorkflow,
 				DeploymentName: &serviceName,
-			}).WithContext(ctx).Run()
+			}).WithContext(ctx).Run(); err != nil {
+				logrus.Error(err)
+				return
+			}
 		}
 		deploymentID, err = GetCICDDeploymentID(service.Build.Context, onCicdNotConfigured)
 		if err != nil {
@@ -97,6 +101,7 @@ func Build(client *deploy.Client, ctx context.Context, serviceName string, servi
 		conf, errGettingConf = github.ToModel(ciConf)
 		if errGettingConf != nil {
 			// TODO: something here
+			continue
 		}
 
 		username, password, tag, errGettingConf = github.ExtractSecrets(conf)
