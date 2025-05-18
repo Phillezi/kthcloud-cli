@@ -19,7 +19,11 @@ func (c *Client) Remove(data any) (*resty.Response, error) {
 	switch v := data.(type) {
 	case *body.DeploymentRead:
 		path = "/v2/deployments/" + v.ID
+	case body.DeploymentRead:
+		path = "/v2/deployments/" + v.ID
 	case *body.VmRead:
+		path = "/v2/vms/" + v.ID
+	case body.VmRead:
 		path = "/v2/vms/" + v.ID
 	default:
 		return nil, fmt.Errorf("unsupported data type: %T", v)

@@ -47,7 +47,6 @@ func (c *Command) up() error {
 			})
 
 			var mode string
-
 			if !deplExistsWithSameName {
 				resp, err = c.client.Create(deployment)
 				mode = "create"
@@ -76,6 +75,14 @@ func (c *Command) up() error {
 				logrus.Error(err)
 				return err
 			}
+			if resp.IsError() {
+				logrus.Errorln("failed to  ", mode, " deployment ", deployment.Name, " status: ", resp.Status())
+
+				logrus.Errorln("response body:", string(resp.Body()))
+
+				cancelCallback()
+				return err
+			}
 			err = response.IsError(resp.String())
 			if err != nil {
 				logrus.Error(err)
@@ -102,7 +109,7 @@ func (c *Command) up() error {
 			logrus.Debugln("removing depl")
 			var found *body.DeploymentRead
 			func() {
-				for i := 0; i < 2; i++ {
+				for range 2 {
 					depls, err := c.client.Deployments()
 					if err != nil {
 						logrus.Fatal(err)

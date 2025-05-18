@@ -5,10 +5,13 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/Phillezi/kthcloud-cli/pkg/defaults"
 	"github.com/Phillezi/kthcloud-cli/pkg/util"
 	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/kthcloud/go-deploy/dto/v2/body"
+	"github.com/kthcloud/go-deploy/utils"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 func ToCloud(in *types.Project, out *Wrap) error {
@@ -34,6 +37,8 @@ func ToCloud(in *types.Project, out *Wrap) error {
 		out.Deployments = append(out.Deployments, *depl)
 		if len(deps) > 0 {
 			out.Dependencies[depl.Name] = deps
+		} else {
+			out.Dependencies[depl.Name] = make([]string, 0)
 		}
 	}
 
@@ -165,6 +170,26 @@ func ServiceToDeployment(in *types.ServiceConfig, additionalInfo ...ServiceToDep
 
 	if in.DNS != nil {
 		logrus.Warnln("service.DNS is not implemented")
+	}
+
+	if out.Zone == nil && viper.GetString("zone") != "" {
+		out.Zone = utils.PtrOf(util.Or(viper.GetString("zone"), defaults.DefaultDeploymentZone))
+	}
+
+	if out.HealthCheckPath == nil {
+		out.HealthCheckPath = utils.PtrOf("/healthz")
+	}
+
+	if out.CpuCores == nil {
+		out.CpuCores = utils.PtrOf(defaults.DefaultDeploymentCores)
+	}
+
+	if out.RAM == nil {
+		out.RAM = utils.PtrOf(defaults.DefaultDeploymentMemory)
+	}
+
+	if out.Replicas == nil {
+		out.Replicas = utils.PtrOf(defaults.DefaultDeploymentReplicas)
 	}
 
 	return out, dependencies, nil
