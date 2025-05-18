@@ -44,6 +44,7 @@ func (s *Server) Serve() error {
 		defer wg.Done()
 		select {
 		case <-ctx.Done():
+			logrus.Debug("recv cancel signal, shutting down server...")
 			if err := server.Shutdown(s.ctx); err != nil {
 				// log err here
 				logrus.Errorln(err)
@@ -51,6 +52,7 @@ func (s *Server) Serve() error {
 			// log ctx cancellation here
 			logrus.Debug("server cancelled")
 		case <-s.ctx.Done():
+			logrus.Debug("recv cancel signal, shutting down server...")
 			if err := server.Shutdown(s.ctx); err != nil {
 				// log err here
 				logrus.Errorln(err)
@@ -63,7 +65,18 @@ func (s *Server) Serve() error {
 	defer logrus.Infoln("server closed")
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		logrus.Errorf("Server failed: %s", err)
-		// log err here
+		if s.cancelServer != nil {
+			s.once.Do(s.cancelServer)
+		}
+		go func() {
+			select {
+			case s.sessionChannel <- nil:
+			default:
+				logrus.Warn("session channel was full")
+			}
+		}()
+		wg.Wait()
+		return err
 	}
 
 	wg.Wait()
@@ -126,8 +139,17 @@ func (s *Server) handleAuthRedirect(doneURL string) http.HandlerFunc {
 			go func() {
 				select {
 				case s.sessionChannel <- session.New(*jwt):
-					s.sent = true
-					s.cancelServer()
+					select {
+					case <-s.authDoneVisited:
+						logrus.Debugln("auth page was visited closing gracefully.")
+					case <-time.After(10 * time.Second):
+						logrus.Warnln("timeout reached before auth page was visited, forcing exit.")
+					}
+					if s.cancelServer != nil {
+						s.once.Do(s.cancelServer)
+					} else {
+						logrus.Warnln("cancel server func is nil!")
+					}
 				default:
 					logrus.Error("failed to send jwt, channel full")
 				}
@@ -147,8 +169,10 @@ func (s *Server) handleAuthDone() http.HandlerFunc {
 		fmt.Fprintln(w, authenticatedHTML)
 
 		go func() {
-			if s.cancelServer != nil {
-				s.cancelServer()
+			select {
+			case s.authDoneVisited <- struct{}{}:
+			default:
+				logrus.Warn("authDoneVisited channel is full")
 			}
 		}()
 	}

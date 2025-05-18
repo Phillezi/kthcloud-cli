@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"net/http"
+	"sync"
 
 	"github.com/Phillezi/kthcloud-cli/pkg/defaults"
 	"github.com/Phillezi/kthcloud-cli/pkg/session"
@@ -18,14 +19,14 @@ type Server struct {
 	redirectPath string
 	redirectURI  string
 
-	sessionChannel chan *session.Session
+	sessionChannel  chan *session.Session
+	authDoneVisited chan struct{}
 
 	fetchOAuthToken func(redirectURI, code string) (*http.Response, error)
 
 	cancelServer context.CancelFunc
 
-	// state
-	sent bool
+	once sync.Once
 }
 
 func New(opts ...ServerOpts) *Server {
@@ -44,6 +45,7 @@ func New(opts ...ServerOpts) *Server {
 		redirectPath: util.PtrOr(opt.RedirectPath, defaults.DefaultRedirectBasePath),
 
 		sessionChannel:  util.PtrOr(opt.SessionChannel),
+		authDoneVisited: make(chan struct{}),
 		fetchOAuthToken: opt.FetchOAuthToken,
 	}
 
