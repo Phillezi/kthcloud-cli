@@ -11,4 +11,9 @@ var (
 		"compose.yaml",
 		"compose.yml",
 	}
+
+	DefaultComposeDotEnvFileNames []string = []string{
+		".env",
+		".env.kthcloud",
+	}
 )

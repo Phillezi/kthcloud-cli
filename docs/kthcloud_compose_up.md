@@ -14,6 +14,8 @@ To rebuild services you can apply the --build flag to rebuild all services, or s
 
 Volumes can be defined and managed, but it is done in a hacky way. Since the storage (filebrowser) instance that gets deployed for your user is behind a oauth2 proxy that only uses cookies for authentication. The current solution is as mention very hacky as it will try to scrape your browser for these cookies to authenticate. This only works on Linux and MacOS, but it can be unreliable since browser companies dont want you to be able too scrape stuff like this.
 
+Environment variables are resolved from .env and .env.kthcloud in the working dir of your compose file. The values are merged, values defined in .env.kthcloud will have priority and override the ones in .env. To see what gets resolved you can use the "kthcloud compose parse" command.
+
 Default behaviour of this command will after creating all the deployments setup SSE log streams from all created deployments to your terminal. This can be skipped by adding the -d flag.
 
 ```

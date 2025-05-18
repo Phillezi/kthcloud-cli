@@ -3,10 +3,12 @@ package load
 import (
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/Phillezi/kthcloud-cli/pkg/defaults"
 	"github.com/compose-spec/compose-go/v2/cli"
+	"github.com/compose-spec/compose-go/v2/consts"
 	"github.com/sirupsen/logrus"
 )
 
@@ -34,6 +36,46 @@ func WithDefaultConfigPath(o *cli.ProjectOptions) error {
 			return nil
 		}
 		pwd = parent
+	}
+}
+
+func WithEnvFiles(file ...string) cli.ProjectOptionsFn {
+	return func(o *cli.ProjectOptions) error {
+		if len(file) > 0 {
+			wd, err := o.GetWorkingDir()
+			if err != nil {
+				return err
+			}
+			o.EnvFiles = findFiles(file, wd)
+			return nil
+		}
+		if v, ok := os.LookupEnv(consts.ComposeDisableDefaultEnvFile); ok {
+			b, err := strconv.ParseBool(v)
+			if err != nil {
+				return err
+			}
+			if b {
+				return nil
+			}
+		}
+
+		wd, err := o.GetWorkingDir()
+		if err != nil {
+			return err
+		}
+		defaultDotEnv := filepath.Join(wd, ".env")
+
+		s, err := os.Stat(defaultDotEnv)
+		if os.IsNotExist(err) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if !s.IsDir() {
+			o.EnvFiles = []string{defaultDotEnv}
+		}
+		return nil
 	}
 }
 
