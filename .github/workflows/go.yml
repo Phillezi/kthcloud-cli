@@ -62,6 +62,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set GOPATH and PATH
+        run: |
+          export GOPATH=$HOME/go
+          echo "$GOPATH/bin" >> $GITHUB_PATH
+
       - name: Generate
         run: |
           make licenses
