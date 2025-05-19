@@ -28,7 +28,9 @@ func (c *Client) Login() (sess *session.Session, err error) {
 
 func (c *Client) Storage() *filebrowser.Client {
 	if c.storageClient == nil {
-		c.storageClient = filebrowser.New().WithContext(c.ctx)
+		c.storageClient = filebrowser.New(filebrowser.ClientOpts{
+			Session: c.session,
+		}).WithContext(c.ctx)
 	}
 	return c.storageClient
 }

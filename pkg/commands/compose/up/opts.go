@@ -14,6 +14,5 @@ type CommandOpts struct {
 
 	BuildAll       *bool
 	Detatched      *bool
-	TryVolumes     *bool
 	NonInteractive *bool
 }

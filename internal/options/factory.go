@@ -3,27 +3,43 @@ package options
 import (
 	"fmt"
 	"net/url"
+	"path"
+	"sync"
 
 	"github.com/Phillezi/kthcloud-cli/internal/interrupt"
 	"github.com/Phillezi/kthcloud-cli/pkg/auth"
+	"github.com/Phillezi/kthcloud-cli/pkg/config"
+	"github.com/Phillezi/kthcloud-cli/pkg/defaults"
 	"github.com/Phillezi/kthcloud-cli/pkg/deploy"
 	"github.com/Phillezi/kthcloud-cli/pkg/filebrowser"
+	"github.com/Phillezi/kthcloud-cli/pkg/session"
+	"github.com/Phillezi/kthcloud-cli/pkg/util"
 	"github.com/spf13/viper"
 )
 
-func DeployOpts() deploy.ClientOpts {
-	baseURL := viper.GetString("api-url")
+var (
+	once       sync.Once
+	deployOpts *deploy.ClientOpts
+)
 
-	return deploy.ClientOpts{
-		BaseURL: &baseURL,
-	}
+func DeployOpts() deploy.ClientOpts {
+	once.Do(func() {
+		baseURL := util.Or(viper.GetString("api-url"), defaults.DefaultDeployBaseURL)
+		sess, _ := session.Load(util.Or(viper.GetString("session-path"), path.Join(config.GetConfigPath(), "session.json")))
+
+		deployOpts = &deploy.ClientOpts{
+			BaseURL: &baseURL,
+			Session: sess,
+		}
+	})
+	return *deployOpts
 }
 
 func AuthOpts() auth.ClientOpts {
-	keycloakBaseURL := viper.GetString("keycloak-host")
-	keycloakClientID := viper.GetString("client-id")
-	keycloakClientSecret := viper.GetString("client-secret")
-	keycloakRealm := viper.GetString("keycloak-realm")
+	keycloakBaseURL := util.Or(viper.GetString("keycloak-host"), defaults.DefaultKeycloakBaseURL)
+	keycloakClientID := util.Or(viper.GetString("client-id"), defaults.DefaultKeycloakClientID)
+	keycloakClientSecret := util.Or(viper.GetString("client-secret"), defaults.DefaultKeycloakClientSecret)
+	keycloakRealm := util.Or(viper.GetString("keycloak-realm"), defaults.DefaultKeycloakRealm)
 
 	redirectURI := viper.GetString("redirect-uri")
 	var (
@@ -52,17 +68,21 @@ func AuthOpts() auth.ClientOpts {
 		SessionPath: &sessionPath,
 
 		RequestTimeout: &requestTimeout,
+		Session:        DeployOpts().Session,
 	}
 }
 
 func FilebrowserOpts() filebrowser.ClientOpts {
 	keycloakBaseURL := viper.GetString("keycloak-host")
+	filebrowserURL := util.Or(viper.GetString("filebrowser-url"), defaults.DefaultStorageManagerProxy)
 
 	requestTimeout := viper.GetDuration("request-timeout")
 
 	return filebrowser.ClientOpts{
 		KeycloakBaseURL: &keycloakBaseURL,
 		RequestTimeout:  &requestTimeout,
+		Session:         DeployOpts().Session,
+		FilebrowserURL:  &filebrowserURL,
 	}
 }
 

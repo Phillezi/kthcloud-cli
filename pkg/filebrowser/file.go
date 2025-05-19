@@ -77,6 +77,12 @@ func (c *Client) postFile(filePath string) (bool, error) {
 
 	req.Header.Set("X-Auth", c.token)
 
+	if c.session != nil && c.session.Token.AccessToken != "" {
+		req.Header.Set("Authorization", "Bearer "+c.session.Token.AccessToken)
+	} else {
+		return false, fmt.Errorf("no active session")
+	}
+
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return false, err
@@ -110,6 +116,12 @@ func (c *Client) headFile(filePath string) (int, error) {
 
 	req.Header.Set("X-Auth", c.token)
 
+	if c.session != nil && c.session.Token.AccessToken != "" {
+		req.Header.Set("Authorization", "Bearer "+c.session.Token.AccessToken)
+	} else {
+		return 0, fmt.Errorf("no active session")
+	}
+
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return 0, err
@@ -141,10 +153,7 @@ func (c *Client) patchFile(filePath string, content []byte, uploadOffset, chunkS
 	}
 
 	totalBytes := len(content)
-	chunkEnd := uploadOffset + chunkSize
-	if chunkEnd > totalBytes {
-		chunkEnd = totalBytes
-	}
+	chunkEnd := min(uploadOffset+chunkSize, totalBytes)
 
 	chunk := content[uploadOffset:chunkEnd]
 
@@ -161,6 +170,12 @@ func (c *Client) patchFile(filePath string, content []byte, uploadOffset, chunkS
 	req.Header.Set("X-Auth", c.token)
 	req.Header.Set("Content-Type", "application/offset+octet-stream")
 	req.Header.Set("Upload-Offset", fmt.Sprintf("%d", uploadOffset))
+
+	if c.session != nil && c.session.Token.AccessToken != "" {
+		req.Header.Set("Authorization", "Bearer "+c.session.Token.AccessToken)
+	} else {
+		return false, fmt.Errorf("no active session")
+	}
 
 	resp, err := c.client.Do(req)
 	if err != nil {

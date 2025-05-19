@@ -15,6 +15,8 @@ const (
 	DefaultKeycloakClientID     string = "landing"
 	DefaultKeycloakClientSecret string = ""
 
+	DefaultStorageManagerProxy string = "https://sm-proxy.app.cloud.cbh.kth.se"
+
 	DefaultCreateWorkflow bool = true
 
 	DefaultSaveSecrets bool = false

@@ -41,7 +41,7 @@
 
 ## Overview
 
-`kthcloud-cli` is a command-line interface tool for interacting with kthcloud’s API. It allows you to perform various operations such as listin deployments, creating api keys, and creating deployments from `docker-compose` files.
+`kthcloud-cli` is a command-line interface tool for interacting with kthcloud’s API. It allows you to perform various operations such as listing deployments, creating api keys, and creating deployments from `docker-compose` files.
 
 <div align="center">
     
@@ -92,11 +92,10 @@ services:
       KTHCLOUD_CORES: 0.1
       KTHCLOUD_RAM: 0.1
       KTHCLOUD_VISIBILITY: private
-
 ```
 
 > [!NOTE]  
-> The above example showcases what is supported but does not provide a functional application. You need to have the ./testpath in your `cwd`.
+> The above example showcases what is supported but does not provide a functional application.
 
 The tool will create four deployments and set up their environment variables, port, start commands and persistent storage.
 
@@ -137,7 +136,8 @@ If you have `go` installed and with `GOBIN` set and added to `PATH` you can inst
 
 ```bash
 go install github.com/Phillezi/kthcloud-cli@latest
-``` 
+```
+
 > [!NOTE]  
 > The cli executable will be named `kthcloud-cli` from the module / repo name instead of `kthcloud`.
 
@@ -148,7 +148,7 @@ If your OS and architecture combo isnt available as a pre-built binary and you d
 #### Prerequisites
 
 - [![Git](https://img.shields.io/badge/Git-FFFFFF?style=for-the-badge&logo=Git&logoColor=black)](https://git-scm.com/downloads)
-- [![Go >= 1.23.1](https://img.shields.io/badge/Go%20%3E%3D%201.23.1-FFFFFF?style=for-the-badge&logo=go&logoColor=black)](https://go.dev/dl/)
+- [![Go >= 1.24.3](https://img.shields.io/badge/Go%20%3E%3D%201.24.3-FFFFFF?style=for-the-badge&logo=go&logoColor=black)](https://go.dev/dl/)
 - [![Gnu Make](https://img.shields.io/badge/GNU%20Make-FFFFFF?style=for-the-badge&logo=GNU&logoColor=black)](https://www.gnu.org/software/make/)
 
 1. Clone the repository:
@@ -178,6 +178,8 @@ If your OS and architecture combo isnt available as a pre-built binary and you d
 
 ### Commands
 
+The commands are described in [docs/](./docs/).
+
 #### Login command
 
 Logs in to kthcloud and retrieves an authentication token, the token gets saved to a file named `session.json` inside the configuration path. It opens a browser window to let you login through the kthcloud keycloak login page.
@@ -205,7 +207,8 @@ Brings up the services defined in the Docker Compose file.
 ##### Compose down command
 
 Brings down the services defined in the Docker Compose file.
-> ![NOTE]
+
+> [!NOTE]
 > This will not remove the volumes created on the storagemanager.
 
 ##### Compose parse command
@@ -217,9 +220,6 @@ Parses a Docker Compose file and prints the Services, Envs, Ports, Commands, Dep
 Checks for newer releases than the release of the binary running the command. If a newer release is found it will prompt you to install it, (can be bypassed wit the `-y` flag).
 
 Versions can be selected by passing the `-i` flag.
-
-> [!WARNING]
-> This currently doesnt work as expected on Windows.
 
 > [!WARNING]
 > This does not verify against a hash to confirm the integrity of the bibary (yet).
@@ -242,19 +242,4 @@ kthcloud version
 
 ## Configuration
 
-The `kthcloud-cli` uses a configuration file named `config.yaml` it is located in the configuration directory. You can specify the following fields:
-
-- `api-url`: The URL of the API endpoint.
-- `api-token`: The api token from kthcloud.
-- `loglevel`: The logging level (info, warn, error, debug) (default "info")
-- `resource-cache-duration duration`: How long resources should be cached when possible (default 1m0s)
-- `session-path`: The filepath where the session should be loaded and saved to (default "~/.config/.kthcloud/session.json")
-- `zone`: The preferred kthcloud zone to use, will use `se-flem2` by default
-
-Example `config.yaml`:
-
-```yaml
-api-url: https://api.example.com
-api-token: your-api-key-from-kthcloud
-loglevel: error
-```
+The `kthcloud-cli` uses a configuration file named `config.yaml` it is located in the configuration directory. You can specify all the options that are available (run `kthcloud --help` too see them).

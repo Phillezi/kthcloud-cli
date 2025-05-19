@@ -4,16 +4,14 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
-	"time"
 
-	"golang.org/x/exp/rand"
+	"math/rand/v2"
 )
 
 func generateRandomState() string {
-	rand.Seed(uint64(time.Now().UnixNano()))
 	const charset = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
 	randomize := func(c rune) rune {
-		r := rand.Intn(16)
+		r := rand.IntN(16)
 		if c == 'x' {
 			return rune(fmt.Sprintf("%x", r)[0])
 		}

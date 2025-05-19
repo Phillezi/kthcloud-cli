@@ -2,17 +2,14 @@ package update
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
+	"net/http"
 
 	log "github.com/sirupsen/logrus"
+
+	"github.com/minio/selfupdate"
 )
 
 func updateInteractively() (bool, error) {
-	execPath, err := os.Executable()
-	if err != nil {
-		return false, fmt.Errorf("failed to get executable path: %v", err)
-	}
 
 	releases, err := GetReleases()
 	if err != nil {
@@ -33,25 +30,22 @@ func updateInteractively() (bool, error) {
 		return false, nil
 	}
 
-	newBinaryPath := filepath.Join(os.TempDir(), "kthcloud-cli-new")
 	downloadURL, err := FindBinaryForCurrentPlatform(selectedRelease)
 	if err != nil {
 		return false, err
 	}
 
-	err = DownloadBinary(downloadURL, newBinaryPath)
+	binResp, err := http.Get(downloadURL)
 	if err != nil {
 		return false, err
 	}
-
-	err = CopyFile(newBinaryPath, execPath)
+	defer binResp.Body.Close()
+	err = selfupdate.Apply(binResp.Body, selfupdate.Options{})
 	if err != nil {
-		return false, fmt.Errorf("error replacing binary: %v", err)
-	}
-
-	err = os.Remove(newBinaryPath)
-	if err != nil {
-		return false, fmt.Errorf("error removing temporary file: %v", err)
+		if rerr := selfupdate.RollbackError(err); rerr != nil {
+			log.Errorf("Failed to rollback from bad update: %v", rerr)
+		}
+		return false, err
 	}
 
 	return true, nil
@@ -61,11 +55,6 @@ func Update(skipPrompt bool, interactive bool) (bool, error) {
 	if interactive {
 		return updateInteractively()
 	}
-	execPath, err := os.Executable()
-	if err != nil {
-		return false, fmt.Errorf("failed to get executable path: %v", err)
-	}
-
 	latestRelease, err := GetLatestRelease()
 	if err != nil {
 		return false, fmt.Errorf("failed to get latest release: %v", err)
@@ -90,25 +79,22 @@ func Update(skipPrompt bool, interactive bool) (bool, error) {
 		}
 	}
 
-	newBinaryPath := filepath.Join(os.TempDir(), "kthcloud-cli-new")
 	downloadURL, err := FindBinaryForCurrentPlatform(latestRelease)
 	if err != nil {
 		return false, err
 	}
 
-	err = DownloadBinary(downloadURL, newBinaryPath)
+	binResp, err := http.Get(downloadURL)
 	if err != nil {
 		return false, err
 	}
-
-	err = CopyFile(newBinaryPath, execPath)
+	defer binResp.Body.Close()
+	err = selfupdate.Apply(binResp.Body, selfupdate.Options{})
 	if err != nil {
-		return false, fmt.Errorf("error replacing binary: %v", err)
-	}
-
-	err = os.Remove(newBinaryPath)
-	if err != nil {
-		return false, fmt.Errorf("error removing temporary file: %v", err)
+		if rerr := selfupdate.RollbackError(err); rerr != nil {
+			log.Errorf("Failed to rollback from bad update: %v", rerr)
+		}
+		return false, err
 	}
 
 	return true, nil
