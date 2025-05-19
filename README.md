@@ -41,7 +41,7 @@
 
 ## Overview
 
-`kthcloud-cli` is a command-line interface tool for interacting with kthcloud’s API. It allows you to perform various operations such as listin deployments, creating api keys, and creating deployments from `docker-compose` files.
+`kthcloud-cli` is a command-line interface tool for interacting with kthcloud’s API. It allows you to perform various operations such as listing deployments, creating api keys, and creating deployments from `docker-compose` files.
 
 <div align="center">
     
@@ -148,7 +148,7 @@ If your OS and architecture combo isnt available as a pre-built binary and you d
 #### Prerequisites
 
 - [![Git](https://img.shields.io/badge/Git-FFFFFF?style=for-the-badge&logo=Git&logoColor=black)](https://git-scm.com/downloads)
-- [![Go >= 1.23.1](https://img.shields.io/badge/Go%20%3E%3D%201.23.1-FFFFFF?style=for-the-badge&logo=go&logoColor=black)](https://go.dev/dl/)
+- [![Go >= 1.24.3](https://img.shields.io/badge/Go%20%3E%3D%201.24.3-FFFFFF?style=for-the-badge&logo=go&logoColor=black)](https://go.dev/dl/)
 - [![Gnu Make](https://img.shields.io/badge/GNU%20Make-FFFFFF?style=for-the-badge&logo=GNU&logoColor=black)](https://www.gnu.org/software/make/)
 
 1. Clone the repository:
@@ -177,6 +177,8 @@ If your OS and architecture combo isnt available as a pre-built binary and you d
 > Alternatively you can add it to the PATH to be able to use it globally. The installation script automatically does this.
 
 ### Commands
+
+The commands are described in [docs/](./docs/).
 
 #### Login command
 
@@ -220,9 +222,6 @@ Checks for newer releases than the release of the binary running the command. If
 Versions can be selected by passing the `-i` flag.
 
 > [!WARNING]
-> This currently doesnt work as expected on Windows.
-
-> [!WARNING]
 > This does not verify against a hash to confirm the integrity of the bibary (yet).
 
 ##### Usage of the update command
@@ -243,27 +242,4 @@ kthcloud version
 
 ## Configuration
 
-The `kthcloud-cli` uses a configuration file named `config.yaml` it is located in the configuration directory. You can specify the following fields:
-
-- `api-url`: The URL of the API endpoint.
-- `api-token`: The api token from kthcloud.
-- `loglevel`: The logging level (info, warn, error, debug) (default "info")
-- `resource-cache-duration duration`: How long resources should be cached when possible (default 1m0s)
-- `session-path`: The filepath where the session should be loaded and saved to (default "~/.config/.kthcloud/session.json")
-- `zone`: The preferred kthcloud zone to use, will use `se-flem2` by default
-
-Example `config.yaml`:
-
-```yaml
-api-url: https://api.example.com
-api-token: your-api-key-from-kthcloud
-loglevel: error
-```
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
-
-This project includes dependencies (and their sub-dependencies) licensed under Apache-2.0, BSD-3-Clause, BSD-2-Clause, and MPL-2.0.
-
-All licenses are provided in [licenses/license_report.md](./licenses/license_report.md). For the full license texts and notices of these dependencies, see the [licenses/third_party/](./licenses/third_party/) directory.
+The `kthcloud-cli` uses a configuration file named `config.yaml` it is located in the configuration directory. You can specify all the options that are available (run `kthcloud --help` too see them).

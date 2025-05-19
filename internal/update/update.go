@@ -43,7 +43,7 @@ func updateInteractively() (bool, error) {
 	err = selfupdate.Apply(binResp.Body, selfupdate.Options{})
 	if err != nil {
 		if rerr := selfupdate.RollbackError(err); rerr != nil {
-			log.Errorln("Failed to rollback from bad update: %v", rerr)
+			log.Errorf("Failed to rollback from bad update: %v", rerr)
 		}
 		return false, err
 	}
@@ -92,7 +92,7 @@ func Update(skipPrompt bool, interactive bool) (bool, error) {
 	err = selfupdate.Apply(binResp.Body, selfupdate.Options{})
 	if err != nil {
 		if rerr := selfupdate.RollbackError(err); rerr != nil {
-			log.Errorln("Failed to rollback from bad update: %v", rerr)
+			log.Errorf("Failed to rollback from bad update: %v", rerr)
 		}
 		return false, err
 	}
