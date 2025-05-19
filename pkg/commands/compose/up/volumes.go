@@ -6,15 +6,11 @@ import (
 )
 
 func (c *Command) volumes() error {
-	if c.tryVolumes {
-		_, err := storage.CreateVolumes(c.client, c.compose)
-		if err != nil {
-			logrus.Fatal(err)
-		}
-	} else {
-		logrus.Infoln("Skipping volume creation from local structure")
-		logrus.Infoln("If enabled it will \"steal\" cookies from your browser to authenticate")
-		logrus.Infoln("use --try-volumes to try")
+
+	_, err := storage.CreateVolumes(c.client, c.compose)
+	if err != nil {
+		logrus.Error("could not create volumes: ", err)
+		return err
 	}
 	return nil
 }

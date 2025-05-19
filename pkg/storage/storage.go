@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/Phillezi/kthcloud-cli/pkg/convert"
 	"github.com/Phillezi/kthcloud-cli/pkg/deploy"
@@ -32,7 +33,7 @@ func CreateVolumes(c *deploy.Client, compose *convert.Wrap) (string, error) {
 		return "", errors.New("user does not have a storageURL")
 	}
 
-	isAuth, err := c.Storage().WithFilebrowserURL(*user.StorageURL).Auth()
+	isAuth, err := c.Storage().Auth()
 	if err != nil {
 		return "", err
 	}
@@ -54,7 +55,7 @@ func CreateVolumes(c *deploy.Client, compose *convert.Wrap) (string, error) {
 	}
 
 	for filePath, fileType := range volumes {
-		err = handlePath(filePath, fileType, c, projectDir)
+		err = handlePath(filePath, fileType, c, projectDir, compose.Source.WorkingDir)
 		if err != nil {
 			return "", err
 		}
@@ -86,8 +87,8 @@ func checkLocalPaths(compose *convert.Wrap) (map[string]FileType, error) {
 	return pathsStatus, nil
 }
 
-func handlePath(filePath string, fileType FileType, c *deploy.Client, projectDir string) error {
-	serverPath := path.Join(projectDir, filePath)
+func handlePath(filePath string, fileType FileType, c *deploy.Client, projectDir, composeCWD string) error {
+	serverPath := path.Join(projectDir, strings.TrimPrefix(filePath, composeCWD))
 	if fileType == Dir || fileType == Nonexistent {
 		created, err := c.Storage().CreateDir(serverPath)
 		if err != nil {
@@ -109,7 +110,7 @@ func handlePath(filePath string, fileType FileType, c *deploy.Client, projectDir
 					childFT = Dir
 				}
 				childPath := path.Join(filePath, child.Name())
-				err = handlePath(childPath, childFT, c, projectDir)
+				err = handlePath(childPath, childFT, c, projectDir, composeCWD)
 				if err != nil {
 					return err
 				}

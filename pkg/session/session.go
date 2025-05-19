@@ -3,6 +3,7 @@ package session
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"time"
 
@@ -17,6 +18,7 @@ type Session struct {
 	Resources  *resources.Resources `json:"resources,omitempty" yaml:"resources,omitempty"`
 	ID         *string              `json:"id,omitempty" yaml:"id,omitempty"`
 	ApiKey     *body.ApiKeyCreated  `json:"api_key,omitempty" yaml:"api_key,omitempty"`
+	Cookies    []*http.Cookie       `json:"cookies,omitempty" yaml:"cookies,omitempty"`
 }
 
 func New(token JWTToken) *Session {

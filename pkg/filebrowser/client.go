@@ -30,6 +30,7 @@ type Client struct {
 }
 
 func New(opts ...ClientOpts) *Client {
+	logrus.Traceln("pkg.filebrowser.client.go New")
 	var opt ClientOpts
 	if len(opts) > 0 {
 		opt = opts[0]
@@ -44,7 +45,7 @@ func New(opts ...ClientOpts) *Client {
 		ctx: util.PtrOr(opt.Context, context.Background()),
 
 		keycloakBaseURL: util.PtrOr(opt.KeycloakBaseURL, defaults.DefaultKeycloakBaseURL),
-		filebrowserURL:  util.PtrOr(opt.FilebrowserURL),
+		filebrowserURL:  util.PtrOr(opt.FilebrowserURL, defaults.DefaultStorageManagerProxy),
 
 		requestTimeout: util.PtrOr(opt.RequestTimeout, defaults.DefaultRequestTimeout),
 
@@ -67,6 +68,13 @@ func New(opts ...ClientOpts) *Client {
 		}
 		c.session = sess
 	}
+
+	logrus.Debugln("Created filebrowser.Client with: filebrowserURL: " + c.filebrowserURL + " session: " + func() string {
+		if c.session != nil {
+			return "true"
+		}
+		return "false"
+	}())
 
 	return c
 }

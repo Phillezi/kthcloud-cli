@@ -104,7 +104,7 @@ func (c *Command) Run() error {
 
 	}
 
-	yamlConf, err := yaml.Marshal(conf)
+	yamlConf, err := yaml.Marshal(gha)
 	if err != nil {
 		logrus.Fatalf("error marshalling YAML: %v", err)
 		return err

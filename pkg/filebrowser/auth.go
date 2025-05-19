@@ -8,21 +8,6 @@ import (
 )
 
 func (c *Client) Auth() (bool, error) {
-	_, err := c.loadCookies()
-	if err != nil {
-		// log err here
-		return false, err
-	}
-
-	resp, err := c.client.Get(c.filebrowserURL + "/oauth2/auth")
-	if err != nil {
-		return false, err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 202 {
-		return false, fmt.Errorf("request error: %s", resp.Status)
-	}
-
 	if c.token == "" {
 		requestBody := strings.NewReader(`{"username": "", "password": "", "recaptcha": ""}`)
 
@@ -36,6 +21,11 @@ func (c *Client) Auth() (bool, error) {
 		}
 
 		req.Header.Set("Content-Type", "application/json")
+		if c.session != nil && c.session.Token.AccessToken != "" {
+			req.Header.Set("Authorization", "Bearer "+c.session.Token.AccessToken)
+		} else {
+			return false, fmt.Errorf("no active session")
+		}
 
 		resp, err := c.client.Do(req)
 		if err != nil {

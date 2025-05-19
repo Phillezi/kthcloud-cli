@@ -92,11 +92,10 @@ services:
       KTHCLOUD_CORES: 0.1
       KTHCLOUD_RAM: 0.1
       KTHCLOUD_VISIBILITY: private
-
 ```
 
 > [!NOTE]  
-> The above example showcases what is supported but does not provide a functional application. You need to have the ./testpath in your `cwd`.
+> The above example showcases what is supported but does not provide a functional application.
 
 The tool will create four deployments and set up their environment variables, port, start commands and persistent storage.
 
@@ -137,7 +136,8 @@ If you have `go` installed and with `GOBIN` set and added to `PATH` you can inst
 
 ```bash
 go install github.com/Phillezi/kthcloud-cli@latest
-``` 
+```
+
 > [!NOTE]  
 > The cli executable will be named `kthcloud-cli` from the module / repo name instead of `kthcloud`.
 
@@ -205,7 +205,8 @@ Brings up the services defined in the Docker Compose file.
 ##### Compose down command
 
 Brings down the services defined in the Docker Compose file.
-> ![NOTE]
+
+> [!NOTE]
 > This will not remove the volumes created on the storagemanager.
 
 ##### Compose parse command
@@ -258,3 +259,11 @@ api-url: https://api.example.com
 api-token: your-api-key-from-kthcloud
 loglevel: error
 ```
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
+
+This project includes dependencies (and their sub-dependencies) licensed under Apache-2.0, BSD-3-Clause, BSD-2-Clause, and MPL-2.0.
+
+All licenses are provided in [licenses/license_report.md](./licenses/license_report.md). For the full license texts and notices of these dependencies, see the [licenses/third_party/](./licenses/third_party/) directory.

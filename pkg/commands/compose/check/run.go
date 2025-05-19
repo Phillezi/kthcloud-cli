@@ -1,8 +1,7 @@
-package upload
+package check
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/sirupsen/logrus"
 )
@@ -25,18 +24,8 @@ func (c *Command) Run() error {
 		logrus.Fatal(err)
 	}
 	if !isAuth {
-		logrus.Fatal("user is not authenticated on storage manager")
+		logrus.Fatal("not authenticated on storage url" + *user.StorageURL)
 	}
-	content, err := os.ReadFile(c.srcPath)
-	if err != nil {
-		logrus.Fatal(err)
-	}
-	uploaded, err := c.client.Storage().UploadFile(c.destPath, content)
-	if err != nil {
-		logrus.Fatal(err)
-	}
-	if uploaded {
-		logrus.Info("uploaded file!")
-	}
+	logrus.Infoln("Passed :)")
 	return nil
 }

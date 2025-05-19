@@ -19,7 +19,6 @@ type Command struct {
 
 	buildAll       bool
 	detached       bool
-	tryVolumes     bool
 	nonInteractive bool
 
 	// state
@@ -42,7 +41,6 @@ func New(opts ...CommandOpts) *Command {
 
 		buildAll:       util.PtrOr(opt.BuildAll, defaults.DefaultComposeUpBuildAll),
 		detached:       util.PtrOr(opt.Detatched, defaults.DefaultComposeUpDetached),
-		tryVolumes:     util.PtrOr(opt.TryVolumes, defaults.DefaultComposeUpTryVolumes),
 		nonInteractive: util.PtrOr(opt.NonInteractive, defaults.DefaultNonInteractive),
 	}
 }

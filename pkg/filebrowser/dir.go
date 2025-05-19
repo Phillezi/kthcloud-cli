@@ -26,6 +26,12 @@ func (c *Client) CreateDir(filePath string) (bool, error) {
 	req.Header.Set("X-Auth", c.token)
 	req.Header.Set("Content-Type", "text/plain;charset=UTF-8")
 
+	if c.session != nil && c.session.Token.AccessToken != "" {
+		req.Header.Set("Authorization", "Bearer "+c.session.Token.AccessToken)
+	} else {
+		return false, fmt.Errorf("no active session")
+	}
+
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return false, err

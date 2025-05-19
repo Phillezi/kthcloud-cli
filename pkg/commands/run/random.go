@@ -2,9 +2,8 @@ package run
 
 import (
 	"strings"
-	"time"
 
-	"golang.org/x/exp/rand"
+	"math/rand/v2"
 )
 
 func GenerateRandomName(minLen, maxLen int) string {
@@ -19,20 +18,18 @@ func GenerateRandomName(minLen, maxLen int) string {
 	digits := "0123456789"
 	validChars := letters + digits + "-"
 
-	rand.Seed(uint64(time.Now().UnixNano()))
-
-	nameLen := rand.Intn(maxLen-minLen+1) + minLen
+	nameLen := rand.IntN(maxLen-minLen+1) + minLen
 	name := strings.Builder{}
 	name.Grow(nameLen)
 
-	name.WriteByte(letters[rand.Intn(len(letters))])
+	name.WriteByte(letters[rand.IntN(len(letters))])
 
 	for i := 1; i < nameLen-1; i++ {
-		name.WriteByte(validChars[rand.Intn(len(validChars))])
+		name.WriteByte(validChars[rand.IntN(len(validChars))])
 	}
 
 	lastChars := letters + digits
-	name.WriteByte(lastChars[rand.Intn(len(lastChars))])
+	name.WriteByte(lastChars[rand.IntN(len(lastChars))])
 
 	return name.String()
 }

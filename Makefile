@@ -6,7 +6,7 @@ BUILDTIMESTAMP=$(shell date -u +%Y%m%d%H%M%S)
 EXT=$(if $(filter windows,$(GOOS)),.exe,)
 
 # Targets
-.PHONY: all build run test release install all-platforms clean lint docs
+.PHONY: all build run test release install all-platforms clean lint licenses docs
 
 all: build
 
@@ -54,6 +54,9 @@ clean:
 
 lint:
 	@./scripts/util/check-lint.sh
+
+licenses:
+	@./scripts/util/check-licenses.sh
 
 docs:
 	@go run ./cmd/docs

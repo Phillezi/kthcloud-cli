@@ -4,12 +4,12 @@ import (
 	"github.com/Phillezi/kthcloud-cli/internal/interrupt"
 	"github.com/Phillezi/kthcloud-cli/internal/load"
 	"github.com/Phillezi/kthcloud-cli/internal/options"
+	"github.com/Phillezi/kthcloud-cli/pkg/commands/compose/check"
 	"github.com/Phillezi/kthcloud-cli/pkg/commands/compose/down"
 	"github.com/Phillezi/kthcloud-cli/pkg/commands/compose/logs"
 	"github.com/Phillezi/kthcloud-cli/pkg/commands/compose/parse"
 	"github.com/Phillezi/kthcloud-cli/pkg/commands/compose/stop"
 	"github.com/Phillezi/kthcloud-cli/pkg/commands/compose/up"
-	"github.com/Phillezi/kthcloud-cli/pkg/storage"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -66,17 +66,15 @@ It will automatically detect if you have custom deployments in your config that 
 
 To rebuild services you can apply the --build flag to rebuild all services, or specify the ones you want to rebuild.
 
-Volumes can be defined and managed, but it is done in a hacky way. Since the storage (filebrowser) instance that gets deployed for your user is behind a oauth2 proxy that only uses cookies for authentication. The current solution is as mention very hacky as it will try to scrape your browser for these cookies to authenticate. This only works on Linux and MacOS, but it can be unreliable since browser companies dont want you to be able too scrape stuff like this.
+Volumes can be defined and created, currently only creation is supported and to remove stuff you need to manually do it.
 
 Environment variables are resolved from .env and .env.kthcloud in the working dir of your compose file. The values are merged, values defined in .env.kthcloud will have priority and override the ones in .env. To see what gets resolved you can use the "kthcloud compose parse" command.
 
 Default behaviour of this command will after creating all the deployments setup SSE log streams from all created deployments to your terminal. This can be skipped by adding the -d flag.`,
 	Example: `kthcloud compose up \
-	--file ./somesubdir/example.compose.yml \
-	--try-volumes`,
+	--file ./somesubdir/example.compose.yml`,
 	Run: func(cmd *cobra.Command, args []string) {
 		detached, _ := cmd.Flags().GetBool("detached")
-		tryToCreateVolumes, _ := cmd.Flags().GetBool("try-volumes")
 		servicesToBuild, _ := cmd.Flags().GetStringSlice("build")
 		nonInteractive, _ := cmd.Flags().GetBool("non-interactive")
 		buildAll := false
@@ -97,7 +95,6 @@ Default behaviour of this command will after creating all the deployments setup 
 			ServicesToBuild: servicesToBuild,
 			BuildAll:        &buildAll,
 			Detatched:       &detached,
-			TryVolumes:      &tryToCreateVolumes,
 			NonInteractive:  &nonInteractive,
 		}).WithContext(interrupt.GetInstance().Context()).Run(); err != nil {
 			logrus.Errorln(err)
@@ -179,7 +176,12 @@ var testSMAuthCmd = &cobra.Command{
 	Short:  "Test authentication against storage manager",
 	Hidden: true,
 	Run: func(cmd *cobra.Command, args []string) {
-		storage.Check(options.DefaultClient())
+		if err := check.New(check.CommandOpts{
+			Client: options.DefaultClient(),
+		}).WithContext(interrupt.GetInstance().Context()).Run(); err != nil {
+			logrus.Errorln(err)
+			return
+		}
 	},
 }
 
@@ -187,7 +189,6 @@ func init() {
 	composeCmd.PersistentFlags().StringP("file", "", "", "Specify which docker-compose file to use.")
 	viper.BindPFlag("file", composeCmd.PersistentFlags().Lookup("file"))
 
-	composeUpCmd.Flags().BoolP("try-volumes", "", false, "Try uploading local files and dirs that should be mounted on the deployment.\nIf enabled it will \"steal\" cookies from your browser to authenticate.")
 	composeUpCmd.Flags().BoolP("detached", "d", false, "Run detached, default behaviour attaches logs from the deployments.")
 	viper.BindPFlag("detached", composeUpCmd.Flags().Lookup("detached"))
 
