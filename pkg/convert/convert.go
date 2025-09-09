@@ -139,9 +139,9 @@ func ServiceToDeployment(in *types.ServiceConfig, additionalInfo ...ServiceToDep
 			if extra.Hash != "" {
 				resolvedServerPath := filepath.Join(extra.Hash, strings.TrimPrefix(vol.Source, extra.CWD))
 
-				out.Volumes = append(out.Volumes, body.Volume{Name: fmt.Sprintf("cli-%d", i), ServerPath: resolvedServerPath, AppPath: vol.Target})
+				out.Volumes = append(out.Volumes, body.Volume{Name: fmt.Sprintf("cli-%d", i), ServerPath: filepath.ToSlash(resolvedServerPath), AppPath: filepath.ToSlash(vol.Target)})
 			} else {
-				out.Volumes = append(out.Volumes, body.Volume{Name: fmt.Sprintf("cli-%d", i), ServerPath: vol.Source, AppPath: vol.Target})
+				out.Volumes = append(out.Volumes, body.Volume{Name: fmt.Sprintf("cli-%d", i), ServerPath: filepath.ToSlash(vol.Source), AppPath: filepath.ToSlash(vol.Target)})
 			}
 
 		}
