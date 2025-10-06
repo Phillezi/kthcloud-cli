@@ -161,9 +161,10 @@ func (s *Sched) startJob(runnable *Job, onDone chan *Job) {
 	go func(job *Job, onDone chan *Job) {
 		defer func() {
 			job.mu.Lock()
-			if job.State == Started {
+			switch job.State {
+			case Started:
 				job.State = Done
-			} else if job.State == Cancelling {
+			case Cancelling:
 				job.State = Cancelled
 			}
 			job.mu.Unlock()

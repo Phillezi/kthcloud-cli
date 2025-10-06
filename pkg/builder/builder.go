@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/compose-spec/compose-go/v2/types"
@@ -76,8 +77,11 @@ func Build(client *deploy.Client, ctx context.Context, serviceName string, servi
 			if contextPath == "" {
 				contextPath = "."
 			}
-			wd, _ := os.Getwd()
-			fullpath := path.Join(wd, contextPath)
+			fullpath := contextPath
+			if !filepath.IsAbs(fullpath) {
+				wd, _ := os.Getwd()
+				fullpath = path.Join(wd, contextPath)
+			}
 			onCicdNotConfigured(fullpath)
 			logrus.Debugln("cicd configured")
 		}
