@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/Phillezi/kthcloud-cli/pkg/util"
 )
@@ -16,10 +17,15 @@ func GetCICDDeploymentID(contextPath string, onDeplNotCICDConfigured func(baseDi
 	if err != nil {
 		return "", err
 	}
-	fullpath := path.Join(wd, contextPath)
-	if fullpath == "" {
-		// will probably never happen
-		return "", errors.New("fullcontextpath is empty")
+	var fullpath string
+	if !filepath.IsAbs(contextPath) {
+		fullpath = path.Join(wd, contextPath)
+		if fullpath == "" {
+			// will probably never happen
+			return "", errors.New("fullcontextpath is empty")
+		}
+	} else {
+		fullpath = contextPath
 	}
 	medadataDir := fullpath + "/.kthcloud"
 	callbackCalls := 0 // could be bool but might want retries?
