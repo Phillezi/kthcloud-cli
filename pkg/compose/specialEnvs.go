@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/kthcloud/cli/pkg/deploy"
 	"github.com/kthcloud/cli/pkg/utils"
-	"github.com/kthcloud/go-deploy/dto/v2/body"
 )
 
 // "Special" environment variables
@@ -40,24 +40,24 @@ var (
 		KTHCLOUD_ADMIN_NEVER_STALE,
 	}
 
-	_ = map[string]func(value string, deployment *body.DeploymentCreate) error{
-		KTHCLOUD_CORES: func(value string, deployment *body.DeploymentCreate) error {
-			cores, err := strconv.ParseFloat(value, 64)
+	_ = map[string]func(value string, deployment *deploy.BodyDeploymentCreate) error{
+		KTHCLOUD_CORES: func(value string, deployment *deploy.BodyDeploymentCreate) error {
+			cores, err := strconv.ParseFloat(value, 32)
 			if err != nil {
 				return err
 			}
-			deployment.CpuCores = &cores
+			deployment.CpuCores = utils.PtrOf(float32(cores))
 			return nil
 		},
-		KTHCLOUD_RAM: func(value string, deployment *body.DeploymentCreate) error {
-			ram, err := strconv.ParseFloat(value, 64)
+		KTHCLOUD_RAM: func(value string, deployment *deploy.BodyDeploymentCreate) error {
+			ram, err := strconv.ParseFloat(value, 32)
 			if err != nil {
 				return err
 			}
-			deployment.RAM = &ram
+			deployment.Ram = utils.PtrOf(float32(ram))
 			return nil
 		},
-		KTHCLOUD_REPLICAS: func(value string, deployment *body.DeploymentCreate) error {
+		KTHCLOUD_REPLICAS: func(value string, deployment *deploy.BodyDeploymentCreate) error {
 			replicas, err := strconv.Atoi(value)
 			if err != nil {
 				return err
@@ -65,30 +65,30 @@ var (
 			deployment.Replicas = &replicas
 			return nil
 		},
-		KTHCLOUD_HEALTH_PATH: func(value string, deployment *body.DeploymentCreate) error {
+		KTHCLOUD_HEALTH_PATH: func(value string, deployment *deploy.BodyDeploymentCreate) error {
 			if value == "" {
 				value = "/"
 			}
 			deployment.HealthCheckPath = &value
 			return nil
 		},
-		KTHCLOUD_VISIBILITY: func(value string, deployment *body.DeploymentCreate) error {
+		KTHCLOUD_VISIBILITY: func(value string, deployment *deploy.BodyDeploymentCreate) error {
 			visibility := strings.ToLower(value)
 			switch visibility {
 			case "private", "public", "auth":
-				deployment.Visibility = visibility
+				deployment.Visibility = utils.PtrOf(deploy.BodyDeploymentCreateVisibility(visibility))
 			default:
 				return ErrInvalidDeploymentVisibility
 			}
 			return nil
 		},
-		KTHCLOUD_ZONE: func(value string, deployment *body.DeploymentCreate) error {
+		KTHCLOUD_ZONE: func(value string, deployment *deploy.BodyDeploymentCreate) error {
 			if value := strings.TrimSpace(value); value != "" {
 				deployment.Zone = utils.PtrOf(value)
 			}
 			return nil
 		},
-		KTHCLOUD_CUSTOMDOMAIN: func(value string, deployment *body.DeploymentCreate) error {
+		KTHCLOUD_CUSTOMDOMAIN: func(value string, deployment *deploy.BodyDeploymentCreate) error {
 			if len(value) > 243 {
 				return ErrCustomDomainTooLong
 			}
@@ -97,12 +97,12 @@ var (
 			}
 			return nil
 		},
-		KTHCLOUD_ADMIN_NEVER_STALE: func(value string, deployment *body.DeploymentCreate) error {
+		KTHCLOUD_ADMIN_NEVER_STALE: func(value string, deployment *deploy.BodyDeploymentCreate) error {
 			v, err := strconv.ParseBool(value)
 			if err != nil {
 				return err
 			}
-			deployment.NeverStale = v
+			deployment.NeverStale = utils.PtrOf(v)
 			return nil
 		},
 	}
