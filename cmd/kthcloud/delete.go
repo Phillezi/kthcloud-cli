@@ -81,42 +81,61 @@ var deleteCmd = &cobra.Command{
 					// Poll job until finished
 					var jobRead deploy.BodyJobRead
 					for {
-						jobResp, err := a.Deploy().GetV2JobsJobId(ctxx, *delJob.JobId, deploy.GetV2JobsJobIdJSONRequestBody{})
-						if err != nil {
-							errCh <- fmt.Errorf("failed to get job %s: %w", *delJob.JobId, err)
-							resultCh <- nil
-							return
-						}
-						if jobResp == nil || jobResp.Body == nil {
-							errCh <- fmt.Errorf("nil response for job %s", *delJob.JobId)
-							resultCh <- nil
-							return
-						}
-						defer jobResp.Body.Close()
+						if jobPoll := func() *bool {
+							jobResp, err := a.Deploy().GetV2JobsJobId(ctxx, *delJob.JobId, deploy.GetV2JobsJobIdJSONRequestBody{})
+							if err != nil {
+								errCh <- fmt.Errorf("failed to get job %s: %w", *delJob.JobId, err)
+								resultCh <- nil
+								return utils.PtrOf(false)
+							}
+							if jobResp == nil || jobResp.Body == nil {
+								errCh <- fmt.Errorf("nil response for job %s", *delJob.JobId)
+								resultCh <- nil
+								return utils.PtrOf(false)
+							}
+							defer jobResp.Body.Close()
 
-						if jobResp.StatusCode >= 400 {
-							errCh <- fmt.Errorf("bad status %d for job %s", jobResp.StatusCode, *delJob.JobId)
+							if jobResp.StatusCode >= 400 {
+								errCh <- fmt.Errorf("bad status %d for job %s", jobResp.StatusCode, *delJob.JobId)
+								resultCh <- nil
+								return utils.PtrOf(false)
+							}
+
+							if err := json.NewDecoder(jobResp.Body).Decode(&jobRead); err != nil {
+								errCh <- fmt.Errorf("failed to decode job %s: %w", *delJob.JobId, err)
+								resultCh <- nil
+								return utils.PtrOf(false)
+							}
+
+							if jobRead.Status != nil && (*jobRead.Status == "completed" || *jobRead.Status == "failed") {
+								return utils.PtrOf(true)
+							}
+
+							return nil
+						}(); jobPoll != nil {
+							if utils.DerefOrZero(jobPoll) {
+								resultCh <- &jobRead
+								zap.L().Info("delete job completed", zap.String("deploymentID", id), zap.String("jobID", utils.DerefOrZero(jobRead.Id)))
+								return
+							}
+						}
+						select {
+						case <-ctxx.Done():
+							errCh <- fmt.Errorf("failed to decode job %s: %w", *delJob.JobId, ctxx.Err())
 							resultCh <- nil
 							return
+						case <-time.After(1 * time.Second):
 						}
-
-						if err := json.NewDecoder(jobResp.Body).Decode(&jobRead); err != nil {
-							errCh <- fmt.Errorf("failed to decode job %s: %w", *delJob.JobId, err)
-							resultCh <- nil
-							return
-						}
-
-						if jobRead.Status != nil && (*jobRead.Status == "completed" || *jobRead.Status == "failed") {
-							break
-						}
-						time.Sleep(1 * time.Second) // poll interval
 					}
 
-					resultCh <- &jobRead
-					zap.L().Info("delete job completed", zap.String("deploymentID", id), zap.String("jobID", utils.DerefOrZero(jobRead.Id)))
 				}(deploymentID)
 			})
 		}
+
+		// TODO: make it stream instead
+		wg.Wait()
+		close(resultCh)
+		close(errCh)
 
 		for r := range resultCh {
 			if r == nil {
@@ -130,10 +149,6 @@ var deleteCmd = &cobra.Command{
 					utils.DerefOrZero(r.Id), utils.DerefOrZero(r.Status), utils.DerefOrZero(r.Status))
 			}
 		}
-
-		wg.Wait()
-		close(resultCh)
-		close(errCh)
 
 		if len(errCh) > 0 {
 			fmt.Fprintf(os.Stderr, "Encountered %d errors during deletion\n", len(errCh))
