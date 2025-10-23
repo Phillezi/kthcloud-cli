@@ -6,7 +6,6 @@ import (
 	"sync"
 )
 
-// Tracks concurrent state
 type Executor struct {
 	ctx    context.Context
 	cancel context.CancelCauseFunc

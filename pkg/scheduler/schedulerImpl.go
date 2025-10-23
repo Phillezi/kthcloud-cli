@@ -12,7 +12,6 @@ type SchedulerImpl struct {
 	executor *Executor
 }
 
-// Create a new DAG scheduler
 func New(ctx context.Context, opts ...Option) *SchedulerImpl {
 	si := &SchedulerImpl{
 		ctx: ctx,

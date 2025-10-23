@@ -15,7 +15,6 @@ import (
 	"github.com/kthcloud/cli/pkg/scheduler"
 )
 
-// --- Helper to get current goroutine ID ---
 func getGID() uint64 {
 	b := make([]byte, 64)
 	n := runtime.Stack(b, false)
@@ -28,13 +27,11 @@ func getGID() uint64 {
 	return id
 }
 
-// --- Single log entry for thread-safe logging ---
 type LogEntry struct {
 	Msg string
 	GID uint64
 }
 
-// --- Mock Job Implementation ---
 type TestJob struct {
 	Value string
 	Fail  bool
@@ -71,7 +68,6 @@ func (j *TestJob) Revert(ctx context.Context) error {
 	return nil
 }
 
-// --- Test ---
 func TestConcurrentDagExecution(t *testing.T) {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
@@ -81,7 +77,7 @@ func TestConcurrentDagExecution(t *testing.T) {
 	mu := &sync.Mutex{}
 	logs := &[]LogEntry{}
 
-	// Graph: hello → world → foo → Bar(fails)
+	// Graph: hello => world => foo => Bar(fails)
 	helloID, _ := dag.Add(&TestJob{Value: "hello", mu: mu, logs: logs})
 	worldID, _ := dag.Add(&TestJob{Value: "world", mu: mu, logs: logs}, helloID)
 	fooID, _ := dag.Add(&TestJob{Value: "foo", mu: mu, logs: logs}, worldID)
@@ -98,7 +94,6 @@ func TestConcurrentDagExecution(t *testing.T) {
 		t.Errorf("expected DAG to fail but got no error")
 	}
 
-	// --- Assertions ---
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -122,7 +117,6 @@ func TestConcurrentDagExecution(t *testing.T) {
 		t.Errorf("expected concurrent execution, but jobs ran sequentially")
 	}
 
-	// Check failure and reverts
 	foundFail := false
 	foundRevert := false
 	for _, entry := range *logs {
