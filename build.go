@@ -20,6 +20,7 @@ const (
 var (
 	targets = map[string]string{
 		defaultTarget: "Build everything",
+		"dynamic":     "Make dynamic executable",
 		"test":        "Run tests",
 	}
 )
@@ -52,6 +53,33 @@ func main() {
 				"-o", defaultOutdir,
 				defaultSelector,
 			)
+
+			cmd.Env = append(os.Environ(), "CGO_ENABLED=0")
+
+			cmd.Stdin = os.Stdin
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+
+			infof("Building target '%s' with version %s", arg, version)
+			if err := cmd.Run(); err != nil {
+				errf("Error occurred when building: %v", err)
+				exitCode = 1
+			}
+		case "dynamic":
+			if err := os.MkdirAll(defaultOutdir, os.ModePerm); err != nil {
+				errf("Failed to create output directory %s: %v", defaultOutdir, err)
+				os.Exit(1)
+			}
+
+			ldflags := fmt.Sprintf("-w -s -X main.version=%s", version)
+			cmd := exec.CommandContext(ctx, "go",
+				"build",
+				"-ldflags", ldflags,
+				"-o", defaultOutdir,
+				defaultSelector,
+			)
+
+			cmd.Env = append(os.Environ(), "CGO_ENABLED=1", "CC=zig cc")
 
 			cmd.Stdin = os.Stdin
 			cmd.Stdout = os.Stdout

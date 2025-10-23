@@ -1,14 +1,17 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
-
-	"github.com/Phillezi/common/interrupt"
+	"os/signal"
 )
 
 func main() {
-	if err := rootCmd.ExecuteContext(interrupt.GetInstance().Context()); err != nil {
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+
+	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		log.Fatal(err)
 		os.Exit(1)
 	}

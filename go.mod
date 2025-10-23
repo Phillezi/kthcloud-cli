@@ -4,7 +4,6 @@ go 1.25.1
 
 require (
 	github.com/Phillezi/common/config v0.0.0-20250720144034-e66c0601d876
-	github.com/Phillezi/common/interrupt v0.0.0-20250720144034-e66c0601d876
 	github.com/Phillezi/common/logging/zap v0.0.0-20250720144034-e66c0601d876
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-playground/validator/v10 v10.22.0
@@ -18,7 +17,7 @@ require (
 	github.com/zalando/go-keyring v0.2.6
 	go.uber.org/zap v1.27.0
 	golang.org/x/net v0.44.0
-	golang.org/x/oauth2 v0.25.0
+	golang.org/x/oauth2 v0.32.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
