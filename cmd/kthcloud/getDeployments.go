@@ -18,10 +18,10 @@ import (
 )
 
 var getDeploymentsCmd = &cobra.Command{
-	Use:   "deployments",
+	Use:   "deployment",
 	Short: "Get deployments",
 	Aliases: []string{
-		"deployment",
+		"deployments",
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx, cancel := signal.NotifyContext(cmd.Context(), os.Interrupt)

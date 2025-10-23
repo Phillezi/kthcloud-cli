@@ -116,7 +116,7 @@ func (m *DefaultManager) AuthMiddleware(_ context.Context, req *http.Request) er
 
 	if session == nil || !session.IsValid() {
 		m.l.Info("session is invalid or expired, user needs to reauthenticate")
-		return ErrNotFound
+		return ErrLoginRequired
 	}
 
 	authHeader := session.AuthHeader()

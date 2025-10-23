@@ -8,4 +8,6 @@ var createCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(createCmd)
+
+	createCmd.PersistentFlags().StringP("output", "o", "table", "Output format: table, json, yaml")
 }

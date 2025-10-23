@@ -3,6 +3,9 @@ package deploy
 import (
 	"fmt"
 	"reflect"
+	"strings"
+
+	"github.com/kthcloud/cli/pkg/utils"
 )
 
 // ResponseError represents a structured error for API responses.
@@ -39,11 +42,11 @@ func HandleAPIResponse(resourceName, stage string, resp any) (any, error) {
 
 		case r.JSON400 != nil:
 			return nil, newResponseError(resourceName, stage, r.StatusCode(), ErrBadRequest,
-				fmt.Sprintf("%v", r.JSON400.Errors))
+				fmt.Sprintf("%v", utils.DerefOrZero(r.JSON400.Errors)))
 
 		case r.JSON500 != nil:
 			return nil, newResponseError(resourceName, stage, r.StatusCode(), ErrServerError,
-				fmt.Sprintf("%v", r.JSON500.Errors))
+				fmt.Sprintf("%v", utils.DerefOrZero(r.JSON500.Errors)))
 
 		default:
 			return nil, newResponseError(resourceName, stage, r.StatusCode(), ErrUnexpected,
@@ -135,7 +138,7 @@ func handleGenericResponse(resourceName, stage string, resp any) (any, error) {
 		fmt.Sprintf("status %d: %s", statusCode, body))
 }
 
-func extractErrorMessage(errObj any) string {
+func extractErrorMessageFallback(errObj any) string {
 	v := reflect.ValueOf(errObj)
 	if v.Kind() == reflect.Pointer {
 		v = v.Elem()
@@ -151,4 +154,28 @@ func extractErrorMessage(errObj any) string {
 		return fmt.Sprintf("%v", f.Interface())
 	}
 	return fmt.Sprintf("%v", errObj)
+}
+
+func extractErrorMessage(errObj any) string {
+	if errObj == nil {
+		return "<no error info>"
+	}
+
+	resp, ok := errObj.(*SysErrorResponse)
+	if !ok || resp.Errors == nil {
+		return extractErrorMessageFallback(errObj)
+	}
+
+	msgs := make([]string, 0, len(*resp.Errors))
+	for _, e := range *resp.Errors {
+		if e.Msg != nil {
+			msgs = append(msgs, *e.Msg)
+		}
+	}
+
+	if len(msgs) == 0 {
+		return "<no error messages>"
+	}
+
+	return strings.Join(msgs, "; ")
 }
