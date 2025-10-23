@@ -20,6 +20,7 @@ const (
 var (
 	targets = map[string]string{
 		defaultTarget: "Build everything",
+		"test":        "Run tests",
 	}
 )
 
@@ -61,6 +62,22 @@ func main() {
 				errf("Error occurred when building: %v", err)
 				exitCode = 1
 			}
+		case "test":
+			cmd := exec.CommandContext(ctx, "go", "test",
+				//"-v",
+				"-race",
+				"-cover",
+				//"-count=1",
+				"./...",
+			)
+			cmd.Stdin = os.Stdin
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			if err := cmd.Run(); err != nil {
+				errf("Error occurred when testing: %v", err)
+				exitCode = 1
+			}
+
 		default:
 			errf("No target named: %s, available targets: %v", arg, keys(targets))
 			exitCode = 1
@@ -111,23 +128,23 @@ func logf(level LogLevel, format string, args ...any) {
 
 	switch level {
 	case INFO:
-		prefix = "+"
+		prefix = "[+]"
 		color = Green
 	case WARN:
-		prefix = "!"
+		prefix = "[!]"
 		color = Yellow
 	case ERROR:
-		prefix = "*"
+		prefix = "[*]"
 		color = Red
 	case DEBUG:
-		prefix = "#"
+		prefix = "[#]"
 		color = Cyan
 	default:
-		prefix = "-"
+		prefix = "[-]"
 		color = Reset
 	}
 
-	fmt.Fprintf(os.Stderr, "%s%s %s%s\n", color, prefix, fmt.Sprintf(format, args...), Reset)
+	fmt.Fprintf(os.Stderr, "%s%s%s %s\n", color, prefix, Reset, fmt.Sprintf(format, args...))
 }
 
 func infof(format string, args ...any)  { logf(INFO, format, args...) }

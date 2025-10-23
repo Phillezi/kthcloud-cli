@@ -34,7 +34,7 @@ type App struct {
 
 	loginServer *auth.Server
 
-	deploy deploy.ClientInterface
+	deploy deploy.ClientWithResponsesInterface
 
 	l *zap.Logger
 }
@@ -95,6 +95,6 @@ func New(ctx context.Context, opts ...Option) *App {
 	return &a
 }
 
-func (a *App) Deploy() deploy.ClientInterface {
+func (a *App) Deploy() deploy.ClientWithResponsesInterface {
 	return a.deploy
 }

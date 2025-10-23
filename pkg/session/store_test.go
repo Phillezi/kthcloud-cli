@@ -48,7 +48,7 @@ func TestNewSessionStoreFactory(t *testing.T) {
 			t.Fatalf("Get() failed: %v", err)
 		}
 		if got.AccessToken() != testSession.AccessToken() {
-			t.Fatalf("expected AccessToken %s, got %s", testSession.AccessToken, got.AccessToken)
+			t.Fatalf("expected AccessToken %s, got %s", testSession.AccessToken(), got.AccessToken())
 		}
 
 		if err := s.Delete(key); err != nil {
@@ -77,7 +77,7 @@ func TestNewSessionStoreFactory(t *testing.T) {
 			t.Fatalf("Get() failed: %v", err)
 		}
 		if got.AccessToken() != testSession.AccessToken() {
-			t.Fatalf("expected AccessToken %s, got %s", testSession.AccessToken, got.AccessToken)
+			t.Fatalf("expected AccessToken %s, got %s", testSession.AccessToken(), got.AccessToken())
 		}
 
 		if err := s.Delete(key); err != nil {

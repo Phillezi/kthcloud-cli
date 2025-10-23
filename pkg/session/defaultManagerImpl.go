@@ -108,7 +108,7 @@ func (m *DefaultManager) AuthMiddleware(_ context.Context, req *http.Request) er
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
 			m.l.Info("no existing session found, user needs to log in")
-			return err
+			return errors.Join(err, ErrLoginRequired)
 		}
 		m.l.Error("failed to retrieve session", zap.Error(err))
 		return err

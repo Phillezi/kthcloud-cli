@@ -11,5 +11,7 @@ var (
 
 	ErrNotFound = errors.New("session not found")
 
+	ErrLoginRequired = errors.New("login is required")
+
 	ErrMiddlewareOnNilReq = errors.New("auth middleware called on nil http.Request")
 )
