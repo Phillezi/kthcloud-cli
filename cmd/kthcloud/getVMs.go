@@ -18,10 +18,10 @@ import (
 )
 
 var getVMsCmd = &cobra.Command{
-	Use:   "vms",
+	Use:   "vm",
 	Short: "Get vms",
 	Aliases: []string{
-		"vm",
+		"vms",
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx, cancel := signal.NotifyContext(cmd.Context(), os.Interrupt)

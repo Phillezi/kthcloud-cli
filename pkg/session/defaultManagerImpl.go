@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/kthcloud/cli/internal/defaults"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 )
@@ -17,6 +18,7 @@ type DefaultManager struct {
 
 	fallbackdir  string
 	service      string
+	sessionKey   string
 	oauth2Config *oauth2.Config
 
 	l *zap.Logger
@@ -26,6 +28,8 @@ type DefaultManager struct {
 func NewManager(opts ...Option) *DefaultManager {
 	m := &DefaultManager{
 		ctx: context.Background(),
+
+		sessionKey: defaults.DefaultKeystoreSessionKey,
 
 		l: zap.NewNop(),
 	}
@@ -104,7 +108,7 @@ func (m *DefaultManager) AuthMiddleware(_ context.Context, req *http.Request) er
 
 	m.l.Debug("auth middleware invoked", zap.String("url", req.URL.String()))
 
-	session, err := m.GetSession("default")
+	session, err := m.GetSession(m.sessionKey)
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
 			m.l.Info("no existing session found, user needs to log in")

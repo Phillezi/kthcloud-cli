@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/kthcloud/cli/internal/defaults"
 	"github.com/kthcloud/cli/pkg/auth"
@@ -72,6 +73,7 @@ func New(ctx context.Context, opts ...Option) *App {
 			session.WithFallbackStoreDir(a.sessionFallbackDir),
 			session.WithService(a.sessionService),
 			session.WithOAuth2Config(a.oauth2Conf),
+			session.WithSessionKey(a.sessionKey),
 		)
 	}
 
@@ -97,4 +99,8 @@ func New(ctx context.Context, opts ...Option) *App {
 
 func (a *App) Deploy() deploy.ClientWithResponsesInterface {
 	return a.deploy
+}
+
+func (a *App) SessionMiddleware() func(ctx context.Context, req *http.Request) error {
+	return a.session.AuthMiddleware
 }

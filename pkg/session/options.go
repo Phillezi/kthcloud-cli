@@ -39,6 +39,12 @@ func WithSessionStore(sessionStore SessionStore) Option {
 	}
 }
 
+func WithSessionKey(sessionKey string) Option {
+	return func(m *DefaultManager) {
+		m.sessionKey = sessionKey
+	}
+}
+
 func WithTokenRefresher(refresher Refresher) Option {
 	return func(m *DefaultManager) {
 		m.refresher = refresher

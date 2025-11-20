@@ -19,3 +19,7 @@ var (
 
 	banner = fmt.Sprintf("%s\nVersion:%-10s\t\t\t\tCommit:%-10s ", kthcloud_cli, version, commit)
 )
+
+func Version() string {
+	return version
+}
