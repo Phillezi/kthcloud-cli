@@ -62,9 +62,21 @@ var logCmd = &cobra.Command{
 			deployments = append(deployments, d)
 		}
 
-		conns := logs.CreateConns(deployments, defaults.DefaultDeployAPIBaseURL)
+		l := logs.New(
+			logs.WithContext(ctx),
+			logs.WithAPIURL(defaults.DefaultDeployAPIBaseURL),
+			logs.WithSession(a.Session()),
+			logs.WithLogger(zap.L().Named("logs")),
+		)
 
-		logs.New(conns, ctx, a.SessionMiddleware()).Start()
+		if err := l.Subscribe(deployments...); err != nil {
+			zap.L().Error("Error subscribing", zap.Error(err))
+		}
+
+		if err := l.Consume(os.Stderr); err != nil {
+			zap.L().Error("Error consuming logs", zap.Error(err))
+		}
+
 	},
 }
 

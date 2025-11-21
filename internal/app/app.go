@@ -117,3 +117,7 @@ func (a *App) Deploy() deploy.ClientWithResponsesInterface {
 func (a *App) SessionMiddleware() func(ctx context.Context, req *http.Request) error {
 	return a.session.AuthMiddleware
 }
+
+func (a *App) Session() session.Auth {
+	return a.session
+}
