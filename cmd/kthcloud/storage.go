@@ -21,6 +21,8 @@ var storageCmd = &cobra.Command{
 			viper.GetString(constants.ViperKeycloakRealm),
 		),
 			app.WithSessionKey(viper.GetString(constants.ViperSessionKey)),
+			//TODO: this wont work here
+			app.WithAPITokenSession(viper.GetString(constants.ViperDeployAPIToken)),
 			app.WithLogger(zap.L()),
 		)
 

@@ -49,7 +49,8 @@ func NewManager(opts ...Option) *DefaultManager {
 	if m.store == nil {
 		store, err := NewSessionStore(m.service, m.fallbackdir)
 		if err != nil {
-			panic(err) // TODO: make this better
+			// FIXME: handle me nicer
+			panic(err)
 		}
 		m.store = store
 	}

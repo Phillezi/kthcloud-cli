@@ -9,5 +9,6 @@ const (
 	ViperSessionKey = "session-key"
 
 	ViperDeployAPIBaseURL = "api-base-url"
+	ViperDeployAPIToken   = "api-token"
 	ViperDeployZone       = "zone"
 )

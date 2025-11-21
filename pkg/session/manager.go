@@ -1,10 +1,5 @@
 package session
 
-import (
-	"context"
-	"net/http"
-)
-
 type Manager interface {
 	// SaveSession stores the session securely.
 	SaveSession(key string, session *Session) error
@@ -19,5 +14,5 @@ type Manager interface {
 	// Clear removes all sessions.
 	Clear() error
 
-	AuthMiddleware(ctx context.Context, req *http.Request) error
+	Auth
 }

@@ -31,7 +31,7 @@ type App struct {
 
 	oauth2Conf *oauth2.Config
 
-	session session.Manager
+	session session.Auth
 
 	loginServer *auth.Server
 
@@ -42,7 +42,8 @@ type App struct {
 
 func New(ctx context.Context, opts ...Option) *App {
 	a := App{
-		ctx:              ctx,
+		ctx: ctx,
+
 		deployAPIBaseURL: defaults.DefaultDeployAPIBaseURL,
 
 		keycloakURL:      defaults.DefaultKeycloakBaseURL,
@@ -63,7 +64,15 @@ func New(ctx context.Context, opts ...Option) *App {
 	}
 
 	if a.oauth2Conf == nil {
-		a.oauth2Conf = keycloak.Config(a.keycloakClientID, a.keycloakURL, fmt.Sprintf("http://localhost:%s/callback", a.loginServerPort), a.keycloakRealm)
+		a.oauth2Conf = keycloak.Config(
+			a.keycloakClientID,
+			a.keycloakURL,
+			fmt.Sprintf(
+				"http://localhost:%s/callback",
+				a.loginServerPort,
+			),
+			a.keycloakRealm,
+		)
 	}
 
 	if a.session == nil {
@@ -81,13 +90,17 @@ func New(ctx context.Context, opts ...Option) *App {
 		a.loginServer = auth.NewServer(
 			auth.WithOAuth2Config(a.oauth2Conf),
 			auth.WithLogger(a.l.Named("auth")),
+			auth.WithPort(a.loginServerPort),
 		)
 	}
 
 	if a.deploy == nil {
-		dc, err := deploy.NewClientWithResponses(a.deployAPIBaseURL, deploy.WithRequestEditorFn(a.session.AuthMiddleware))
+		dc, err := deploy.NewClientWithResponses(
+			a.deployAPIBaseURL,
+			deploy.WithRequestEditorFn(a.session.AuthMiddleware),
+		)
 		if err != nil {
-			// TODO: handle me nicer
+			// FIXME: handle me nicer
 			panic(err)
 		}
 		a.deploy = dc

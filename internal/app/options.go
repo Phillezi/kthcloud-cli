@@ -1,6 +1,9 @@
 package app
 
 import (
+	"strings"
+
+	"github.com/kthcloud/cli/pkg/session"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 )
@@ -26,6 +29,16 @@ func WithOAuth2Config(conf *oauth2.Config) Option {
 func WithSessionKey(sessionKey string) Option {
 	return func(a *App) {
 		a.sessionKey = sessionKey
+	}
+}
+
+// Use api token based session
+func WithAPITokenSession(token string) Option {
+	if strings.TrimSpace(token) == "" {
+		return func(*App) {}
+	}
+	return func(app *App) {
+		app.session = session.APITokenSession(token)
 	}
 }
 

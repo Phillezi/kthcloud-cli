@@ -26,6 +26,7 @@ func init() {
 	rootCmd.PersistentFlags().String(constants.ViperKeycloakBaseURL, defaults.DefaultKeycloakBaseURL, "Keycloak base URL")
 	rootCmd.PersistentFlags().String(constants.ViperKeycloakRealm, defaults.DefaultKeycloakRealm, "Keycloak realm")
 
+	rootCmd.PersistentFlags().String(constants.ViperDeployAPIToken, "", "Use an API token for authentication")
 	rootCmd.PersistentFlags().String(constants.ViperSessionKey, defaults.DefaultKeystoreSessionKey, "The session key to store the session as, can be used with different users on the same computer user at the same time with this option")
 
 	viper.BindPFlags(rootCmd.PersistentFlags())

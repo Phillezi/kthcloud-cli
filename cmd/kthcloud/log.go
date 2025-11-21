@@ -31,6 +31,7 @@ var logCmd = &cobra.Command{
 			viper.GetString(constants.ViperKeycloakRealm),
 		),
 			app.WithSessionKey(viper.GetString(constants.ViperSessionKey)),
+			app.WithAPITokenSession(viper.GetString(constants.ViperDeployAPIToken)),
 			app.WithLogger(zap.L()),
 		)
 

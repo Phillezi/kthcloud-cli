@@ -13,23 +13,27 @@ import (
 )
 
 func (a *App) Login() error {
-	s, err := a.session.GetSession(a.sessionKey)
-	if err != nil && !errors.Is(err, session.ErrNotFound) {
-		return errors.Join(err, ErrLogin)
-	}
-
-	if s == nil || !s.IsValid() {
-		if err := a.login(); err != nil {
+	if m, ok := a.session.(session.Manager); ok {
+		s, err := m.GetSession(a.sessionKey)
+		if err != nil && !errors.Is(err, session.ErrNotFound) {
 			return errors.Join(err, ErrLogin)
 		}
-	} else {
-		a.l.Debug("re-using valid session")
-	}
 
-	return nil
+		if s == nil || !s.IsValid() {
+			if err := a.login(m); err != nil {
+				return errors.Join(err, ErrLogin)
+			}
+		} else {
+			a.l.Debug("re-using valid session")
+		}
+
+		return nil
+	} else {
+		return ErrSessionDoesntSupportLogin
+	}
 }
 
-func (a *App) login() error {
+func (a *App) login(manager session.Manager) error {
 	errCh := make(chan error, 1)
 
 	go func() {
@@ -58,12 +62,16 @@ func (a *App) login() error {
 		a.l.Error("Failed to start login server", zap.Error(err))
 		return err
 	case tok := <-a.loginServer.Token():
-		a.session.SaveSession(a.sessionKey, session.FromOAuth2Token(tok))
+		manager.SaveSession(a.sessionKey, session.FromOAuth2Token(tok))
 	}
 
 	return nil
 }
 
 func (a *App) Logout() error {
-	return a.session.DeleteSession(a.sessionKey)
+	if m, ok := a.session.(session.Manager); ok {
+		return m.DeleteSession(a.sessionKey)
+	} else {
+		return ErrSessionDoesntSupportLogout
+	}
 }
