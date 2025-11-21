@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/kthcloud/cli/internal/app"
+	"github.com/kthcloud/cli/internal/constants"
 	"github.com/kthcloud/cli/pkg/deploy"
 	"github.com/kthcloud/cli/pkg/session"
 	"github.com/kthcloud/cli/pkg/ui/renderer"
@@ -28,11 +29,11 @@ var getVMsCmd = &cobra.Command{
 		defer cancel()
 
 		a := app.New(ctx, app.WithKeycloakOptions(
-			viper.GetString("keycloak-client-id"),
-			viper.GetString("keycloak-base-url"),
-			viper.GetString("keycloak-realm"),
+			viper.GetString(constants.ViperKeycloakClientId),
+			viper.GetString(constants.ViperKeycloakBaseURL),
+			viper.GetString(constants.ViperKeycloakRealm),
 		),
-			app.WithSessionKey(viper.GetString("session-key")),
+			app.WithSessionKey(viper.GetString(constants.ViperSessionKey)),
 			app.WithLogger(zap.L()),
 		)
 

@@ -5,6 +5,7 @@ import (
 	"os/signal"
 
 	"github.com/kthcloud/cli/internal/app"
+	"github.com/kthcloud/cli/internal/constants"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -18,11 +19,11 @@ var loginCmd = &cobra.Command{
 		defer cancel()
 
 		if err := app.New(ctx, app.WithKeycloakOptions(
-			viper.GetString("keycloak-client-id"),
-			viper.GetString("keycloak-base-url"),
-			viper.GetString("keycloak-realm"),
+			viper.GetString(constants.ViperKeycloakClientId),
+			viper.GetString(constants.ViperKeycloakBaseURL),
+			viper.GetString(constants.ViperKeycloakRealm),
 		),
-			app.WithSessionKey(viper.GetString("session-key")),
+			app.WithSessionKey(viper.GetString(constants.ViperSessionKey)),
 			app.WithLogger(zap.L()),
 		).Login(); err != nil {
 			zap.L().Fatal("Error when logging in", zap.Error(err))

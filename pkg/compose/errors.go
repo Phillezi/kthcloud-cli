@@ -1,6 +1,10 @@
 package compose
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/kthcloud/cli/pkg/warnings"
+)
 
 var (
 	ErrNoNameOnService             = errors.New("service is required to have a name")
@@ -9,8 +13,6 @@ var (
 	ErrCustomDomainTooLong         = errors.New("the provided custom domain is too long, please make sure that it doesnt exceed the length of 243 characters")
 )
 
-type Warning error
-
 var (
-	WarnNotImplServiceDeployResourcesLimits = Warning(errors.New("service.Deploy.Resources.Limits is not implemented"))
+	WarnNotImplServiceDeployResourcesLimits = warnings.New("service.Deploy.Resources.Limits is not implemented")
 )

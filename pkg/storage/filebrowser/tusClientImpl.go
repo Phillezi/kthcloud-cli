@@ -242,7 +242,7 @@ func (c *FileBrowserClient) headFile(ctx context.Context, filePath string) (int,
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
-		// no existing upload — this is not an error
+		// no existing upload => this is not an error
 		return 0, nil
 	}
 

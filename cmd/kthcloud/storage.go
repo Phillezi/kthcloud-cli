@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/kthcloud/cli/internal/app"
+	"github.com/kthcloud/cli/internal/constants"
 	"github.com/kthcloud/cli/internal/defaults"
 	"github.com/kthcloud/cli/pkg/storage/filebrowser"
 	"github.com/spf13/cobra"
@@ -15,11 +16,11 @@ var storageCmd = &cobra.Command{
 	Use: "storage",
 	Run: func(cmd *cobra.Command, args []string) {
 		a := app.New(cmd.Context(), app.WithKeycloakOptions(
-			viper.GetString("keycloak-client-id"),
-			viper.GetString("keycloak-base-url"),
-			viper.GetString("keycloak-realm"),
+			viper.GetString(constants.ViperKeycloakClientId),
+			viper.GetString(constants.ViperKeycloakBaseURL),
+			viper.GetString(constants.ViperKeycloakRealm),
 		),
-			app.WithSessionKey(viper.GetString("session-key")),
+			app.WithSessionKey(viper.GetString(constants.ViperSessionKey)),
 			app.WithLogger(zap.L()),
 		)
 

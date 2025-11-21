@@ -5,8 +5,6 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/NYTimes/gziphandler v0.0.0-20170623195520-56545f4a5d46/go.mod h1:3wb06e3pkSAbeQ52E9H9iFoQsEEwGN64994WTCIhntQ=
 github.com/Phillezi/common/config v0.0.0-20250720144034-e66c0601d876 h1:M6HUOYfYJ5TgWsyaqJQ93pwxIn9kpjB5a5FoIkb0NUA=
 github.com/Phillezi/common/config v0.0.0-20250720144034-e66c0601d876/go.mod h1:deureQwlMwwnZ1VPdlfUoCA1W/NQ2max/sGPuG07A2g=
-github.com/Phillezi/common/interrupt v0.0.0-20250720144034-e66c0601d876 h1:CCxlaUGdxpUVypVGEAmuhTE0hP+5rlXUPjXx4q746b8=
-github.com/Phillezi/common/interrupt v0.0.0-20250720144034-e66c0601d876/go.mod h1:9xsfi0EM7XlGZ4M69qbpMMiNNpAa08Z5Ajjja7972rg=
 github.com/Phillezi/common/logging/zap v0.0.0-20250720144034-e66c0601d876 h1:5DEw8Lq37EpndkPNnmfyxyMLq1LIxNM21EpOOTLGFoY=
 github.com/Phillezi/common/logging/zap v0.0.0-20250720144034-e66c0601d876/go.mod h1:hxoaklCD98Qh7W80jluJ2gh3AlnIs8rMGutYZUbIcWM=
 github.com/Phillezi/common/utils v0.0.0-20250707180956-c49b54d246db h1:HshVqG5ib8D9u/A3FROviEyS5MLuP54rLatBi+dmWvk=
