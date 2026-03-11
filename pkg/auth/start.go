@@ -15,7 +15,7 @@ func (s *Server) Start() error {
 	mux.HandleFunc("/callback", s.CallbackHandler)
 
 	s.server = &http.Server{
-		Addr:         ":" + s.port,
+		Addr:         s.addr,
 		Handler:      mux,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,

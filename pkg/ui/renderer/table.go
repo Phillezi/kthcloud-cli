@@ -4,16 +4,37 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"strings"
 	"text/tabwriter"
 )
 
 func renderTable(w io.Writer, obj any) error {
-	switch v := obj.(type) {
-	case []DeploymentLike:
-		return renderDeployments(w, v)
-	default:
-		return renderGeneric(w, obj)
+	v := reflect.ValueOf(obj)
+
+	// unwrap pointer(s)
+	for v.Kind() == reflect.Pointer {
+		if v.IsNil() {
+			return nil
+		}
+		v = v.Elem()
 	}
+
+	// check for slice
+	if v.Kind() == reflect.Slice && v.Len() > 0 {
+		first := v.Index(0).Interface()
+
+		if _, ok := first.(DeploymentLike); ok {
+			list := make([]DeploymentLike, v.Len())
+
+			for i := 0; i < v.Len(); i++ {
+				list[i] = v.Index(i).Interface().(DeploymentLike)
+			}
+
+			return renderDeployments(w, list)
+		}
+	}
+
+	return renderGeneric(w, obj)
 }
 
 func renderGeneric(w io.Writer, obj any) error {
@@ -54,8 +75,8 @@ func renderSlice(w io.Writer, v reflect.Value) error {
 
 	t := elem.Type()
 	cols := make([]string, 0, t.NumField())
-	for i := 0; i < t.NumField(); i++ {
-		cols = append(cols, t.Field(i).Name)
+	for field := range t.Fields() {
+		cols = append(cols, field.Name)
 	}
 	fmt.Fprintln(tw, joinTabs(cols...))
 
@@ -95,12 +116,12 @@ func derefValue(v reflect.Value) any {
 }
 
 func joinTabs(fields ...string) string {
-	out := ""
+	var out strings.Builder
 	for i, f := range fields {
 		if i > 0 {
-			out += "\t"
+			out.WriteString("\t")
 		}
-		out += f
+		out.WriteString(f)
 	}
-	return out
+	return out.String()
 }

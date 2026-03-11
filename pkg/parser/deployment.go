@@ -8,7 +8,6 @@ import (
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/kthcloud/cli/pkg/deploy"
 	"github.com/kthcloud/cli/pkg/parser/validation"
-	"github.com/kthcloud/cli/pkg/utils"
 	"github.com/kthcloud/go-deploy/dto/v2/body"
 )
 
@@ -20,6 +19,7 @@ type DeploymentFlags struct {
 	Port       []string
 	CPU        float32
 	RAM        float32
+	GPU        []string
 	Replicas   int
 	Zone       string
 	NeverStale bool
@@ -47,6 +47,16 @@ func ParseDeployment(image string, flags DeploymentFlags) (*deploy.BodyDeploymen
 	}
 	if flags.RAM > 0 {
 		body.Ram = &flags.RAM
+	}
+	if len(flags.GPU) > 0 {
+		body.Gpus = new(make([]deploy.BodyDeploymentGPU, 0, len(flags.GPU)))
+		for _, gpu := range flags.GPU {
+			parts := strings.SplitN(gpu, "/", 2)
+			claim := strings.ToLower(strings.TrimSpace(parts[0]))
+			name := strings.ToLower(strings.TrimSpace(parts[1]))
+
+			*body.Gpus = append(*body.Gpus, deploy.BodyDeploymentGPU{ClaimName: claim, Name: name})
+		}
 	}
 	if flags.Replicas != 1 {
 		body.Replicas = &flags.Replicas
@@ -80,7 +90,7 @@ func ParseDeployment(image string, flags DeploymentFlags) (*deploy.BodyDeploymen
 
 	if len(flags.Port) > 0 {
 		if body.Envs == nil {
-			body.Envs = utils.PtrOf(make([]deploy.BodyEnv, 0, len(flags.Port)+1))
+			body.Envs = new(make([]deploy.BodyEnv, 0, len(flags.Port)+1))
 		}
 
 		(*body.Envs) = append((*body.Envs), parsePorts(flags.Port)...)

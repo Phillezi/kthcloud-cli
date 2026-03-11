@@ -1,6 +1,23 @@
 {
   "components": {
     "schemas": {
+      "body.AllocatedGpu": {
+        "properties": {
+          "adminAccess": {
+            "type": "boolean"
+          },
+          "device": {
+            "type": "string"
+          },
+          "pool": {
+            "type": "string"
+          },
+          "shareID": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "body.ApiKey": {
         "properties": {
           "createdAt": {
@@ -211,6 +228,14 @@
             "type": "array",
             "uniqueItems": false
           },
+          "gpus": {
+            "items": {
+              "$ref": "#/components/schemas/body.DeploymentGPU"
+            },
+            "minItems": 0,
+            "type": "array",
+            "uniqueItems": false
+          },
           "healthCheckPath": {
             "maxLength": 1000,
             "minLength": 0,
@@ -287,6 +312,21 @@
             "type": "string"
           }
         },
+        "type": "object"
+      },
+      "body.DeploymentGPU": {
+        "properties": {
+          "claimName": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "claimName",
+          "name"
+        ],
         "type": "object"
       },
       "body.DeploymentRead": {
@@ -422,6 +462,13 @@
           "cpuCores": {
             "type": "number"
           },
+          "gpus": {
+            "items": {
+              "$ref": "#/components/schemas/body.DeploymentGPU"
+            },
+            "type": "array",
+            "uniqueItems": false
+          },
           "ram": {
             "type": "number"
           },
@@ -454,6 +501,14 @@
               "$ref": "#/components/schemas/body.Env"
             },
             "maxItems": 1000,
+            "minItems": 0,
+            "type": "array",
+            "uniqueItems": false
+          },
+          "gpus": {
+            "items": {
+              "$ref": "#/components/schemas/body.DeploymentGPU"
+            },
             "minItems": 0,
             "type": "array",
             "uniqueItems": false
@@ -571,6 +626,147 @@
             "type": "integer"
           }
         },
+        "type": "object"
+      },
+      "body.GpuClaimConsumer": {
+        "properties": {
+          "apiGroup": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "resource": {
+            "type": "string"
+          },
+          "uid": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "body.GpuClaimCreate": {
+        "properties": {
+          "allowedRoles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": false
+          },
+          "name": {
+            "maxLength": 30,
+            "minLength": 3,
+            "type": "string"
+          },
+          "requested": {
+            "description": "Requested contains all requested GPU configurations by key (request.Name).",
+            "items": {
+              "$ref": "#/components/schemas/body.RequestedGpuCreate"
+            },
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": false
+          },
+          "zone": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "body.GpuClaimCreated": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "jobId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "body.GpuClaimRead": {
+        "properties": {
+          "allocated": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/body.AllocatedGpu"
+              },
+              "type": "array"
+            },
+            "description": "Allocated contains the GPUs that have been successfully bound/allocated.",
+            "type": "object"
+          },
+          "allowedRoles": {
+            "description": "Roles allowed to use this GpuClaim, empty means all",
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": false
+          },
+          "consumers": {
+            "description": "Consumers are the workloads currently using this claim.",
+            "items": {
+              "$ref": "#/components/schemas/body.GpuClaimConsumer"
+            },
+            "type": "array",
+            "uniqueItems": false
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "lastError": {
+            "description": "LastError holds the last reconciliation or provisioning error message.",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "requested": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/body.RequestedGpu"
+            },
+            "description": "Requested contains all requested GPU configurations by key (request.Name).",
+            "type": "object"
+          },
+          "status": {
+            "$ref": "#/components/schemas/body.GpuClaimStatus"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "zone": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "body.GpuClaimStatus": {
+        "description": "Status reflects the reconciliation and/or lifecycle state.",
+        "properties": {
+          "lastSynced": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "phase": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "body.GpuDeviceConfigurationWrapper": {
         "type": "object"
       },
       "body.GpuGroupRead": {
@@ -784,38 +980,16 @@
           "cpuCore": {
             "$ref": "#/components/schemas/body.CpuCoreCapacities"
           },
-          "displayName": {
-            "type": "string"
-          },
           "gpu": {
             "$ref": "#/components/schemas/body.GpuCapacities"
           },
-          "name": {
-            "type": "string"
-          },
           "ram": {
             "$ref": "#/components/schemas/body.RamCapacities"
-          },
-          "zone": {
-            "description": "Zone is the name of the zone where the host is located.",
-            "type": "string"
           }
         },
         "type": "object"
       },
       "body.HostRead": {
-        "properties": {
-          "displayName": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "zone": {
-            "description": "Zone is the name of the zone where the host is located.",
-            "type": "string"
-          }
-        },
         "type": "object"
       },
       "body.HostStatus": {
@@ -823,21 +997,11 @@
           "cpu": {
             "$ref": "#/components/schemas/body.CpuStatus"
           },
-          "displayName": {
-            "type": "string"
-          },
           "gpu": {
             "$ref": "#/components/schemas/body.GpuStatus"
           },
-          "name": {
-            "type": "string"
-          },
           "ram": {
             "$ref": "#/components/schemas/body.RamStatus"
-          },
-          "zone": {
-            "description": "Zone is the name of the zone where the host is located.",
-            "type": "string"
           }
         },
         "type": "object"
@@ -845,9 +1009,6 @@
       "body.HostVerboseRead": {
         "properties": {
           "deactivatedUntil": {
-            "type": "string"
-          },
-          "displayName": {
             "type": "string"
           },
           "enabled": {
@@ -859,9 +1020,6 @@
           "lastSeenAt": {
             "type": "string"
           },
-          "name": {
-            "type": "string"
-          },
           "port": {
             "type": "integer"
           },
@@ -870,10 +1028,6 @@
           },
           "schedulable": {
             "type": "boolean"
-          },
-          "zone": {
-            "description": "Zone is the name of the zone where the host is located.",
-            "type": "string"
           }
         },
         "type": "object"
@@ -1139,6 +1293,9 @@
             "description": "in hours",
             "type": "number"
           },
+          "gpus": {
+            "type": "integer"
+          },
           "ram": {
             "type": "number"
           },
@@ -1193,6 +1350,57 @@
         },
         "type": "object"
       },
+      "body.RequestedGpu": {
+        "properties": {
+          "allocationMode": {
+            "enum": [
+              "All",
+              "ExactCount"
+            ],
+            "type": "string"
+          },
+          "capacity": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "config": {
+            "$ref": "#/components/schemas/body.GpuDeviceConfigurationWrapper"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "deviceClassName": {
+            "type": "string"
+          },
+          "selectors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": false
+          }
+        },
+        "required": [
+          "allocationMode",
+          "deviceClassName"
+        ],
+        "type": "object"
+      },
+      "body.RequestedGpuCreate": {
+        "properties": {
+          "name": {
+            "maxLength": 30,
+            "minLength": 3,
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
       "body.ResourceMigrationCreate": {
         "properties": {
           "resourceId": {
@@ -1231,46 +1439,8 @@
       },
       "body.ResourceMigrationCreated": {
         "properties": {
-          "createdAt": {
-            "type": "string"
-          },
-          "deletedAt": {
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          },
           "jobId": {
             "description": "JobID is the ID of the job that was created for the resource migration.\nIt will only be set if the migration was created with status 'accepted'.",
-            "type": "string"
-          },
-          "resourceId": {
-            "description": "ResourceID is the ID of the resource that is being migrated.\nThis can be a VM ID, deployment ID, etc. depending on the type of the migration.",
-            "type": "string"
-          },
-          "resourceType": {
-            "description": "ResourceType is the type of the resource that is being migrated.\n\nPossible values:\n- vm\n- deployment",
-            "type": "string"
-          },
-          "status": {
-            "description": "Status is the status of the resource migration.\nWhen this field is set to 'accepted', the migration will take place and then automatically be deleted.",
-            "type": "string"
-          },
-          "type": {
-            "description": "Type is the type of the resource migration.\n\nPossible values:\n- updateOwner",
-            "type": "string"
-          },
-          "updateOwner": {
-            "description": "UpdateOwner is the set of parameters that are required for the updateOwner migration type.\nIt is empty if the migration type is not updateOwner.",
-            "properties": {
-              "ownerId": {
-                "type": "string"
-              }
-            },
-            "type": "object"
-          },
-          "userId": {
-            "description": "UserID is the ID of the user who initiated the migration.",
             "type": "string"
           }
         },
@@ -1337,46 +1507,8 @@
       },
       "body.ResourceMigrationUpdated": {
         "properties": {
-          "createdAt": {
-            "type": "string"
-          },
-          "deletedAt": {
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          },
           "jobId": {
             "description": "JobID is the ID of the job that was created for the resource migration.\nIt will only be set if the migration was updated with status 'accepted'.",
-            "type": "string"
-          },
-          "resourceId": {
-            "description": "ResourceID is the ID of the resource that is being migrated.\nThis can be a VM ID, deployment ID, etc. depending on the type of the migration.",
-            "type": "string"
-          },
-          "resourceType": {
-            "description": "ResourceType is the type of the resource that is being migrated.\n\nPossible values:\n- vm\n- deployment",
-            "type": "string"
-          },
-          "status": {
-            "description": "Status is the status of the resource migration.\nWhen this field is set to 'accepted', the migration will take place and then automatically be deleted.",
-            "type": "string"
-          },
-          "type": {
-            "description": "Type is the type of the resource migration.\n\nPossible values:\n- updateOwner",
-            "type": "string"
-          },
-          "updateOwner": {
-            "description": "UpdateOwner is the set of parameters that are required for the updateOwner migration type.\nIt is empty if the migration type is not updateOwner.",
-            "properties": {
-              "ownerId": {
-                "type": "string"
-              }
-            },
-            "type": "object"
-          },
-          "userId": {
-            "description": "UserID is the ID of the user who initiated the migration.",
             "type": "string"
           }
         },
@@ -1524,31 +1656,13 @@
           "addedAt": {
             "type": "string"
           },
-          "email": {
-            "type": "string"
-          },
-          "firstName": {
-            "type": "string"
-          },
-          "gravatarUrl": {
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          },
           "joinedAt": {
-            "type": "string"
-          },
-          "lastName": {
             "type": "string"
           },
           "memberStatus": {
             "type": "string"
           },
           "teamRole": {
-            "type": "string"
-          },
-          "username": {
             "type": "string"
           }
         },
@@ -1706,6 +1820,9 @@
             "type": "number"
           },
           "diskSize": {
+            "type": "integer"
+          },
+          "gpus": {
             "type": "integer"
           },
           "ram": {
@@ -2360,7 +2477,16 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/body.DeploymentCreate"
+                "oneOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "$ref": "#/components/schemas/body.DeploymentCreate",
+                    "description": "Deployment body",
+                    "summary": "body"
+                  }
+                ]
               }
             }
           },
@@ -2606,7 +2732,16 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/body.DeploymentUpdate"
+                "oneOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "$ref": "#/components/schemas/body.DeploymentUpdate",
+                    "description": "Deployment update",
+                    "summary": "body"
+                  }
+                ]
               }
             }
           },
@@ -2757,7 +2892,16 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/body.DeploymentCommand"
+                "oneOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "$ref": "#/components/schemas/body.DeploymentCommand",
+                    "description": "Command body",
+                    "summary": "body"
+                  }
+                ]
               }
             }
           },
@@ -2921,6 +3065,359 @@
         "summary": "Discover",
         "tags": [
           "Discover"
+        ]
+      }
+    },
+    "/v2/gpuClaims": {
+      "get": {
+        "description": "List GPU claims",
+        "parameters": [
+          {
+            "description": "Page number",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Number of items per page",
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Admin detailed list",
+            "in": "query",
+            "name": "detailed",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/body.GpuClaimRead"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "423": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Locked"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "KeycloakOAuth": []
+          }
+        ],
+        "summary": "List GPU claims",
+        "tags": [
+          "GpuClaim"
+        ]
+      },
+      "post": {
+        "description": "Create GpuClaim",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "$ref": "#/components/schemas/body.GpuClaimCreate",
+                    "description": "GpuClaim body",
+                    "summary": "body"
+                  }
+                ]
+              }
+            }
+          },
+          "description": "GpuClaim body",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/body.GpuClaimCreated"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "KeycloakOAuth": []
+          }
+        ],
+        "summary": "Create GpuClaim",
+        "tags": [
+          "GpuClaim"
+        ]
+      }
+    },
+    "/v2/gpuClaims/{gpuClaimId}": {
+      "delete": {
+        "description": "Delete GpuClaim",
+        "parameters": [
+          {
+            "description": "GpuClaim ID",
+            "in": "path",
+            "name": "gpuClaimId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/body.GpuClaimCreated"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "KeycloakOAuth": []
+          }
+        ],
+        "summary": "Delete GpuClaim",
+        "tags": [
+          "GpuClaim"
+        ]
+      },
+      "get": {
+        "description": "Get GPU claim",
+        "parameters": [
+          {
+            "description": "GPU claim ID",
+            "in": "path",
+            "name": "gpuClaimId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/body.GpuClaimRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "423": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Locked"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "KeycloakOAuth": []
+          }
+        ],
+        "summary": "Get GPU claim",
+        "tags": [
+          "GpuClaim"
         ]
       }
     },
@@ -3205,7 +3702,16 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/body.GpuLeaseCreate"
+                "oneOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "$ref": "#/components/schemas/body.GpuLeaseCreate",
+                    "description": "GPU lease",
+                    "summary": "body"
+                  }
+                ]
               }
             }
           },
@@ -3441,7 +3947,16 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/body.GpuLeaseUpdate"
+                "oneOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "$ref": "#/components/schemas/body.GpuLeaseUpdate",
+                    "description": "GPU lease",
+                    "summary": "body"
+                  }
+                ]
               }
             }
           },
@@ -3521,7 +4036,16 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/body.HarborWebhook"
+                "oneOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "$ref": "#/components/schemas/body.HarborWebhook",
+                    "description": "Harbor webhook body",
+                    "summary": "body"
+                  }
+                ]
               }
             }
           },
@@ -3861,7 +4385,16 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/body.JobUpdate"
+                "oneOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "$ref": "#/components/schemas/body.JobUpdate",
+                    "description": "Job update",
+                    "summary": "body"
+                  }
+                ]
               }
             }
           },
@@ -4142,7 +4675,16 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/body.NotificationUpdate"
+                "oneOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "$ref": "#/components/schemas/body.NotificationUpdate",
+                    "description": "Notification update",
+                    "summary": "body"
+                  }
+                ]
               }
             }
           },
@@ -4314,7 +4856,16 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/body.ResourceMigrationCreate"
+                "oneOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "$ref": "#/components/schemas/body.ResourceMigrationCreate",
+                    "description": "Resource Migration Create",
+                    "summary": "body"
+                  }
+                ]
               }
             }
           },
@@ -4533,7 +5084,16 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/body.ResourceMigrationUpdate"
+                "oneOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "$ref": "#/components/schemas/body.ResourceMigrationUpdate",
+                    "description": "Resource Migration Update",
+                    "summary": "body"
+                  }
+                ]
               }
             }
           },
@@ -4593,6 +5153,182 @@
         "summary": "Update resource migration",
         "tags": [
           "ResourceMigration"
+        ]
+      }
+    },
+    "/v2/snapshots/{vmId}": {
+      "get": {
+        "description": "List snapshots",
+        "parameters": [
+          {
+            "description": "Filter by VM ID",
+            "in": "path",
+            "name": "vmId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page number",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Number of items per page",
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/body.VmSnapshotRead"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "423": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Locked"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "KeycloakOAuth": []
+          }
+        ],
+        "summary": "List snapshots",
+        "tags": [
+          "Snapshot"
+        ]
+      },
+      "post": {
+        "description": "Create snapshot",
+        "parameters": [
+          {
+            "description": "VM ID",
+            "in": "path",
+            "name": "vmId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/body.VmSnapshotCreated"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "KeycloakOAuth": []
+          }
+        ],
+        "summary": "Create snapshot",
+        "tags": [
+          "Snapshot"
         ]
       }
     },
@@ -5041,15 +5777,6 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "content": {
@@ -5104,7 +5831,16 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/body.TeamCreate"
+                "oneOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "$ref": "#/components/schemas/body.TeamCreate",
+                    "description": "Team",
+                    "summary": "body"
+                  }
+                ]
               }
             }
           },
@@ -5231,15 +5967,6 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "content": {
@@ -5302,7 +6029,16 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/body.TeamUpdate"
+                "oneOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "$ref": "#/components/schemas/body.TeamUpdate",
+                    "description": "Team",
+                    "summary": "body"
+                  }
+                ]
               }
             }
           },
@@ -5533,7 +6269,16 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/body.UserUpdate"
+                "oneOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "$ref": "#/components/schemas/body.UserUpdate",
+                    "description": "User update",
+                    "summary": "body"
+                  }
+                ]
               }
             }
           },
@@ -5604,7 +6349,16 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/body.ApiKeyCreate"
+                "oneOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "$ref": "#/components/schemas/body.ApiKeyCreate",
+                    "description": "API key create body",
+                    "summary": "body"
+                  }
+                ]
               }
             }
           },
@@ -5654,6 +6408,96 @@
         "summary": "Create API key",
         "tags": [
           "User"
+        ]
+      }
+    },
+    "/v2/vmActions/{vmId}": {
+      "post": {
+        "description": "Creates a new action",
+        "parameters": [
+          {
+            "description": "VM ID",
+            "in": "path",
+            "name": "vmId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "$ref": "#/components/schemas/body.VmActionCreate",
+                    "description": "actions body",
+                    "summary": "body"
+                  }
+                ]
+              }
+            }
+          },
+          "description": "actions body",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/body.VmActionCreated"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/sys.ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "KeycloakOAuth": []
+          }
+        ],
+        "summary": "Creates a new action",
+        "tags": [
+          "VmAction"
         ]
       }
     },
@@ -5768,7 +6612,16 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/body.VmCreate"
+                "oneOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "$ref": "#/components/schemas/body.VmCreate",
+                    "description": "VM body",
+                    "summary": "body"
+                  }
+                ]
               }
             }
           },
@@ -6024,7 +6877,16 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/body.VmUpdate"
+                "oneOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "$ref": "#/components/schemas/body.VmUpdate",
+                    "description": "VM update",
+                    "summary": "body"
+                  }
+                ]
               }
             }
           },

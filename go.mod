@@ -1,6 +1,6 @@
 module github.com/kthcloud/cli
 
-go 1.25.1
+go 1.26.0
 
 require (
 	github.com/Phillezi/common/config v0.0.0-20250720144034-e66c0601d876
@@ -19,6 +19,7 @@ require (
 	go.uber.org/zap v1.27.0
 	golang.org/x/net v0.44.0
 	golang.org/x/oauth2 v0.32.0
+	golang.org/x/term v0.35.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -78,6 +79,7 @@ require (
 	github.com/openshift/custom-resource-status v1.1.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
+	github.com/phillezi/gob v0.0.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rancher/go-rancher v0.1.0 // indirect
 	github.com/sagikazarmark/locafero v0.9.0 // indirect
@@ -98,7 +100,6 @@ require (
 	golang.org/x/mod v0.27.0 // indirect
 	golang.org/x/sync v0.17.0 // indirect
 	golang.org/x/sys v0.36.0 // indirect
-	golang.org/x/term v0.35.0 // indirect
 	golang.org/x/text v0.29.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.36.0 // indirect
@@ -120,4 +121,7 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-tool github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
+tool (
+	github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
+	github.com/phillezi/gob/cmd/gob
+)

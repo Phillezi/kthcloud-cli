@@ -23,7 +23,7 @@ const (
 
 // Defines values for BodyDeploymentCommandCommand.
 const (
-	Restart BodyDeploymentCommandCommand = "restart"
+	BodyDeploymentCommandCommandRestart BodyDeploymentCommandCommand = "restart"
 )
 
 // Defines values for BodyDeploymentCreateVisibility.
@@ -62,10 +62,32 @@ const (
 	BodyPortUpdateProtocolUdp BodyPortUpdateProtocol = "udp"
 )
 
+// Defines values for BodyRequestedGpuAllocationMode.
+const (
+	All        BodyRequestedGpuAllocationMode = "All"
+	ExactCount BodyRequestedGpuAllocationMode = "ExactCount"
+)
+
 // Defines values for BodyResourceMigrationCreateType.
 const (
 	UpdateOwner BodyResourceMigrationCreateType = "updateOwner"
 )
+
+// Defines values for BodyVmActionCreateAction.
+const (
+	BodyVmActionCreateActionRepair  BodyVmActionCreateAction = "repair"
+	BodyVmActionCreateActionRestart BodyVmActionCreateAction = "restart"
+	BodyVmActionCreateActionStart   BodyVmActionCreateAction = "start"
+	BodyVmActionCreateActionStop    BodyVmActionCreateAction = "stop"
+)
+
+// BodyAllocatedGpu defines model for body.AllocatedGpu.
+type BodyAllocatedGpu struct {
+	AdminAccess *bool   `json:"adminAccess,omitempty"`
+	Device      *string `json:"device,omitempty"`
+	Pool        *string `json:"pool,omitempty"`
+	ShareID     *string `json:"shareID,omitempty"`
+}
 
 // BodyApiKey defines model for body.ApiKey.
 type BodyApiKey struct {
@@ -162,12 +184,13 @@ type BodyDeploymentCreate struct {
 
 	// CustomDomain CustomDomain is the domain that the deployment will be available on.
 	// The max length is set to 243 to allow for a subdomain when confirming the domain.
-	CustomDomain    *string    `json:"customDomain,omitempty"`
-	Envs            *[]BodyEnv `json:"envs,omitempty"`
-	HealthCheckPath *string    `json:"healthCheckPath,omitempty"`
-	Image           *string    `json:"image,omitempty"`
-	InitCommands    *[]string  `json:"initCommands,omitempty"`
-	Name            string     `json:"name"`
+	CustomDomain    *string              `json:"customDomain,omitempty"`
+	Envs            *[]BodyEnv           `json:"envs,omitempty"`
+	Gpus            *[]BodyDeploymentGPU `json:"gpus,omitempty"`
+	HealthCheckPath *string              `json:"healthCheckPath,omitempty"`
+	Image           *string              `json:"image,omitempty"`
+	InitCommands    *[]string            `json:"initCommands,omitempty"`
+	Name            string               `json:"name"`
 
 	// NeverStale Boolean to make deployment never get disabled, despite being stale
 	NeverStale *bool `json:"neverStale,omitempty"`
@@ -191,6 +214,12 @@ type BodyDeploymentCreateVisibility string
 type BodyDeploymentCreated struct {
 	Id    *string `json:"id,omitempty"`
 	JobId *string `json:"jobId,omitempty"`
+}
+
+// BodyDeploymentGPU defines model for body.DeploymentGPU.
+type BodyDeploymentGPU struct {
+	ClaimName string `json:"claimName"`
+	Name      string `json:"name"`
 }
 
 // BodyDeploymentRead defines model for body.DeploymentRead.
@@ -236,9 +265,10 @@ type BodyDeploymentRead struct {
 
 // BodyDeploymentSpecs defines model for body.DeploymentSpecs.
 type BodyDeploymentSpecs struct {
-	CpuCores *float32 `json:"cpuCores,omitempty"`
-	Ram      *float32 `json:"ram,omitempty"`
-	Replicas *int     `json:"replicas,omitempty"`
+	CpuCores *float32             `json:"cpuCores,omitempty"`
+	Gpus     *[]BodyDeploymentGPU `json:"gpus,omitempty"`
+	Ram      *float32             `json:"ram,omitempty"`
+	Replicas *int                 `json:"replicas,omitempty"`
 }
 
 // BodyDeploymentUpdate defines model for body.DeploymentUpdate.
@@ -248,13 +278,14 @@ type BodyDeploymentUpdate struct {
 
 	// CustomDomain CustomDomain is the domain that the deployment will be available on.
 	// The max length is set to 243 to allow for a subdomain when confirming the domain.
-	CustomDomain    *string    `json:"customDomain,omitempty"`
-	Envs            *[]BodyEnv `json:"envs,omitempty"`
-	HealthCheckPath *string    `json:"healthCheckPath,omitempty"`
-	Image           *string    `json:"image,omitempty"`
-	InitCommands    *[]string  `json:"initCommands,omitempty"`
-	Name            string     `json:"name"`
-	NeverStale      *bool      `json:"neverStale,omitempty"`
+	CustomDomain    *string              `json:"customDomain,omitempty"`
+	Envs            *[]BodyEnv           `json:"envs,omitempty"`
+	Gpus            *[]BodyDeploymentGPU `json:"gpus,omitempty"`
+	HealthCheckPath *string              `json:"healthCheckPath,omitempty"`
+	Image           *string              `json:"image,omitempty"`
+	InitCommands    *[]string            `json:"initCommands,omitempty"`
+	Name            string               `json:"name"`
+	NeverStale      *bool                `json:"neverStale,omitempty"`
 
 	// Private Deprecated: Use Visibility instead.
 	Private    *bool                           `json:"private,omitempty"`
@@ -289,6 +320,67 @@ type BodyEnv struct {
 type BodyGpuCapacities struct {
 	Total *int `json:"total,omitempty"`
 }
+
+// BodyGpuClaimConsumer defines model for body.GpuClaimConsumer.
+type BodyGpuClaimConsumer struct {
+	ApiGroup *string `json:"apiGroup,omitempty"`
+	Name     *string `json:"name,omitempty"`
+	Resource *string `json:"resource,omitempty"`
+	Uid      *string `json:"uid,omitempty"`
+}
+
+// BodyGpuClaimCreate defines model for body.GpuClaimCreate.
+type BodyGpuClaimCreate struct {
+	AllowedRoles *[]string `json:"allowedRoles,omitempty"`
+	Name         string    `json:"name"`
+
+	// Requested Requested contains all requested GPU configurations by key (request.Name).
+	Requested *[]BodyRequestedGpuCreate `json:"requested,omitempty"`
+	Zone      *string                   `json:"zone,omitempty"`
+}
+
+// BodyGpuClaimCreated defines model for body.GpuClaimCreated.
+type BodyGpuClaimCreated struct {
+	Id    *string `json:"id,omitempty"`
+	JobId *string `json:"jobId,omitempty"`
+}
+
+// BodyGpuClaimRead defines model for body.GpuClaimRead.
+type BodyGpuClaimRead struct {
+	// Allocated Allocated contains the GPUs that have been successfully bound/allocated.
+	Allocated *map[string][]BodyAllocatedGpu `json:"allocated,omitempty"`
+
+	// AllowedRoles Roles allowed to use this GpuClaim, empty means all
+	AllowedRoles *[]string `json:"allowedRoles,omitempty"`
+
+	// Consumers Consumers are the workloads currently using this claim.
+	Consumers *[]BodyGpuClaimConsumer `json:"consumers,omitempty"`
+	CreatedAt *string                 `json:"createdAt,omitempty"`
+	Id        *string                 `json:"id,omitempty"`
+
+	// LastError LastError holds the last reconciliation or provisioning error message.
+	LastError *string `json:"lastError,omitempty"`
+	Name      *string `json:"name,omitempty"`
+
+	// Requested Requested contains all requested GPU configurations by key (request.Name).
+	Requested *map[string]BodyRequestedGpu `json:"requested,omitempty"`
+
+	// Status Status reflects the reconciliation and/or lifecycle state.
+	Status    *BodyGpuClaimStatus `json:"status,omitempty"`
+	UpdatedAt *string             `json:"updatedAt,omitempty"`
+	Zone      *string             `json:"zone,omitempty"`
+}
+
+// BodyGpuClaimStatus Status reflects the reconciliation and/or lifecycle state.
+type BodyGpuClaimStatus struct {
+	LastSynced *string `json:"lastSynced,omitempty"`
+	Message    *string `json:"message,omitempty"`
+	Phase      *string `json:"phase,omitempty"`
+	UpdatedAt  *string `json:"updatedAt,omitempty"`
+}
+
+// BodyGpuDeviceConfigurationWrapper defines model for body.GpuDeviceConfigurationWrapper.
+type BodyGpuDeviceConfigurationWrapper = map[string]interface{}
 
 // BodyGpuGroupRead defines model for body.GpuGroupRead.
 type BodyGpuGroupRead struct {
@@ -402,51 +494,30 @@ type BodyHarborWebhook struct {
 // BodyHostCapacities defines model for body.HostCapacities.
 type BodyHostCapacities struct {
 	// CpuCore Total
-	CpuCore     *BodyCpuCoreCapacities `json:"cpuCore,omitempty"`
-	DisplayName *string                `json:"displayName,omitempty"`
-	Gpu         *BodyGpuCapacities     `json:"gpu,omitempty"`
-	Name        *string                `json:"name,omitempty"`
-	Ram         *BodyRamCapacities     `json:"ram,omitempty"`
-
-	// Zone Zone is the name of the zone where the host is located.
-	Zone *string `json:"zone,omitempty"`
+	CpuCore *BodyCpuCoreCapacities `json:"cpuCore,omitempty"`
+	Gpu     *BodyGpuCapacities     `json:"gpu,omitempty"`
+	Ram     *BodyRamCapacities     `json:"ram,omitempty"`
 }
 
 // BodyHostRead defines model for body.HostRead.
-type BodyHostRead struct {
-	DisplayName *string `json:"displayName,omitempty"`
-	Name        *string `json:"name,omitempty"`
-
-	// Zone Zone is the name of the zone where the host is located.
-	Zone *string `json:"zone,omitempty"`
-}
+type BodyHostRead = map[string]interface{}
 
 // BodyHostStatus defines model for body.HostStatus.
 type BodyHostStatus struct {
-	Cpu         *BodyCpuStatus `json:"cpu,omitempty"`
-	DisplayName *string        `json:"displayName,omitempty"`
-	Gpu         *BodyGpuStatus `json:"gpu,omitempty"`
-	Name        *string        `json:"name,omitempty"`
-	Ram         *BodyRamStatus `json:"ram,omitempty"`
-
-	// Zone Zone is the name of the zone where the host is located.
-	Zone *string `json:"zone,omitempty"`
+	Cpu *BodyCpuStatus `json:"cpu,omitempty"`
+	Gpu *BodyGpuStatus `json:"gpu,omitempty"`
+	Ram *BodyRamStatus `json:"ram,omitempty"`
 }
 
 // BodyHostVerboseRead defines model for body.HostVerboseRead.
 type BodyHostVerboseRead struct {
 	DeactivatedUntil *string `json:"deactivatedUntil,omitempty"`
-	DisplayName      *string `json:"displayName,omitempty"`
 	Enabled          *bool   `json:"enabled,omitempty"`
 	Ip               *string `json:"ip,omitempty"`
 	LastSeenAt       *string `json:"lastSeenAt,omitempty"`
-	Name             *string `json:"name,omitempty"`
 	Port             *int    `json:"port,omitempty"`
 	RegisteredAt     *string `json:"registeredAt,omitempty"`
 	Schedulable      *bool   `json:"schedulable,omitempty"`
-
-	// Zone Zone is the name of the zone where the host is located.
-	Zone *string `json:"zone,omitempty"`
 }
 
 // BodyHttpProxyCreate defines model for body.HttpProxyCreate.
@@ -561,6 +632,7 @@ type BodyQuota struct {
 
 	// GpuLeaseDuration in hours
 	GpuLeaseDuration *float32 `json:"gpuLeaseDuration,omitempty"`
+	Gpus             *int     `json:"gpus,omitempty"`
 	Ram              *float32 `json:"ram,omitempty"`
 	Snapshots        *int     `json:"snapshots,omitempty"`
 }
@@ -593,6 +665,24 @@ type BodyReplicaStatus struct {
 
 	// UnavailableReplicas UnavailableReplicas is the number of replicas that are unavailable.
 	UnavailableReplicas *int `json:"unavailableReplicas,omitempty"`
+}
+
+// BodyRequestedGpu defines model for body.RequestedGpu.
+type BodyRequestedGpu struct {
+	AllocationMode  BodyRequestedGpuAllocationMode     `json:"allocationMode"`
+	Capacity        *map[string]string                 `json:"capacity,omitempty"`
+	Config          *BodyGpuDeviceConfigurationWrapper `json:"config,omitempty"`
+	Count           *int                               `json:"count,omitempty"`
+	DeviceClassName string                             `json:"deviceClassName"`
+	Selectors       *[]string                          `json:"selectors,omitempty"`
+}
+
+// BodyRequestedGpuAllocationMode defines model for BodyRequestedGpu.AllocationMode.
+type BodyRequestedGpuAllocationMode string
+
+// BodyRequestedGpuCreate defines model for body.RequestedGpuCreate.
+type BodyRequestedGpuCreate struct {
+	Name string `json:"name"`
 }
 
 // BodyResourceMigrationCreate defines model for body.ResourceMigrationCreate.
@@ -631,43 +721,9 @@ type BodyResourceMigrationCreateType string
 
 // BodyResourceMigrationCreated defines model for body.ResourceMigrationCreated.
 type BodyResourceMigrationCreated struct {
-	CreatedAt *string `json:"createdAt,omitempty"`
-	DeletedAt *string `json:"deletedAt,omitempty"`
-	Id        *string `json:"id,omitempty"`
-
 	// JobId JobID is the ID of the job that was created for the resource migration.
 	// It will only be set if the migration was created with status 'accepted'.
 	JobId *string `json:"jobId,omitempty"`
-
-	// ResourceId ResourceID is the ID of the resource that is being migrated.
-	// This can be a VM ID, deployment ID, etc. depending on the type of the migration.
-	ResourceId *string `json:"resourceId,omitempty"`
-
-	// ResourceType ResourceType is the type of the resource that is being migrated.
-	//
-	// Possible values:
-	// - vm
-	// - deployment
-	ResourceType *string `json:"resourceType,omitempty"`
-
-	// Status Status is the status of the resource migration.
-	// When this field is set to 'accepted', the migration will take place and then automatically be deleted.
-	Status *string `json:"status,omitempty"`
-
-	// Type Type is the type of the resource migration.
-	//
-	// Possible values:
-	// - updateOwner
-	Type *string `json:"type,omitempty"`
-
-	// UpdateOwner UpdateOwner is the set of parameters that are required for the updateOwner migration type.
-	// It is empty if the migration type is not updateOwner.
-	UpdateOwner *struct {
-		OwnerId *string `json:"ownerId,omitempty"`
-	} `json:"updateOwner,omitempty"`
-
-	// UserId UserID is the ID of the user who initiated the migration.
-	UserId *string `json:"userId,omitempty"`
 }
 
 // BodyResourceMigrationRead defines model for body.ResourceMigrationRead.
@@ -725,43 +781,9 @@ type BodyResourceMigrationUpdate struct {
 
 // BodyResourceMigrationUpdated defines model for body.ResourceMigrationUpdated.
 type BodyResourceMigrationUpdated struct {
-	CreatedAt *string `json:"createdAt,omitempty"`
-	DeletedAt *string `json:"deletedAt,omitempty"`
-	Id        *string `json:"id,omitempty"`
-
 	// JobId JobID is the ID of the job that was created for the resource migration.
 	// It will only be set if the migration was updated with status 'accepted'.
 	JobId *string `json:"jobId,omitempty"`
-
-	// ResourceId ResourceID is the ID of the resource that is being migrated.
-	// This can be a VM ID, deployment ID, etc. depending on the type of the migration.
-	ResourceId *string `json:"resourceId,omitempty"`
-
-	// ResourceType ResourceType is the type of the resource that is being migrated.
-	//
-	// Possible values:
-	// - vm
-	// - deployment
-	ResourceType *string `json:"resourceType,omitempty"`
-
-	// Status Status is the status of the resource migration.
-	// When this field is set to 'accepted', the migration will take place and then automatically be deleted.
-	Status *string `json:"status,omitempty"`
-
-	// Type Type is the type of the resource migration.
-	//
-	// Possible values:
-	// - updateOwner
-	Type *string `json:"type,omitempty"`
-
-	// UpdateOwner UpdateOwner is the set of parameters that are required for the updateOwner migration type.
-	// It is empty if the migration type is not updateOwner.
-	UpdateOwner *struct {
-		OwnerId *string `json:"ownerId,omitempty"`
-	} `json:"updateOwner,omitempty"`
-
-	// UserId UserID is the ID of the user who initiated the migration.
-	UserId *string `json:"userId,omitempty"`
 }
 
 // BodyRole defines model for body.Role.
@@ -822,15 +844,9 @@ type BodyTeamCreate struct {
 // BodyTeamMember defines model for body.TeamMember.
 type BodyTeamMember struct {
 	AddedAt      *string `json:"addedAt,omitempty"`
-	Email        *string `json:"email,omitempty"`
-	FirstName    *string `json:"firstName,omitempty"`
-	GravatarUrl  *string `json:"gravatarUrl,omitempty"`
-	Id           *string `json:"id,omitempty"`
 	JoinedAt     *string `json:"joinedAt,omitempty"`
-	LastName     *string `json:"lastName,omitempty"`
 	MemberStatus *string `json:"memberStatus,omitempty"`
 	TeamRole     *string `json:"teamRole,omitempty"`
-	Username     *string `json:"username,omitempty"`
 }
 
 // BodyTeamMemberCreate defines model for body.TeamMemberCreate.
@@ -898,6 +914,7 @@ type BodyTimestampedSystemStatus struct {
 type BodyUsage struct {
 	CpuCores *float32 `json:"cpuCores,omitempty"`
 	DiskSize *int     `json:"diskSize,omitempty"`
+	Gpus     *int     `json:"gpus,omitempty"`
 	Ram      *float32 `json:"ram,omitempty"`
 }
 
@@ -932,6 +949,20 @@ type BodyUserUpdate struct {
 	ApiKeys    *[]BodyApiKey    `json:"apiKeys,omitempty"`
 	PublicKeys *[]BodyPublicKey `json:"publicKeys,omitempty"`
 	UserData   *[]BodyUserData  `json:"userData,omitempty"`
+}
+
+// BodyVmActionCreate defines model for body.VmActionCreate.
+type BodyVmActionCreate struct {
+	Action BodyVmActionCreateAction `json:"action"`
+}
+
+// BodyVmActionCreateAction defines model for BodyVmActionCreate.Action.
+type BodyVmActionCreateAction string
+
+// BodyVmActionCreated defines model for body.VmActionCreated.
+type BodyVmActionCreated struct {
+	Id    *string `json:"id,omitempty"`
+	JobId *string `json:"jobId,omitempty"`
 }
 
 // BodyVmCreate defines model for body.VmCreate.
@@ -1000,6 +1031,12 @@ type BodyVmRead struct {
 	Teams               *[]string       `json:"teams,omitempty"`
 	UpdatedAt           *string         `json:"updatedAt,omitempty"`
 	Zone                *string         `json:"zone,omitempty"`
+}
+
+// BodyVmSnapshotCreated defines model for body.VmSnapshotCreated.
+type BodyVmSnapshotCreated struct {
+	Id    *string `json:"id,omitempty"`
+	JobId *string `json:"jobId,omitempty"`
 }
 
 // BodyVmSnapshotDeleted defines model for body.VmSnapshotDeleted.
@@ -1099,8 +1136,52 @@ type GetV2DeploymentsParams struct {
 	PageSize *int `form:"pageSize,omitempty" json:"pageSize,omitempty"`
 }
 
+// PostV2DeploymentsJSONBody defines parameters for PostV2Deployments.
+type PostV2DeploymentsJSONBody struct {
+	union json.RawMessage
+}
+
+// PostV2DeploymentsJSONBody0 defines parameters for PostV2Deployments.
+type PostV2DeploymentsJSONBody0 = map[string]interface{}
+
 // DeleteV2DeploymentsDeploymentIdJSONBody defines parameters for DeleteV2DeploymentsDeploymentId.
 type DeleteV2DeploymentsDeploymentIdJSONBody = map[string]interface{}
+
+// PostV2DeploymentsDeploymentIdJSONBody defines parameters for PostV2DeploymentsDeploymentId.
+type PostV2DeploymentsDeploymentIdJSONBody struct {
+	union json.RawMessage
+}
+
+// PostV2DeploymentsDeploymentIdJSONBody0 defines parameters for PostV2DeploymentsDeploymentId.
+type PostV2DeploymentsDeploymentIdJSONBody0 = map[string]interface{}
+
+// PostV2DeploymentsDeploymentIdCommandJSONBody defines parameters for PostV2DeploymentsDeploymentIdCommand.
+type PostV2DeploymentsDeploymentIdCommandJSONBody struct {
+	union json.RawMessage
+}
+
+// PostV2DeploymentsDeploymentIdCommandJSONBody0 defines parameters for PostV2DeploymentsDeploymentIdCommand.
+type PostV2DeploymentsDeploymentIdCommandJSONBody0 = map[string]interface{}
+
+// GetV2GpuClaimsParams defines parameters for GetV2GpuClaims.
+type GetV2GpuClaimsParams struct {
+	// Page Page number
+	Page *int `form:"page,omitempty" json:"page,omitempty"`
+
+	// PageSize Number of items per page
+	PageSize *int `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+
+	// Detailed Admin detailed list
+	Detailed *bool `form:"detailed,omitempty" json:"detailed,omitempty"`
+}
+
+// PostV2GpuClaimsJSONBody defines parameters for PostV2GpuClaims.
+type PostV2GpuClaimsJSONBody struct {
+	union json.RawMessage
+}
+
+// PostV2GpuClaimsJSONBody0 defines parameters for PostV2GpuClaims.
+type PostV2GpuClaimsJSONBody0 = map[string]interface{}
 
 // GetV2GpuGroupsParams defines parameters for GetV2GpuGroups.
 type GetV2GpuGroupsParams struct {
@@ -1126,14 +1207,38 @@ type GetV2GpuLeasesParams struct {
 	PageSize *int `form:"pageSize,omitempty" json:"pageSize,omitempty"`
 }
 
+// PostV2GpuLeasesJSONBody defines parameters for PostV2GpuLeases.
+type PostV2GpuLeasesJSONBody struct {
+	union json.RawMessage
+}
+
+// PostV2GpuLeasesJSONBody0 defines parameters for PostV2GpuLeases.
+type PostV2GpuLeasesJSONBody0 = map[string]interface{}
+
 // DeleteV2GpuLeasesGpuLeaseIdJSONBody defines parameters for DeleteV2GpuLeasesGpuLeaseId.
 type DeleteV2GpuLeasesGpuLeaseIdJSONBody = map[string]interface{}
+
+// PostV2GpuLeasesGpuLeaseIdJSONBody defines parameters for PostV2GpuLeasesGpuLeaseId.
+type PostV2GpuLeasesGpuLeaseIdJSONBody struct {
+	union json.RawMessage
+}
+
+// PostV2GpuLeasesGpuLeaseIdJSONBody0 defines parameters for PostV2GpuLeasesGpuLeaseId.
+type PostV2GpuLeasesGpuLeaseIdJSONBody0 = map[string]interface{}
+
+// PostV2HooksHarborJSONBody defines parameters for PostV2HooksHarbor.
+type PostV2HooksHarborJSONBody struct {
+	union json.RawMessage
+}
 
 // PostV2HooksHarborParams defines parameters for PostV2HooksHarbor.
 type PostV2HooksHarborParams struct {
 	// Authorization Basic auth token
 	Authorization *string `json:"Authorization,omitempty"`
 }
+
+// PostV2HooksHarborJSONBody0 defines parameters for PostV2HooksHarbor.
+type PostV2HooksHarborJSONBody0 = map[string]interface{}
 
 // GetV2JobsJSONBody defines parameters for GetV2Jobs.
 type GetV2JobsJSONBody = map[string]interface{}
@@ -1162,6 +1267,14 @@ type GetV2JobsParams struct {
 // GetV2JobsJobIdJSONBody defines parameters for GetV2JobsJobId.
 type GetV2JobsJobIdJSONBody = map[string]interface{}
 
+// PostV2JobsJobIdJSONBody defines parameters for PostV2JobsJobId.
+type PostV2JobsJobIdJSONBody struct {
+	union json.RawMessage
+}
+
+// PostV2JobsJobIdJSONBody0 defines parameters for PostV2JobsJobId.
+type PostV2JobsJobIdJSONBody0 = map[string]interface{}
+
 // GetV2NotificationsJSONBody defines parameters for GetV2Notifications.
 type GetV2NotificationsJSONBody = map[string]interface{}
 
@@ -1186,6 +1299,14 @@ type DeleteV2NotificationsNotificationIdJSONBody = map[string]interface{}
 // GetV2NotificationsNotificationIdJSONBody defines parameters for GetV2NotificationsNotificationId.
 type GetV2NotificationsNotificationIdJSONBody = map[string]interface{}
 
+// PostV2NotificationsNotificationIdJSONBody defines parameters for PostV2NotificationsNotificationId.
+type PostV2NotificationsNotificationIdJSONBody struct {
+	union json.RawMessage
+}
+
+// PostV2NotificationsNotificationIdJSONBody0 defines parameters for PostV2NotificationsNotificationId.
+type PostV2NotificationsNotificationIdJSONBody0 = map[string]interface{}
+
 // GetV2ResourceMigrationsParams defines parameters for GetV2ResourceMigrations.
 type GetV2ResourceMigrationsParams struct {
 	// Page Page number
@@ -1195,8 +1316,36 @@ type GetV2ResourceMigrationsParams struct {
 	PageSize *int `form:"pageSize,omitempty" json:"pageSize,omitempty"`
 }
 
+// PostV2ResourceMigrationsJSONBody defines parameters for PostV2ResourceMigrations.
+type PostV2ResourceMigrationsJSONBody struct {
+	union json.RawMessage
+}
+
+// PostV2ResourceMigrationsJSONBody0 defines parameters for PostV2ResourceMigrations.
+type PostV2ResourceMigrationsJSONBody0 = map[string]interface{}
+
 // DeleteV2ResourceMigrationsResourceMigrationIdJSONBody defines parameters for DeleteV2ResourceMigrationsResourceMigrationId.
 type DeleteV2ResourceMigrationsResourceMigrationIdJSONBody = map[string]interface{}
+
+// PostV2ResourceMigrationsResourceMigrationIdJSONBody defines parameters for PostV2ResourceMigrationsResourceMigrationId.
+type PostV2ResourceMigrationsResourceMigrationIdJSONBody struct {
+	union json.RawMessage
+}
+
+// PostV2ResourceMigrationsResourceMigrationIdJSONBody0 defines parameters for PostV2ResourceMigrationsResourceMigrationId.
+type PostV2ResourceMigrationsResourceMigrationIdJSONBody0 = map[string]interface{}
+
+// GetV2SnapshotsVmIdParams defines parameters for GetV2SnapshotsVmId.
+type GetV2SnapshotsVmIdParams struct {
+	// Page Page number
+	Page *int `form:"page,omitempty" json:"page,omitempty"`
+
+	// PageSize Number of items per page
+	PageSize *int `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+}
+
+// PostV2SnapshotsVmIdJSONBody defines parameters for PostV2SnapshotsVmId.
+type PostV2SnapshotsVmIdJSONBody = map[string]interface{}
 
 // GetV2StorageManagersParams defines parameters for GetV2StorageManagers.
 type GetV2StorageManagersParams struct {
@@ -1228,9 +1377,6 @@ type GetV2SystemStatusParams struct {
 	N *int `form:"n,omitempty" json:"n,omitempty"`
 }
 
-// GetV2TeamsJSONBody defines parameters for GetV2Teams.
-type GetV2TeamsJSONBody = map[string]interface{}
-
 // GetV2TeamsParams defines parameters for GetV2Teams.
 type GetV2TeamsParams struct {
 	// All List all
@@ -1246,11 +1392,24 @@ type GetV2TeamsParams struct {
 	PageSize *int `form:"pageSize,omitempty" json:"pageSize,omitempty"`
 }
 
+// PostV2TeamsJSONBody defines parameters for PostV2Teams.
+type PostV2TeamsJSONBody struct {
+	union json.RawMessage
+}
+
+// PostV2TeamsJSONBody0 defines parameters for PostV2Teams.
+type PostV2TeamsJSONBody0 = map[string]interface{}
+
 // DeleteV2TeamsTeamIdJSONBody defines parameters for DeleteV2TeamsTeamId.
 type DeleteV2TeamsTeamIdJSONBody = map[string]interface{}
 
-// GetV2TeamsTeamIdJSONBody defines parameters for GetV2TeamsTeamId.
-type GetV2TeamsTeamIdJSONBody = map[string]interface{}
+// PostV2TeamsTeamIdJSONBody defines parameters for PostV2TeamsTeamId.
+type PostV2TeamsTeamIdJSONBody struct {
+	union json.RawMessage
+}
+
+// PostV2TeamsTeamIdJSONBody0 defines parameters for PostV2TeamsTeamId.
+type PostV2TeamsTeamIdJSONBody0 = map[string]interface{}
 
 // GetV2UsersParams defines parameters for GetV2Users.
 type GetV2UsersParams struct {
@@ -1276,6 +1435,30 @@ type GetV2UsersUserIdParams struct {
 	Discover *bool `form:"discover,omitempty" json:"discover,omitempty"`
 }
 
+// PostV2UsersUserIdJSONBody defines parameters for PostV2UsersUserId.
+type PostV2UsersUserIdJSONBody struct {
+	union json.RawMessage
+}
+
+// PostV2UsersUserIdJSONBody0 defines parameters for PostV2UsersUserId.
+type PostV2UsersUserIdJSONBody0 = map[string]interface{}
+
+// PostV2UsersUserIdApiKeysJSONBody defines parameters for PostV2UsersUserIdApiKeys.
+type PostV2UsersUserIdApiKeysJSONBody struct {
+	union json.RawMessage
+}
+
+// PostV2UsersUserIdApiKeysJSONBody0 defines parameters for PostV2UsersUserIdApiKeys.
+type PostV2UsersUserIdApiKeysJSONBody0 = map[string]interface{}
+
+// PostV2VmActionsVmIdJSONBody defines parameters for PostV2VmActionsVmId.
+type PostV2VmActionsVmIdJSONBody struct {
+	union json.RawMessage
+}
+
+// PostV2VmActionsVmIdJSONBody0 defines parameters for PostV2VmActionsVmId.
+type PostV2VmActionsVmIdJSONBody0 = map[string]interface{}
+
 // GetV2VmsParams defines parameters for GetV2Vms.
 type GetV2VmsParams struct {
 	// All List all
@@ -1291,8 +1474,24 @@ type GetV2VmsParams struct {
 	PageSize *int `form:"pageSize,omitempty" json:"pageSize,omitempty"`
 }
 
+// PostV2VmsJSONBody defines parameters for PostV2Vms.
+type PostV2VmsJSONBody struct {
+	union json.RawMessage
+}
+
+// PostV2VmsJSONBody0 defines parameters for PostV2Vms.
+type PostV2VmsJSONBody0 = map[string]interface{}
+
 // DeleteV2VmsVmIdJSONBody defines parameters for DeleteV2VmsVmId.
 type DeleteV2VmsVmIdJSONBody = map[string]interface{}
+
+// PostV2VmsVmIdJSONBody defines parameters for PostV2VmsVmId.
+type PostV2VmsVmIdJSONBody struct {
+	union json.RawMessage
+}
+
+// PostV2VmsVmIdJSONBody0 defines parameters for PostV2VmsVmId.
+type PostV2VmsVmIdJSONBody0 = map[string]interface{}
 
 // DeleteV2VmsVmIdSnapshotSnapshotIdJSONBody defines parameters for DeleteV2VmsVmIdSnapshotSnapshotId.
 type DeleteV2VmsVmIdSnapshotSnapshotIdJSONBody = map[string]interface{}
@@ -1301,28 +1500,31 @@ type DeleteV2VmsVmIdSnapshotSnapshotIdJSONBody = map[string]interface{}
 type PostV2VmsVmIdSnapshotSnapshotIdJSONBody = map[string]interface{}
 
 // PostV2DeploymentsJSONRequestBody defines body for PostV2Deployments for application/json ContentType.
-type PostV2DeploymentsJSONRequestBody = BodyDeploymentCreate
+type PostV2DeploymentsJSONRequestBody PostV2DeploymentsJSONBody
 
 // DeleteV2DeploymentsDeploymentIdJSONRequestBody defines body for DeleteV2DeploymentsDeploymentId for application/json ContentType.
 type DeleteV2DeploymentsDeploymentIdJSONRequestBody = DeleteV2DeploymentsDeploymentIdJSONBody
 
 // PostV2DeploymentsDeploymentIdJSONRequestBody defines body for PostV2DeploymentsDeploymentId for application/json ContentType.
-type PostV2DeploymentsDeploymentIdJSONRequestBody = BodyDeploymentUpdate
+type PostV2DeploymentsDeploymentIdJSONRequestBody PostV2DeploymentsDeploymentIdJSONBody
 
 // PostV2DeploymentsDeploymentIdCommandJSONRequestBody defines body for PostV2DeploymentsDeploymentIdCommand for application/json ContentType.
-type PostV2DeploymentsDeploymentIdCommandJSONRequestBody = BodyDeploymentCommand
+type PostV2DeploymentsDeploymentIdCommandJSONRequestBody PostV2DeploymentsDeploymentIdCommandJSONBody
+
+// PostV2GpuClaimsJSONRequestBody defines body for PostV2GpuClaims for application/json ContentType.
+type PostV2GpuClaimsJSONRequestBody PostV2GpuClaimsJSONBody
 
 // PostV2GpuLeasesJSONRequestBody defines body for PostV2GpuLeases for application/json ContentType.
-type PostV2GpuLeasesJSONRequestBody = BodyGpuLeaseCreate
+type PostV2GpuLeasesJSONRequestBody PostV2GpuLeasesJSONBody
 
 // DeleteV2GpuLeasesGpuLeaseIdJSONRequestBody defines body for DeleteV2GpuLeasesGpuLeaseId for application/json ContentType.
 type DeleteV2GpuLeasesGpuLeaseIdJSONRequestBody = DeleteV2GpuLeasesGpuLeaseIdJSONBody
 
 // PostV2GpuLeasesGpuLeaseIdJSONRequestBody defines body for PostV2GpuLeasesGpuLeaseId for application/json ContentType.
-type PostV2GpuLeasesGpuLeaseIdJSONRequestBody = BodyGpuLeaseUpdate
+type PostV2GpuLeasesGpuLeaseIdJSONRequestBody PostV2GpuLeasesGpuLeaseIdJSONBody
 
 // PostV2HooksHarborJSONRequestBody defines body for PostV2HooksHarbor for application/json ContentType.
-type PostV2HooksHarborJSONRequestBody = BodyHarborWebhook
+type PostV2HooksHarborJSONRequestBody PostV2HooksHarborJSONBody
 
 // GetV2JobsJSONRequestBody defines body for GetV2Jobs for application/json ContentType.
 type GetV2JobsJSONRequestBody = GetV2JobsJSONBody
@@ -1331,7 +1533,7 @@ type GetV2JobsJSONRequestBody = GetV2JobsJSONBody
 type GetV2JobsJobIdJSONRequestBody = GetV2JobsJobIdJSONBody
 
 // PostV2JobsJobIdJSONRequestBody defines body for PostV2JobsJobId for application/json ContentType.
-type PostV2JobsJobIdJSONRequestBody = BodyJobUpdate
+type PostV2JobsJobIdJSONRequestBody PostV2JobsJobIdJSONBody
 
 // GetV2NotificationsJSONRequestBody defines body for GetV2Notifications for application/json ContentType.
 type GetV2NotificationsJSONRequestBody = GetV2NotificationsJSONBody
@@ -1343,46 +1545,46 @@ type DeleteV2NotificationsNotificationIdJSONRequestBody = DeleteV2NotificationsN
 type GetV2NotificationsNotificationIdJSONRequestBody = GetV2NotificationsNotificationIdJSONBody
 
 // PostV2NotificationsNotificationIdJSONRequestBody defines body for PostV2NotificationsNotificationId for application/json ContentType.
-type PostV2NotificationsNotificationIdJSONRequestBody = BodyNotificationUpdate
+type PostV2NotificationsNotificationIdJSONRequestBody PostV2NotificationsNotificationIdJSONBody
 
 // PostV2ResourceMigrationsJSONRequestBody defines body for PostV2ResourceMigrations for application/json ContentType.
-type PostV2ResourceMigrationsJSONRequestBody = BodyResourceMigrationCreate
+type PostV2ResourceMigrationsJSONRequestBody PostV2ResourceMigrationsJSONBody
 
 // DeleteV2ResourceMigrationsResourceMigrationIdJSONRequestBody defines body for DeleteV2ResourceMigrationsResourceMigrationId for application/json ContentType.
 type DeleteV2ResourceMigrationsResourceMigrationIdJSONRequestBody = DeleteV2ResourceMigrationsResourceMigrationIdJSONBody
 
 // PostV2ResourceMigrationsResourceMigrationIdJSONRequestBody defines body for PostV2ResourceMigrationsResourceMigrationId for application/json ContentType.
-type PostV2ResourceMigrationsResourceMigrationIdJSONRequestBody = BodyResourceMigrationUpdate
+type PostV2ResourceMigrationsResourceMigrationIdJSONRequestBody PostV2ResourceMigrationsResourceMigrationIdJSONBody
 
-// GetV2TeamsJSONRequestBody defines body for GetV2Teams for application/json ContentType.
-type GetV2TeamsJSONRequestBody = GetV2TeamsJSONBody
+// PostV2SnapshotsVmIdJSONRequestBody defines body for PostV2SnapshotsVmId for application/json ContentType.
+type PostV2SnapshotsVmIdJSONRequestBody = PostV2SnapshotsVmIdJSONBody
 
 // PostV2TeamsJSONRequestBody defines body for PostV2Teams for application/json ContentType.
-type PostV2TeamsJSONRequestBody = BodyTeamCreate
+type PostV2TeamsJSONRequestBody PostV2TeamsJSONBody
 
 // DeleteV2TeamsTeamIdJSONRequestBody defines body for DeleteV2TeamsTeamId for application/json ContentType.
 type DeleteV2TeamsTeamIdJSONRequestBody = DeleteV2TeamsTeamIdJSONBody
 
-// GetV2TeamsTeamIdJSONRequestBody defines body for GetV2TeamsTeamId for application/json ContentType.
-type GetV2TeamsTeamIdJSONRequestBody = GetV2TeamsTeamIdJSONBody
-
 // PostV2TeamsTeamIdJSONRequestBody defines body for PostV2TeamsTeamId for application/json ContentType.
-type PostV2TeamsTeamIdJSONRequestBody = BodyTeamUpdate
+type PostV2TeamsTeamIdJSONRequestBody PostV2TeamsTeamIdJSONBody
 
 // PostV2UsersUserIdJSONRequestBody defines body for PostV2UsersUserId for application/json ContentType.
-type PostV2UsersUserIdJSONRequestBody = BodyUserUpdate
+type PostV2UsersUserIdJSONRequestBody PostV2UsersUserIdJSONBody
 
 // PostV2UsersUserIdApiKeysJSONRequestBody defines body for PostV2UsersUserIdApiKeys for application/json ContentType.
-type PostV2UsersUserIdApiKeysJSONRequestBody = BodyApiKeyCreate
+type PostV2UsersUserIdApiKeysJSONRequestBody PostV2UsersUserIdApiKeysJSONBody
+
+// PostV2VmActionsVmIdJSONRequestBody defines body for PostV2VmActionsVmId for application/json ContentType.
+type PostV2VmActionsVmIdJSONRequestBody PostV2VmActionsVmIdJSONBody
 
 // PostV2VmsJSONRequestBody defines body for PostV2Vms for application/json ContentType.
-type PostV2VmsJSONRequestBody = BodyVmCreate
+type PostV2VmsJSONRequestBody PostV2VmsJSONBody
 
 // DeleteV2VmsVmIdJSONRequestBody defines body for DeleteV2VmsVmId for application/json ContentType.
 type DeleteV2VmsVmIdJSONRequestBody = DeleteV2VmsVmIdJSONBody
 
 // PostV2VmsVmIdJSONRequestBody defines body for PostV2VmsVmId for application/json ContentType.
-type PostV2VmsVmIdJSONRequestBody = BodyVmUpdate
+type PostV2VmsVmIdJSONRequestBody PostV2VmsVmIdJSONBody
 
 // DeleteV2VmsVmIdSnapshotSnapshotIdJSONRequestBody defines body for DeleteV2VmsVmIdSnapshotSnapshotId for application/json ContentType.
 type DeleteV2VmsVmIdSnapshotSnapshotIdJSONRequestBody = DeleteV2VmsVmIdSnapshotSnapshotIdJSONBody
@@ -1498,6 +1700,20 @@ type ClientInterface interface {
 	// GetV2Discover request
 	GetV2Discover(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetV2GpuClaims request
+	GetV2GpuClaims(ctx context.Context, params *GetV2GpuClaimsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostV2GpuClaimsWithBody request with any body
+	PostV2GpuClaimsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostV2GpuClaims(ctx context.Context, body PostV2GpuClaimsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteV2GpuClaimsGpuClaimId request
+	DeleteV2GpuClaimsGpuClaimId(ctx context.Context, gpuClaimId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetV2GpuClaimsGpuClaimId request
+	GetV2GpuClaimsGpuClaimId(ctx context.Context, gpuClaimId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetV2GpuGroups request
 	GetV2GpuGroups(ctx context.Context, params *GetV2GpuGroupsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1598,6 +1814,14 @@ type ClientInterface interface {
 
 	PostV2ResourceMigrationsResourceMigrationId(ctx context.Context, resourceMigrationId string, body PostV2ResourceMigrationsResourceMigrationIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetV2SnapshotsVmId request
+	GetV2SnapshotsVmId(ctx context.Context, vmId string, params *GetV2SnapshotsVmIdParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostV2SnapshotsVmIdWithBody request with any body
+	PostV2SnapshotsVmIdWithBody(ctx context.Context, vmId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostV2SnapshotsVmId(ctx context.Context, vmId string, body PostV2SnapshotsVmIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetV2StorageManagers request
 	GetV2StorageManagers(ctx context.Context, params *GetV2StorageManagersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1616,10 +1840,8 @@ type ClientInterface interface {
 	// GetV2SystemStatus request
 	GetV2SystemStatus(ctx context.Context, params *GetV2SystemStatusParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetV2TeamsWithBody request with any body
-	GetV2TeamsWithBody(ctx context.Context, params *GetV2TeamsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	GetV2Teams(ctx context.Context, params *GetV2TeamsParams, body GetV2TeamsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetV2Teams request
+	GetV2Teams(ctx context.Context, params *GetV2TeamsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostV2TeamsWithBody request with any body
 	PostV2TeamsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1631,10 +1853,8 @@ type ClientInterface interface {
 
 	DeleteV2TeamsTeamId(ctx context.Context, teamId string, body DeleteV2TeamsTeamIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetV2TeamsTeamIdWithBody request with any body
-	GetV2TeamsTeamIdWithBody(ctx context.Context, teamId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	GetV2TeamsTeamId(ctx context.Context, teamId string, body GetV2TeamsTeamIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetV2TeamsTeamId request
+	GetV2TeamsTeamId(ctx context.Context, teamId string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostV2TeamsTeamIdWithBody request with any body
 	PostV2TeamsTeamIdWithBody(ctx context.Context, teamId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1656,6 +1876,11 @@ type ClientInterface interface {
 	PostV2UsersUserIdApiKeysWithBody(ctx context.Context, userId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostV2UsersUserIdApiKeys(ctx context.Context, userId string, body PostV2UsersUserIdApiKeysJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostV2VmActionsVmIdWithBody request with any body
+	PostV2VmActionsVmIdWithBody(ctx context.Context, vmId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostV2VmActionsVmId(ctx context.Context, vmId string, body PostV2VmActionsVmIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetV2Vms request
 	GetV2Vms(ctx context.Context, params *GetV2VmsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1841,6 +2066,66 @@ func (c *Client) GetV2DeploymentsDeploymentIdLogs(ctx context.Context, deploymen
 
 func (c *Client) GetV2Discover(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetV2DiscoverRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetV2GpuClaims(ctx context.Context, params *GetV2GpuClaimsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetV2GpuClaimsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostV2GpuClaimsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostV2GpuClaimsRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostV2GpuClaims(ctx context.Context, body PostV2GpuClaimsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostV2GpuClaimsRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteV2GpuClaimsGpuClaimId(ctx context.Context, gpuClaimId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteV2GpuClaimsGpuClaimIdRequest(c.Server, gpuClaimId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetV2GpuClaimsGpuClaimId(ctx context.Context, gpuClaimId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetV2GpuClaimsGpuClaimIdRequest(c.Server, gpuClaimId)
 	if err != nil {
 		return nil, err
 	}
@@ -2307,6 +2592,42 @@ func (c *Client) PostV2ResourceMigrationsResourceMigrationId(ctx context.Context
 	return c.Client.Do(req)
 }
 
+func (c *Client) GetV2SnapshotsVmId(ctx context.Context, vmId string, params *GetV2SnapshotsVmIdParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetV2SnapshotsVmIdRequest(c.Server, vmId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostV2SnapshotsVmIdWithBody(ctx context.Context, vmId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostV2SnapshotsVmIdRequestWithBody(c.Server, vmId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostV2SnapshotsVmId(ctx context.Context, vmId string, body PostV2SnapshotsVmIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostV2SnapshotsVmIdRequest(c.Server, vmId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) GetV2StorageManagers(ctx context.Context, params *GetV2StorageManagersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetV2StorageManagersRequest(c.Server, params)
 	if err != nil {
@@ -2379,20 +2700,8 @@ func (c *Client) GetV2SystemStatus(ctx context.Context, params *GetV2SystemStatu
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetV2TeamsWithBody(ctx context.Context, params *GetV2TeamsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetV2TeamsRequestWithBody(c.Server, params, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetV2Teams(ctx context.Context, params *GetV2TeamsParams, body GetV2TeamsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetV2TeamsRequest(c.Server, params, body)
+func (c *Client) GetV2Teams(ctx context.Context, params *GetV2TeamsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetV2TeamsRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -2451,20 +2760,8 @@ func (c *Client) DeleteV2TeamsTeamId(ctx context.Context, teamId string, body De
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetV2TeamsTeamIdWithBody(ctx context.Context, teamId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetV2TeamsTeamIdRequestWithBody(c.Server, teamId, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetV2TeamsTeamId(ctx context.Context, teamId string, body GetV2TeamsTeamIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetV2TeamsTeamIdRequest(c.Server, teamId, body)
+func (c *Client) GetV2TeamsTeamId(ctx context.Context, teamId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetV2TeamsTeamIdRequest(c.Server, teamId)
 	if err != nil {
 		return nil, err
 	}
@@ -2561,6 +2858,30 @@ func (c *Client) PostV2UsersUserIdApiKeysWithBody(ctx context.Context, userId st
 
 func (c *Client) PostV2UsersUserIdApiKeys(ctx context.Context, userId string, body PostV2UsersUserIdApiKeysJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostV2UsersUserIdApiKeysRequest(c.Server, userId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostV2VmActionsVmIdWithBody(ctx context.Context, vmId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostV2VmActionsVmIdRequestWithBody(c.Server, vmId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostV2VmActionsVmId(ctx context.Context, vmId string, body PostV2VmActionsVmIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostV2VmActionsVmIdRequest(c.Server, vmId, body)
 	if err != nil {
 		return nil, err
 	}
@@ -3145,6 +3466,195 @@ func NewGetV2DiscoverRequest(server string) (*http.Request, error) {
 	}
 
 	operationPath := fmt.Sprintf("/v2/discover")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetV2GpuClaimsRequest generates requests for GetV2GpuClaims
+func NewGetV2GpuClaimsRequest(server string, params *GetV2GpuClaimsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v2/gpuClaims")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.PageSize != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageSize", runtime.ParamLocationQuery, *params.PageSize); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Detailed != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "detailed", runtime.ParamLocationQuery, *params.Detailed); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostV2GpuClaimsRequest calls the generic PostV2GpuClaims builder with application/json body
+func NewPostV2GpuClaimsRequest(server string, body PostV2GpuClaimsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostV2GpuClaimsRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostV2GpuClaimsRequestWithBody generates requests for PostV2GpuClaims with any type of body
+func NewPostV2GpuClaimsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v2/gpuClaims")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteV2GpuClaimsGpuClaimIdRequest generates requests for DeleteV2GpuClaimsGpuClaimId
+func NewDeleteV2GpuClaimsGpuClaimIdRequest(server string, gpuClaimId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "gpuClaimId", runtime.ParamLocationPath, gpuClaimId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v2/gpuClaims/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetV2GpuClaimsGpuClaimIdRequest generates requests for GetV2GpuClaimsGpuClaimId
+func NewGetV2GpuClaimsGpuClaimIdRequest(server string, gpuClaimId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "gpuClaimId", runtime.ParamLocationPath, gpuClaimId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v2/gpuClaims/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -4409,6 +4919,125 @@ func NewPostV2ResourceMigrationsResourceMigrationIdRequestWithBody(server string
 	return req, nil
 }
 
+// NewGetV2SnapshotsVmIdRequest generates requests for GetV2SnapshotsVmId
+func NewGetV2SnapshotsVmIdRequest(server string, vmId string, params *GetV2SnapshotsVmIdParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "vmId", runtime.ParamLocationPath, vmId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v2/snapshots/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.PageSize != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageSize", runtime.ParamLocationQuery, *params.PageSize); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostV2SnapshotsVmIdRequest calls the generic PostV2SnapshotsVmId builder with application/json body
+func NewPostV2SnapshotsVmIdRequest(server string, vmId string, body PostV2SnapshotsVmIdJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostV2SnapshotsVmIdRequestWithBody(server, vmId, "application/json", bodyReader)
+}
+
+// NewPostV2SnapshotsVmIdRequestWithBody generates requests for PostV2SnapshotsVmId with any type of body
+func NewPostV2SnapshotsVmIdRequestWithBody(server string, vmId string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "vmId", runtime.ParamLocationPath, vmId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v2/snapshots/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetV2StorageManagersRequest generates requests for GetV2StorageManagers
 func NewGetV2StorageManagersRequest(server string, params *GetV2StorageManagersParams) (*http.Request, error) {
 	var err error
@@ -4705,19 +5334,8 @@ func NewGetV2SystemStatusRequest(server string, params *GetV2SystemStatusParams)
 	return req, nil
 }
 
-// NewGetV2TeamsRequest calls the generic GetV2Teams builder with application/json body
-func NewGetV2TeamsRequest(server string, params *GetV2TeamsParams, body GetV2TeamsJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewGetV2TeamsRequestWithBody(server, params, "application/json", bodyReader)
-}
-
-// NewGetV2TeamsRequestWithBody generates requests for GetV2Teams with any type of body
-func NewGetV2TeamsRequestWithBody(server string, params *GetV2TeamsParams, contentType string, body io.Reader) (*http.Request, error) {
+// NewGetV2TeamsRequest generates requests for GetV2Teams
+func NewGetV2TeamsRequest(server string, params *GetV2TeamsParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -4805,12 +5423,10 @@ func NewGetV2TeamsRequestWithBody(server string, params *GetV2TeamsParams, conte
 		queryURL.RawQuery = queryValues.Encode()
 	}
 
-	req, err := http.NewRequest("GET", queryURL.String(), body)
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-
-	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -4902,19 +5518,8 @@ func NewDeleteV2TeamsTeamIdRequestWithBody(server string, teamId string, content
 	return req, nil
 }
 
-// NewGetV2TeamsTeamIdRequest calls the generic GetV2TeamsTeamId builder with application/json body
-func NewGetV2TeamsTeamIdRequest(server string, teamId string, body GetV2TeamsTeamIdJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewGetV2TeamsTeamIdRequestWithBody(server, teamId, "application/json", bodyReader)
-}
-
-// NewGetV2TeamsTeamIdRequestWithBody generates requests for GetV2TeamsTeamId with any type of body
-func NewGetV2TeamsTeamIdRequestWithBody(server string, teamId string, contentType string, body io.Reader) (*http.Request, error) {
+// NewGetV2TeamsTeamIdRequest generates requests for GetV2TeamsTeamId
+func NewGetV2TeamsTeamIdRequest(server string, teamId string) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -4939,12 +5544,10 @@ func NewGetV2TeamsTeamIdRequestWithBody(server string, teamId string, contentTyp
 		return nil, err
 	}
 
-	req, err := http.NewRequest("GET", queryURL.String(), body)
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-
-	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -5240,6 +5843,53 @@ func NewPostV2UsersUserIdApiKeysRequestWithBody(server string, userId string, co
 	}
 
 	operationPath := fmt.Sprintf("/v2/users/%s/apiKeys", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostV2VmActionsVmIdRequest calls the generic PostV2VmActionsVmId builder with application/json body
+func NewPostV2VmActionsVmIdRequest(server string, vmId string, body PostV2VmActionsVmIdJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostV2VmActionsVmIdRequestWithBody(server, vmId, "application/json", bodyReader)
+}
+
+// NewPostV2VmActionsVmIdRequestWithBody generates requests for PostV2VmActionsVmId with any type of body
+func NewPostV2VmActionsVmIdRequestWithBody(server string, vmId string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "vmId", runtime.ParamLocationPath, vmId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v2/vmActions/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -5764,6 +6414,20 @@ type ClientWithResponsesInterface interface {
 	// GetV2DiscoverWithResponse request
 	GetV2DiscoverWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetV2DiscoverResponse, error)
 
+	// GetV2GpuClaimsWithResponse request
+	GetV2GpuClaimsWithResponse(ctx context.Context, params *GetV2GpuClaimsParams, reqEditors ...RequestEditorFn) (*GetV2GpuClaimsResponse, error)
+
+	// PostV2GpuClaimsWithBodyWithResponse request with any body
+	PostV2GpuClaimsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostV2GpuClaimsResponse, error)
+
+	PostV2GpuClaimsWithResponse(ctx context.Context, body PostV2GpuClaimsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostV2GpuClaimsResponse, error)
+
+	// DeleteV2GpuClaimsGpuClaimIdWithResponse request
+	DeleteV2GpuClaimsGpuClaimIdWithResponse(ctx context.Context, gpuClaimId string, reqEditors ...RequestEditorFn) (*DeleteV2GpuClaimsGpuClaimIdResponse, error)
+
+	// GetV2GpuClaimsGpuClaimIdWithResponse request
+	GetV2GpuClaimsGpuClaimIdWithResponse(ctx context.Context, gpuClaimId string, reqEditors ...RequestEditorFn) (*GetV2GpuClaimsGpuClaimIdResponse, error)
+
 	// GetV2GpuGroupsWithResponse request
 	GetV2GpuGroupsWithResponse(ctx context.Context, params *GetV2GpuGroupsParams, reqEditors ...RequestEditorFn) (*GetV2GpuGroupsResponse, error)
 
@@ -5864,6 +6528,14 @@ type ClientWithResponsesInterface interface {
 
 	PostV2ResourceMigrationsResourceMigrationIdWithResponse(ctx context.Context, resourceMigrationId string, body PostV2ResourceMigrationsResourceMigrationIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PostV2ResourceMigrationsResourceMigrationIdResponse, error)
 
+	// GetV2SnapshotsVmIdWithResponse request
+	GetV2SnapshotsVmIdWithResponse(ctx context.Context, vmId string, params *GetV2SnapshotsVmIdParams, reqEditors ...RequestEditorFn) (*GetV2SnapshotsVmIdResponse, error)
+
+	// PostV2SnapshotsVmIdWithBodyWithResponse request with any body
+	PostV2SnapshotsVmIdWithBodyWithResponse(ctx context.Context, vmId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostV2SnapshotsVmIdResponse, error)
+
+	PostV2SnapshotsVmIdWithResponse(ctx context.Context, vmId string, body PostV2SnapshotsVmIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PostV2SnapshotsVmIdResponse, error)
+
 	// GetV2StorageManagersWithResponse request
 	GetV2StorageManagersWithResponse(ctx context.Context, params *GetV2StorageManagersParams, reqEditors ...RequestEditorFn) (*GetV2StorageManagersResponse, error)
 
@@ -5882,10 +6554,8 @@ type ClientWithResponsesInterface interface {
 	// GetV2SystemStatusWithResponse request
 	GetV2SystemStatusWithResponse(ctx context.Context, params *GetV2SystemStatusParams, reqEditors ...RequestEditorFn) (*GetV2SystemStatusResponse, error)
 
-	// GetV2TeamsWithBodyWithResponse request with any body
-	GetV2TeamsWithBodyWithResponse(ctx context.Context, params *GetV2TeamsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GetV2TeamsResponse, error)
-
-	GetV2TeamsWithResponse(ctx context.Context, params *GetV2TeamsParams, body GetV2TeamsJSONRequestBody, reqEditors ...RequestEditorFn) (*GetV2TeamsResponse, error)
+	// GetV2TeamsWithResponse request
+	GetV2TeamsWithResponse(ctx context.Context, params *GetV2TeamsParams, reqEditors ...RequestEditorFn) (*GetV2TeamsResponse, error)
 
 	// PostV2TeamsWithBodyWithResponse request with any body
 	PostV2TeamsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostV2TeamsResponse, error)
@@ -5897,10 +6567,8 @@ type ClientWithResponsesInterface interface {
 
 	DeleteV2TeamsTeamIdWithResponse(ctx context.Context, teamId string, body DeleteV2TeamsTeamIdJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteV2TeamsTeamIdResponse, error)
 
-	// GetV2TeamsTeamIdWithBodyWithResponse request with any body
-	GetV2TeamsTeamIdWithBodyWithResponse(ctx context.Context, teamId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GetV2TeamsTeamIdResponse, error)
-
-	GetV2TeamsTeamIdWithResponse(ctx context.Context, teamId string, body GetV2TeamsTeamIdJSONRequestBody, reqEditors ...RequestEditorFn) (*GetV2TeamsTeamIdResponse, error)
+	// GetV2TeamsTeamIdWithResponse request
+	GetV2TeamsTeamIdWithResponse(ctx context.Context, teamId string, reqEditors ...RequestEditorFn) (*GetV2TeamsTeamIdResponse, error)
 
 	// PostV2TeamsTeamIdWithBodyWithResponse request with any body
 	PostV2TeamsTeamIdWithBodyWithResponse(ctx context.Context, teamId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostV2TeamsTeamIdResponse, error)
@@ -5922,6 +6590,11 @@ type ClientWithResponsesInterface interface {
 	PostV2UsersUserIdApiKeysWithBodyWithResponse(ctx context.Context, userId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostV2UsersUserIdApiKeysResponse, error)
 
 	PostV2UsersUserIdApiKeysWithResponse(ctx context.Context, userId string, body PostV2UsersUserIdApiKeysJSONRequestBody, reqEditors ...RequestEditorFn) (*PostV2UsersUserIdApiKeysResponse, error)
+
+	// PostV2VmActionsVmIdWithBodyWithResponse request with any body
+	PostV2VmActionsVmIdWithBodyWithResponse(ctx context.Context, vmId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostV2VmActionsVmIdResponse, error)
+
+	PostV2VmActionsVmIdWithResponse(ctx context.Context, vmId string, body PostV2VmActionsVmIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PostV2VmActionsVmIdResponse, error)
 
 	// GetV2VmsWithResponse request
 	GetV2VmsWithResponse(ctx context.Context, params *GetV2VmsParams, reqEditors ...RequestEditorFn) (*GetV2VmsResponse, error)
@@ -6179,6 +6852,111 @@ func (r GetV2DiscoverResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetV2DiscoverResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetV2GpuClaimsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]BodyGpuClaimRead
+	JSON400      *SysErrorResponse
+	JSON404      *SysErrorResponse
+	JSON423      *SysErrorResponse
+	JSON500      *SysErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetV2GpuClaimsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetV2GpuClaimsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostV2GpuClaimsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *BodyGpuClaimCreated
+	JSON400      *SysErrorResponse
+	JSON403      *SysErrorResponse
+	JSON404      *SysErrorResponse
+	JSON500      *SysErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostV2GpuClaimsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostV2GpuClaimsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteV2GpuClaimsGpuClaimIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *BodyGpuClaimCreated
+	JSON400      *SysErrorResponse
+	JSON401      *SysErrorResponse
+	JSON403      *SysErrorResponse
+	JSON404      *SysErrorResponse
+	JSON500      *SysErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteV2GpuClaimsGpuClaimIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteV2GpuClaimsGpuClaimIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetV2GpuClaimsGpuClaimIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *BodyGpuClaimRead
+	JSON400      *SysErrorResponse
+	JSON404      *SysErrorResponse
+	JSON423      *SysErrorResponse
+	JSON500      *SysErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetV2GpuClaimsGpuClaimIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetV2GpuClaimsGpuClaimIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -6769,6 +7547,57 @@ func (r PostV2ResourceMigrationsResourceMigrationIdResponse) StatusCode() int {
 	return 0
 }
 
+type GetV2SnapshotsVmIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]BodyVmSnapshotRead
+	JSON400      *SysErrorResponse
+	JSON404      *SysErrorResponse
+	JSON423      *SysErrorResponse
+	JSON500      *SysErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetV2SnapshotsVmIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetV2SnapshotsVmIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostV2SnapshotsVmIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *BodyVmSnapshotCreated
+	JSON400      *SysErrorResponse
+	JSON404      *SysErrorResponse
+	JSON500      *SysErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostV2SnapshotsVmIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostV2SnapshotsVmIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetV2StorageManagersResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -7133,6 +7962,31 @@ func (r PostV2UsersUserIdApiKeysResponse) StatusCode() int {
 	return 0
 }
 
+type PostV2VmActionsVmIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *BodyVmActionCreated
+	JSON400      *SysErrorResponse
+	JSON404      *SysErrorResponse
+	JSON500      *SysErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostV2VmActionsVmIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostV2VmActionsVmIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetV2VmsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -7475,6 +8329,50 @@ func (c *ClientWithResponses) GetV2DiscoverWithResponse(ctx context.Context, req
 	return ParseGetV2DiscoverResponse(rsp)
 }
 
+// GetV2GpuClaimsWithResponse request returning *GetV2GpuClaimsResponse
+func (c *ClientWithResponses) GetV2GpuClaimsWithResponse(ctx context.Context, params *GetV2GpuClaimsParams, reqEditors ...RequestEditorFn) (*GetV2GpuClaimsResponse, error) {
+	rsp, err := c.GetV2GpuClaims(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetV2GpuClaimsResponse(rsp)
+}
+
+// PostV2GpuClaimsWithBodyWithResponse request with arbitrary body returning *PostV2GpuClaimsResponse
+func (c *ClientWithResponses) PostV2GpuClaimsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostV2GpuClaimsResponse, error) {
+	rsp, err := c.PostV2GpuClaimsWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostV2GpuClaimsResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostV2GpuClaimsWithResponse(ctx context.Context, body PostV2GpuClaimsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostV2GpuClaimsResponse, error) {
+	rsp, err := c.PostV2GpuClaims(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostV2GpuClaimsResponse(rsp)
+}
+
+// DeleteV2GpuClaimsGpuClaimIdWithResponse request returning *DeleteV2GpuClaimsGpuClaimIdResponse
+func (c *ClientWithResponses) DeleteV2GpuClaimsGpuClaimIdWithResponse(ctx context.Context, gpuClaimId string, reqEditors ...RequestEditorFn) (*DeleteV2GpuClaimsGpuClaimIdResponse, error) {
+	rsp, err := c.DeleteV2GpuClaimsGpuClaimId(ctx, gpuClaimId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteV2GpuClaimsGpuClaimIdResponse(rsp)
+}
+
+// GetV2GpuClaimsGpuClaimIdWithResponse request returning *GetV2GpuClaimsGpuClaimIdResponse
+func (c *ClientWithResponses) GetV2GpuClaimsGpuClaimIdWithResponse(ctx context.Context, gpuClaimId string, reqEditors ...RequestEditorFn) (*GetV2GpuClaimsGpuClaimIdResponse, error) {
+	rsp, err := c.GetV2GpuClaimsGpuClaimId(ctx, gpuClaimId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetV2GpuClaimsGpuClaimIdResponse(rsp)
+}
+
 // GetV2GpuGroupsWithResponse request returning *GetV2GpuGroupsResponse
 func (c *ClientWithResponses) GetV2GpuGroupsWithResponse(ctx context.Context, params *GetV2GpuGroupsParams, reqEditors ...RequestEditorFn) (*GetV2GpuGroupsResponse, error) {
 	rsp, err := c.GetV2GpuGroups(ctx, params, reqEditors...)
@@ -7803,6 +8701,32 @@ func (c *ClientWithResponses) PostV2ResourceMigrationsResourceMigrationIdWithRes
 	return ParsePostV2ResourceMigrationsResourceMigrationIdResponse(rsp)
 }
 
+// GetV2SnapshotsVmIdWithResponse request returning *GetV2SnapshotsVmIdResponse
+func (c *ClientWithResponses) GetV2SnapshotsVmIdWithResponse(ctx context.Context, vmId string, params *GetV2SnapshotsVmIdParams, reqEditors ...RequestEditorFn) (*GetV2SnapshotsVmIdResponse, error) {
+	rsp, err := c.GetV2SnapshotsVmId(ctx, vmId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetV2SnapshotsVmIdResponse(rsp)
+}
+
+// PostV2SnapshotsVmIdWithBodyWithResponse request with arbitrary body returning *PostV2SnapshotsVmIdResponse
+func (c *ClientWithResponses) PostV2SnapshotsVmIdWithBodyWithResponse(ctx context.Context, vmId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostV2SnapshotsVmIdResponse, error) {
+	rsp, err := c.PostV2SnapshotsVmIdWithBody(ctx, vmId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostV2SnapshotsVmIdResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostV2SnapshotsVmIdWithResponse(ctx context.Context, vmId string, body PostV2SnapshotsVmIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PostV2SnapshotsVmIdResponse, error) {
+	rsp, err := c.PostV2SnapshotsVmId(ctx, vmId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostV2SnapshotsVmIdResponse(rsp)
+}
+
 // GetV2StorageManagersWithResponse request returning *GetV2StorageManagersResponse
 func (c *ClientWithResponses) GetV2StorageManagersWithResponse(ctx context.Context, params *GetV2StorageManagersParams, reqEditors ...RequestEditorFn) (*GetV2StorageManagersResponse, error) {
 	rsp, err := c.GetV2StorageManagers(ctx, params, reqEditors...)
@@ -7857,17 +8781,9 @@ func (c *ClientWithResponses) GetV2SystemStatusWithResponse(ctx context.Context,
 	return ParseGetV2SystemStatusResponse(rsp)
 }
 
-// GetV2TeamsWithBodyWithResponse request with arbitrary body returning *GetV2TeamsResponse
-func (c *ClientWithResponses) GetV2TeamsWithBodyWithResponse(ctx context.Context, params *GetV2TeamsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GetV2TeamsResponse, error) {
-	rsp, err := c.GetV2TeamsWithBody(ctx, params, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetV2TeamsResponse(rsp)
-}
-
-func (c *ClientWithResponses) GetV2TeamsWithResponse(ctx context.Context, params *GetV2TeamsParams, body GetV2TeamsJSONRequestBody, reqEditors ...RequestEditorFn) (*GetV2TeamsResponse, error) {
-	rsp, err := c.GetV2Teams(ctx, params, body, reqEditors...)
+// GetV2TeamsWithResponse request returning *GetV2TeamsResponse
+func (c *ClientWithResponses) GetV2TeamsWithResponse(ctx context.Context, params *GetV2TeamsParams, reqEditors ...RequestEditorFn) (*GetV2TeamsResponse, error) {
+	rsp, err := c.GetV2Teams(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -7908,17 +8824,9 @@ func (c *ClientWithResponses) DeleteV2TeamsTeamIdWithResponse(ctx context.Contex
 	return ParseDeleteV2TeamsTeamIdResponse(rsp)
 }
 
-// GetV2TeamsTeamIdWithBodyWithResponse request with arbitrary body returning *GetV2TeamsTeamIdResponse
-func (c *ClientWithResponses) GetV2TeamsTeamIdWithBodyWithResponse(ctx context.Context, teamId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GetV2TeamsTeamIdResponse, error) {
-	rsp, err := c.GetV2TeamsTeamIdWithBody(ctx, teamId, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetV2TeamsTeamIdResponse(rsp)
-}
-
-func (c *ClientWithResponses) GetV2TeamsTeamIdWithResponse(ctx context.Context, teamId string, body GetV2TeamsTeamIdJSONRequestBody, reqEditors ...RequestEditorFn) (*GetV2TeamsTeamIdResponse, error) {
-	rsp, err := c.GetV2TeamsTeamId(ctx, teamId, body, reqEditors...)
+// GetV2TeamsTeamIdWithResponse request returning *GetV2TeamsTeamIdResponse
+func (c *ClientWithResponses) GetV2TeamsTeamIdWithResponse(ctx context.Context, teamId string, reqEditors ...RequestEditorFn) (*GetV2TeamsTeamIdResponse, error) {
+	rsp, err := c.GetV2TeamsTeamId(ctx, teamId, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -7992,6 +8900,23 @@ func (c *ClientWithResponses) PostV2UsersUserIdApiKeysWithResponse(ctx context.C
 		return nil, err
 	}
 	return ParsePostV2UsersUserIdApiKeysResponse(rsp)
+}
+
+// PostV2VmActionsVmIdWithBodyWithResponse request with arbitrary body returning *PostV2VmActionsVmIdResponse
+func (c *ClientWithResponses) PostV2VmActionsVmIdWithBodyWithResponse(ctx context.Context, vmId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostV2VmActionsVmIdResponse, error) {
+	rsp, err := c.PostV2VmActionsVmIdWithBody(ctx, vmId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostV2VmActionsVmIdResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostV2VmActionsVmIdWithResponse(ctx context.Context, vmId string, body PostV2VmActionsVmIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PostV2VmActionsVmIdResponse, error) {
+	rsp, err := c.PostV2VmActionsVmId(ctx, vmId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostV2VmActionsVmIdResponse(rsp)
 }
 
 // GetV2VmsWithResponse request returning *GetV2VmsResponse
@@ -8518,6 +9443,229 @@ func ParseGetV2DiscoverResponse(rsp *http.Response) (*GetV2DiscoverResponse, err
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetV2GpuClaimsResponse parses an HTTP response from a GetV2GpuClaimsWithResponse call
+func ParseGetV2GpuClaimsResponse(rsp *http.Response) (*GetV2GpuClaimsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetV2GpuClaimsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []BodyGpuClaimRead
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 423:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON423 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostV2GpuClaimsResponse parses an HTTP response from a PostV2GpuClaimsWithResponse call
+func ParsePostV2GpuClaimsResponse(rsp *http.Response) (*PostV2GpuClaimsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostV2GpuClaimsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest BodyGpuClaimCreated
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteV2GpuClaimsGpuClaimIdResponse parses an HTTP response from a DeleteV2GpuClaimsGpuClaimIdWithResponse call
+func ParseDeleteV2GpuClaimsGpuClaimIdResponse(rsp *http.Response) (*DeleteV2GpuClaimsGpuClaimIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteV2GpuClaimsGpuClaimIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest BodyGpuClaimCreated
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetV2GpuClaimsGpuClaimIdResponse parses an HTTP response from a GetV2GpuClaimsGpuClaimIdWithResponse call
+func ParseGetV2GpuClaimsGpuClaimIdResponse(rsp *http.Response) (*GetV2GpuClaimsGpuClaimIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetV2GpuClaimsGpuClaimIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest BodyGpuClaimRead
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 423:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON423 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest SysErrorResponse
@@ -9547,6 +10695,107 @@ func ParsePostV2ResourceMigrationsResourceMigrationIdResponse(rsp *http.Response
 	return response, nil
 }
 
+// ParseGetV2SnapshotsVmIdResponse parses an HTTP response from a GetV2SnapshotsVmIdWithResponse call
+func ParseGetV2SnapshotsVmIdResponse(rsp *http.Response) (*GetV2SnapshotsVmIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetV2SnapshotsVmIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []BodyVmSnapshotRead
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 423:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON423 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostV2SnapshotsVmIdResponse parses an HTTP response from a PostV2SnapshotsVmIdWithResponse call
+func ParsePostV2SnapshotsVmIdResponse(rsp *http.Response) (*PostV2SnapshotsVmIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostV2SnapshotsVmIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest BodyVmSnapshotCreated
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetV2StorageManagersResponse parses an HTTP response from a GetV2StorageManagersWithResponse call
 func ParseGetV2StorageManagersResponse(rsp *http.Response) (*GetV2StorageManagersResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -10162,6 +11411,53 @@ func ParsePostV2UsersUserIdApiKeysResponse(rsp *http.Response) (*PostV2UsersUser
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostV2VmActionsVmIdResponse parses an HTTP response from a PostV2VmActionsVmIdWithResponse call
+func ParsePostV2VmActionsVmIdResponse(rsp *http.Response) (*PostV2VmActionsVmIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostV2VmActionsVmIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest BodyVmActionCreated
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest SysErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest SysErrorResponse

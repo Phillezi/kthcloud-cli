@@ -5,12 +5,13 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/kthcloud/cli/internal/defaults"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 )
 
 type Server struct {
-	port       string
+	addr       string
 	oauth2Conf *oauth2.Config
 	server     *http.Server
 
@@ -24,7 +25,7 @@ type Server struct {
 
 func NewServer(opts ...Option) *Server {
 	s := &Server{
-		port:    "3000",
+		addr:    defaults.DefaultLoginServerAddress,
 		tokenCh: make(chan *oauth2.Token, 1),
 		l:       zap.NewNop(),
 	}
@@ -39,5 +40,5 @@ func (s *Server) Token() <-chan *oauth2.Token {
 }
 
 func (s *Server) Url() string {
-	return fmt.Sprintf("http://localhost:%s/login", s.port)
+	return fmt.Sprintf("http://%s/login", s.addr)
 }

@@ -1,11 +1,13 @@
 package deploy
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
 
 	"github.com/kthcloud/cli/pkg/utils"
+	"go.uber.org/zap"
 )
 
 // ResponseError represents a structured error for API responses.
@@ -71,10 +73,13 @@ func newResponseError(resource, stage string, code int, baseErr error, msg strin
 
 func handleGenericResponse(resourceName, stage string, resp any) (any, error) {
 	v := reflect.ValueOf(resp)
+	fmt.Println("handleGenericResponse:", resp)
+	zap.L().Info("handleGenericResponse", zap.Any("response", resp))
 	if v.Kind() == reflect.Pointer {
 		v = v.Elem()
 	}
 	if !v.IsValid() {
+		fmt.Println("!v.IsValid(), v.Elem()=", v.Elem())
 		return nil, newResponseError(resourceName, stage, 0, ErrInvalidResponse,
 			fmt.Sprintf("type: %T", resp))
 	}
@@ -90,6 +95,8 @@ func handleGenericResponse(resourceName, stage string, resp any) (any, error) {
 	for _, name := range []string{"JSON400", "JSON401", "JSON403", "JSON404", "JSON500"} {
 		if f := v.FieldByName(name); f.IsValid() && !f.IsNil() {
 			msg := extractErrorMessage(f.Interface())
+
+			fmt.Println(f.Elem())
 
 			var baseErr error
 			switch name {
@@ -153,7 +160,32 @@ func extractErrorMessageFallback(errObj any) string {
 	if f := v.FieldByName("Errors"); f.IsValid() {
 		return fmt.Sprintf("%v", f.Interface())
 	}
-	return fmt.Sprintf("%v", errObj)
+	if f := v.FieldByName("ValidationErrors"); f.IsValid() {
+		switch f.Kind() {
+		case reflect.String:
+			return f.String()
+		case reflect.Map, reflect.Struct:
+			// safely format map or struct as JSON-like string
+			return fmt.Sprintf("%v", f.Interface())
+		case reflect.Slice:
+			// maybe a slice of messages
+			var msgs []string
+			for i := 0; i < f.Len(); i++ {
+				msgs = append(msgs, fmt.Sprintf("%v", f.Index(i).Interface()))
+			}
+			return strings.Join(msgs, "; ")
+		}
+	}
+
+	return fallbackToJSON(errObj)
+}
+
+func fallbackToJSON(obj any) string {
+	if b, err := json.MarshalIndent(obj, "", "  "); err == nil {
+		return string(b)
+	}
+	// if JSON fails, just use default formatting
+	return fmt.Sprintf("%v", obj)
 }
 
 func extractErrorMessage(errObj any) string {

@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/kthcloud/cli/pkg/deploy"
-	"github.com/kthcloud/cli/pkg/utils"
 )
 
 // "Special" environment variables
@@ -46,7 +45,7 @@ var (
 			if err != nil {
 				return err
 			}
-			deployment.CpuCores = utils.PtrOf(float32(cores))
+			deployment.CpuCores = new(float32(cores))
 			return nil
 		},
 		KTHCLOUD_RAM: func(value string, deployment *deploy.BodyDeploymentCreate) error {
@@ -54,7 +53,7 @@ var (
 			if err != nil {
 				return err
 			}
-			deployment.Ram = utils.PtrOf(float32(ram))
+			deployment.Ram = new(float32(ram))
 			return nil
 		},
 		KTHCLOUD_REPLICAS: func(value string, deployment *deploy.BodyDeploymentCreate) error {
@@ -76,7 +75,7 @@ var (
 			visibility := strings.ToLower(value)
 			switch visibility {
 			case "private", "public", "auth":
-				deployment.Visibility = utils.PtrOf(deploy.BodyDeploymentCreateVisibility(visibility))
+				deployment.Visibility = new(deploy.BodyDeploymentCreateVisibility(visibility))
 			default:
 				return ErrInvalidDeploymentVisibility
 			}
@@ -84,7 +83,7 @@ var (
 		},
 		KTHCLOUD_ZONE: func(value string, deployment *deploy.BodyDeploymentCreate) error {
 			if value := strings.TrimSpace(value); value != "" {
-				deployment.Zone = utils.PtrOf(value)
+				deployment.Zone = new(value)
 			}
 			return nil
 		},
@@ -93,7 +92,7 @@ var (
 				return ErrCustomDomainTooLong
 			}
 			if value := strings.TrimSpace(value); value != "" {
-				deployment.CustomDomain = utils.PtrOf(value)
+				deployment.CustomDomain = new(value)
 			}
 			return nil
 		},
@@ -102,7 +101,7 @@ var (
 			if err != nil {
 				return err
 			}
-			deployment.NeverStale = utils.PtrOf(v)
+			deployment.NeverStale = new(v)
 			return nil
 		},
 	}

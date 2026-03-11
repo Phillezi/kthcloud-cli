@@ -12,7 +12,7 @@ const (
 	DefaultKeycloakRealm        = "cloud"
 	DefaultKeycloakClientID     = "landing"
 	DefaultKeycloakClientSecret = ""
-	DefaultLoginServerPort      = "3000"
+	DefaultLoginServerAddress   = "localhost:3000"
 
 	DefaultDeploymentVisibility    = "public"
 	DefaultDeploymentHealthPath    = "/healthz"
@@ -29,4 +29,7 @@ const (
 	DefaultKeystoreSessionKey  = "default"
 	DefaultKeystoreServiceName = "kthcloud-cli"
 	DefaultKeystoreFallbackDir = "/tmp/kthcloud-cli" // TODO: this is temporary
+
+	DefaultSSHBinary = "ssh"
+	DefaultSSHHost   = "deploy.cloud.cbh.kth.se"
 )

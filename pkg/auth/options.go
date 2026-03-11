@@ -11,12 +11,12 @@ import (
 
 type Option func(*Server)
 
-func WithPort(port string) Option {
+func WithAddr(addr string) Option {
 	return func(s *Server) {
-		oldPort := s.port
-		s.port = port
+		oldAddr := s.addr
+		s.addr = addr
 		if s.oauth2Conf != nil {
-			s.oauth2Conf.RedirectURL = strings.ReplaceAll(s.oauth2Conf.RedirectURL, oldPort, port)
+			s.oauth2Conf.RedirectURL = strings.ReplaceAll(s.oauth2Conf.RedirectURL, oldAddr, addr)
 		}
 	}
 }
@@ -29,7 +29,7 @@ func WithOAuth2Config(conf *oauth2.Config) Option {
 
 func WithKeycloakOAuth2Config(clientID, baseURL, realm string) Option {
 	return func(s *Server) {
-		redirectURL := fmt.Sprintf("http://localhost:%s/callback", s.port)
+		redirectURL := fmt.Sprintf("http://%s/callback", s.addr)
 		s.oauth2Conf = keycloak.Config(clientID, baseURL, redirectURL, realm)
 	}
 }

@@ -12,7 +12,6 @@ import (
 	"github.com/kthcloud/cli/pkg/deploy"
 	"github.com/kthcloud/cli/pkg/session"
 	"github.com/kthcloud/cli/pkg/ui/renderer"
-	"github.com/kthcloud/cli/pkg/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -39,8 +38,8 @@ var getDeploymentsCmd = &cobra.Command{
 		)
 
 		params := &deploy.GetV2DeploymentsParams{
-			All:    utils.PtrOf(viper.GetBool("all")),
-			Shared: utils.PtrOf(viper.GetBool("shared")),
+			All:    new(viper.GetBool("all")),
+			Shared: new(viper.GetBool("shared")),
 		}
 		if userIDFilter := viper.GetString("by-user-id"); userIDFilter != "" {
 			params.UserId = &userIDFilter
@@ -62,7 +61,17 @@ var getDeploymentsCmd = &cobra.Command{
 			zap.L().Fatal("Error on handle", zap.Error(err))
 		}
 
-		if err := renderer.New().Render(obj, renderer.WithOutput(renderer.OutputFromString(viper.GetString("output")))); err != nil {
+		deployments := make([]renderer.DeploymentLike, len(*obj))
+		for i, deployment := range *obj {
+			deployments[i] = renderer.DeploymentAdapter{
+				ID:     *deployment.Id,
+				Name:   *deployment.Name,
+				Owner:  *deployment.OwnerId,
+				Status: *deployment.Status,
+			}
+		}
+
+		if err := renderer.New().Render(deployments, renderer.WithOutput(renderer.OutputFromString(viper.GetString("output")))); err != nil {
 			zap.L().Fatal("Error on render", zap.Error(err))
 		}
 

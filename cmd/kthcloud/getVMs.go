@@ -12,7 +12,6 @@ import (
 	"github.com/kthcloud/cli/pkg/deploy"
 	"github.com/kthcloud/cli/pkg/session"
 	"github.com/kthcloud/cli/pkg/ui/renderer"
-	"github.com/kthcloud/cli/pkg/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -39,7 +38,7 @@ var getVMsCmd = &cobra.Command{
 		)
 
 		params := &deploy.GetV2VmsParams{
-			All: utils.PtrOf(viper.GetBool("all")),
+			All: new(viper.GetBool("all")),
 		}
 		if userIDFilter := viper.GetString("by-user-id"); userIDFilter != "" {
 			params.UserId = &userIDFilter

@@ -104,7 +104,6 @@ var deleteDeploymentCmd = &cobra.Command{
 				fmt.Println(res)
 			}
 		}
-
 	},
 }
 

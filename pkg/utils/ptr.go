@@ -1,7 +1,8 @@
 package utils
 
+//go:fix inline
 func PtrOf[T any](v T) *T {
-	return &v
+	return new(v)
 }
 
 func DerefOrZero[T any](ptr *T) T {

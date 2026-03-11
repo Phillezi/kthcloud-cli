@@ -7,6 +7,7 @@ import (
 	"os/signal"
 
 	"github.com/kthcloud/cli/internal/app"
+	"github.com/kthcloud/cli/internal/body"
 	"github.com/kthcloud/cli/internal/constants"
 	"github.com/kthcloud/cli/pkg/deploy"
 	"github.com/kthcloud/cli/pkg/parser"
@@ -43,12 +44,17 @@ var createDeploymentCmd = &cobra.Command{
 		)
 
 		flags.Args = args[1:]
-		body, err := parser.ParseDeployment(args[0], flags)
+		reqBody, err := parser.ParseDeployment(args[0], flags)
 		if err != nil {
 			zap.L().Fatal("Error parsing args", zap.Error(err))
 		}
 
-		r, err := a.Deploy().PostV2DeploymentsWithResponse(ctx, *body)
+		reader, err := body.Reader(reqBody)
+		if err != nil {
+			zap.L().Fatal("Error marshal", zap.Error(err))
+		}
+
+		r, err := a.Deploy().PostV2DeploymentsWithBodyWithResponse(ctx, "application/json", reader)
 		if err != nil {
 			if errors.Is(err, session.ErrLoginRequired) {
 				zap.L().Fatal("Login is required, please run the login command")
@@ -61,10 +67,11 @@ var createDeploymentCmd = &cobra.Command{
 			zap.L().Fatal("Error on handle", zap.Error(err))
 		}
 
-		if obj != nil && obj.Id != nil {
-			fmt.Println(*obj.Id)
+		if obj != nil {
+			if obj.Id != nil {
+				_, _ = fmt.Fprintln(os.Stdout, *obj.Id)
+			}
 		}
-
 	},
 }
 
@@ -72,17 +79,17 @@ func init() {
 	createCmd.AddCommand(createDeploymentCmd)
 
 	createDeploymentCmd.Flags().StringVar(&flags.Name, "name", "", "Deployment name")
-	createDeploymentCmd.MarkFlagRequired("name")
+	_ = createDeploymentCmd.MarkFlagRequired("name")
 	createDeploymentCmd.Flags().StringSliceVarP(&flags.Env, "env", "e", nil, "Set environment variables (KEY=value)")
 	createDeploymentCmd.Flags().StringSliceVarP(&flags.Volume, "volume", "v", nil, "Bind mount a volume (local:remote)")
 	createDeploymentCmd.Flags().StringSliceVarP(&flags.Port, "publish", "p", nil, "Publish a port (local:remote)")
 	createDeploymentCmd.Flags().Float32Var(&flags.CPU, "cpu", 0, "CPU cores")
 	createDeploymentCmd.Flags().Float32Var(&flags.RAM, "ram", 0, "RAM (in GB)")
+	createDeploymentCmd.Flags().StringSliceVar(&flags.GPU, "gpu", nil, "GPU (<claim-name>/<gpu-name>)")
 	createDeploymentCmd.Flags().IntVar(&flags.Replicas, "replicas", 1, "Number of replicas")
 	createDeploymentCmd.Flags().StringVar(&flags.Zone, "zone", "", "Deployment zone")
 	createDeploymentCmd.Flags().StringVar(&flags.Domain, "domain", "", "Custom domain")
 	createDeploymentCmd.Flags().StringVar(&flags.Health, "health", "", "Health check path")
 	createDeploymentCmd.Flags().StringVar(&flags.Visibility, "visibility", "", "Visibility (public, private, auth)")
 	createDeploymentCmd.Flags().BoolVar(&flags.NeverStale, "never-stale", false, "Prevent auto-disable")
-
 }

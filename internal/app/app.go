@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/kthcloud/cli/internal/defaults"
 	"github.com/kthcloud/cli/pkg/auth"
 	"github.com/kthcloud/cli/pkg/deploy"
 	"github.com/kthcloud/cli/pkg/keycloak"
@@ -23,7 +22,7 @@ type App struct {
 	keycloakClientID string
 	keycloakRealm    string
 
-	loginServerPort string
+	loginServerAddress string
 
 	sessionKey         string
 	sessionService     string
@@ -41,26 +40,31 @@ type App struct {
 }
 
 func New(ctx context.Context, opts ...Option) *App {
+	cfg := DefaultConfig()
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+
 	a := App{
 		ctx: ctx,
 
-		deployAPIBaseURL: defaults.DefaultDeployAPIBaseURL,
+		deployAPIBaseURL: cfg.DeployAPIBaseURL,
 
-		keycloakURL:      defaults.DefaultKeycloakBaseURL,
-		keycloakClientID: defaults.DefaultKeycloakClientID,
-		keycloakRealm:    defaults.DefaultKeycloakRealm,
+		keycloakURL:      cfg.KeycloakBaseURL,
+		keycloakClientID: cfg.KeycloakClientID,
+		keycloakRealm:    cfg.KeycloakRealm,
 
-		loginServerPort: defaults.DefaultLoginServerPort,
+		loginServerAddress: cfg.LoginServerAddress,
 
-		sessionKey:         defaults.DefaultKeystoreSessionKey,
-		sessionService:     defaults.DefaultKeystoreServiceName,
-		sessionFallbackDir: defaults.DefaultKeystoreFallbackDir,
+		oauth2Conf: cfg.Oauth2Config,
 
-		l: zap.NewNop(),
-	}
+		sessionKey:         cfg.SessionKey,
+		sessionService:     cfg.SessionService,
+		sessionFallbackDir: cfg.SessionFallbackDir,
 
-	for _, opt := range opts {
-		opt(&a)
+		session: cfg.Session,
+
+		l: cfg.Logger,
 	}
 
 	if a.oauth2Conf == nil {
@@ -68,8 +72,8 @@ func New(ctx context.Context, opts ...Option) *App {
 			a.keycloakClientID,
 			a.keycloakURL,
 			fmt.Sprintf(
-				"http://localhost:%s/callback",
-				a.loginServerPort,
+				"http://%s/callback",
+				a.loginServerAddress,
 			),
 			a.keycloakRealm,
 		)
@@ -90,7 +94,7 @@ func New(ctx context.Context, opts ...Option) *App {
 		a.loginServer = auth.NewServer(
 			auth.WithOAuth2Config(a.oauth2Conf),
 			auth.WithLogger(a.l.Named("auth")),
-			auth.WithPort(a.loginServerPort),
+			auth.WithAddr(a.loginServerAddress),
 		)
 	}
 
