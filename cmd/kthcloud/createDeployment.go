@@ -22,6 +22,7 @@ var createDeploymentCmd = &cobra.Command{
 	Use: "deployment",
 	Aliases: []string{
 		"deployments",
+		"deploy",
 	},
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {

@@ -21,6 +21,7 @@ var getDeploymentsCmd = &cobra.Command{
 	Short: "Get deployments",
 	Aliases: []string{
 		"deployments",
+		"deploy",
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx, cancel := signal.NotifyContext(cmd.Context(), os.Interrupt)
