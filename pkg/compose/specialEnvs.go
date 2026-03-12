@@ -1,6 +1,9 @@
 package compose
 
 import (
+	"fmt"
+	"maps"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -15,6 +18,8 @@ const (
 	KTHCLOUD_RAM = "KTHCLOUD_RAM"
 	// Configure how many replicas should be requested
 	KTHCLOUD_REPLICAS = "KTHCLOUD_REPLICAS"
+	// Configure gpus for deployment, syntax <claim-name>/<gpu-name>,<claim-name-1>/<gpu-name-1> (comma separated)
+	KTHCLOUD_GPUS = "KTHCLOUD_GPUS"
 	// Configure health path that should be polled
 	KTHCLOUD_HEALTH_PATH = "KTHCLOUD_HEALTH_PATH"
 	// Configure the visibility of the deployment
@@ -28,10 +33,11 @@ const (
 )
 
 var (
-	_ = []string{
+	specialEnvs = []string{
 		KTHCLOUD_CORES,
 		KTHCLOUD_RAM,
 		KTHCLOUD_REPLICAS,
+		KTHCLOUD_GPUS,
 		KTHCLOUD_HEALTH_PATH,
 		KTHCLOUD_VISIBILITY,
 		KTHCLOUD_ZONE,
@@ -39,7 +45,7 @@ var (
 		KTHCLOUD_ADMIN_NEVER_STALE,
 	}
 
-	_ = map[string]func(value string, deployment *deploy.BodyDeploymentCreate) error{
+	specialEnvsHandlers = map[string]func(value string, deployment *deploy.BodyDeploymentCreate) error{
 		KTHCLOUD_CORES: func(value string, deployment *deploy.BodyDeploymentCreate) error {
 			cores, err := strconv.ParseFloat(value, 32)
 			if err != nil {
@@ -62,6 +68,25 @@ var (
 				return err
 			}
 			deployment.Replicas = &replicas
+			return nil
+		},
+		KTHCLOUD_GPUS: func(value string, deployment *deploy.BodyDeploymentCreate) error {
+			if value == "" {
+				return nil
+			}
+			pairs := strings.Split(value, ",")
+			if (*deployment).Gpus == nil {
+				(*deployment).Gpus = new(make([]deploy.BodyDeploymentGPU, 0, len(pairs)))
+			}
+			for _, pair := range pairs {
+				pair = strings.TrimSpace(pair)
+				parts := strings.Split(pair, "/")
+				partsLen := len(parts)
+				if partsLen != 2 {
+					return fmt.Errorf("gpu config env needs exactly two parts split by /, got: %v", parts)
+				}
+				*(*deployment).Gpus = append(*(*deployment).Gpus, deploy.BodyDeploymentGPU{ClaimName: parts[0], Name: parts[1]})
+			}
 			return nil
 		},
 		KTHCLOUD_HEALTH_PATH: func(value string, deployment *deploy.BodyDeploymentCreate) error {
@@ -106,3 +131,11 @@ var (
 		},
 	}
 )
+
+func GetSpecialEnvs() []string {
+	return slices.Clone(specialEnvs)
+}
+
+func GetSpecialEnvsHandlers() map[string]func(value string, deployment *deploy.BodyDeploymentCreate) error {
+	return maps.Clone(specialEnvsHandlers)
+}

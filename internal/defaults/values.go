@@ -16,8 +16,8 @@ const (
 
 	DefaultDeploymentVisibility    = "public"
 	DefaultDeploymentHealthPath    = "/healthz"
-	DefaultDeploymentSpecsCores    = float64(0.2)
-	DefaultDeploymentSpecsRam      = float64(0.5)
+	DefaultDeploymentSpecsCores    = float32(0.2)
+	DefaultDeploymentSpecsRam      = float32(0.5)
 	DefaultDeploymentSpecsReplicas = 1
 
 	DefaultVMSpecsCores = float64(4)
@@ -32,4 +32,22 @@ const (
 
 	DefaultSSHBinary = "ssh"
 	DefaultSSHHost   = "deploy.cloud.cbh.kth.se"
+)
+
+var (
+	DefaultComposeFileNames []string = []string{
+		"kthcloud.docker-compose.yaml",
+		"kthcloud.docker-compose.yml",
+		"kthcloud.compose.yaml",
+		"kthcloud.compose.yml",
+		"docker-compose.yaml",
+		"docker-compose.yml",
+		"compose.yaml",
+		"compose.yml",
+	}
+
+	DefaultComposeDotEnvFileNames []string = []string{
+		".env",
+		".env.kthcloud",
+	}
 )
