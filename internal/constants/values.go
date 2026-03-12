@@ -1,16 +1,21 @@
 package constants
 
 const (
+	ViperDeployAPIBaseURL = "api.baseurl"
+	ViperDeployAPIToken   = "api.token"
+
 	ViperKeycloakClientId     = "keycloak.client.id"
 	ViperKeycloakClientSecret = "keycloak.client.secret"
 	ViperKeycloakBaseURL      = "keycloak.base.url"
 	ViperKeycloakRealm        = "keycloak.realm"
 
-	ViperSessionKey = "session.key"
+	ViperLoginServerAddress = "login.serveraddress"
 
-	ViperDeployAPIBaseURL = "api.baseurl"
-	ViperDeployAPIToken   = "api.token"
-	ViperDeployZone       = "zone"
+	ViperSessionKey         = "session.key"
+	ViperSessionService     = "session.service"
+	ViperSessionFallbackDir = "session.fallbackdir"
+
+	ViperDeployZone = "zone"
 
 	ViperSSHBinary = "ssh.binary"
 	ViperSSHHost   = "ssh.host"

@@ -28,7 +28,6 @@ var loginCmd = &cobra.Command{
 		).Login(); err != nil {
 			zap.L().Fatal("Error when logging in", zap.Error(err))
 		}
-
 	},
 }
 

@@ -5,6 +5,7 @@ import (
 	"log"
 	"runtime"
 	"sync"
+	"sync/atomic"
 )
 
 // Run jobs concurrently when dependencies are satisfied
@@ -19,15 +20,19 @@ func (d *SchedulerImpl) Start() error {
 
 	// try to size jobCh to number of vertices; fall back to small buffer if unknown
 	jobsCount := 0
+	var jobsCompleted atomic.Uint64
 	verts := d.dag.GetVertices()
 	if verts != nil {
 		jobsCount = len(verts)
 	}
+	// why did i do this?
 	if jobsCount <= 0 {
 		jobsCount = 16
 	}
 
+	done := make(chan struct{})
 	jobCh := make(chan string, jobsCount)
+	var once sync.Once
 	var wg sync.WaitGroup
 
 	workerCount := min(runtime.NumCPU(), jobsCount)
@@ -78,9 +83,17 @@ func (d *SchedulerImpl) Start() error {
 				ex.markDone(id)
 				ex.setState(id, JobDone, nil)
 
+				jobsCompleted.Add(1)
+
 				// Schedule dependents if they are ready
 				children, err := d.dag.GetChildren(id)
 				if err != nil {
+					if jobsCompleted.Load() >= uint64(jobsCount) {
+						once.Do(func() {
+							close(jobCh)
+						})
+						return
+					}
 					continue
 				}
 				for childID := range children {
@@ -92,6 +105,14 @@ func (d *SchedulerImpl) Start() error {
 							return
 						}
 					}
+				}
+
+				if jobsCompleted.Load() >= uint64(jobsCount) {
+					once.Do(func() {
+						close(jobCh)
+					})
+
+					return
 				}
 			}
 		})
@@ -106,14 +127,21 @@ func (d *SchedulerImpl) Start() error {
 	// close jobCh after all workers finished (wait in separate goroutine)
 	go func() {
 		wg.Wait()
-		close(jobCh)
+		once.Do(func() {
+			close(jobCh)
+		})
 		for _, sub := range ex.subscribers {
 			close(sub)
 		}
+		close(done)
 	}()
 
 	// wait until context is cancelled (by failure or external cancel)
-	<-ctx.Done()
+	// or jobs complete
+	select {
+	case <-ctx.Done():
+	case <-done:
+	}
 
 	// if a failure occurred, revert executed jobs in reverse order
 	if ex.failed {

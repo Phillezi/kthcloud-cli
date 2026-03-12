@@ -80,14 +80,18 @@ func New(ctx context.Context, opts ...Option) *App {
 	}
 
 	if a.session == nil {
-		a.session = session.NewManager(
-			session.WithContext(ctx),
-			session.WithLogger(a.l.Named("session")),
-			session.WithFallbackStoreDir(a.sessionFallbackDir),
-			session.WithService(a.sessionService),
-			session.WithOAuth2Config(a.oauth2Conf),
-			session.WithSessionKey(a.sessionKey),
-		)
+		if cfg.DeployAPIToken != "" {
+			a.session = session.APITokenSession(cfg.DeployAPIToken)
+		} else {
+			a.session = session.NewManager(
+				session.WithContext(ctx),
+				session.WithLogger(a.l.Named("session")),
+				session.WithFallbackStoreDir(a.sessionFallbackDir),
+				session.WithService(a.sessionService),
+				session.WithOAuth2Config(a.oauth2Conf),
+				session.WithSessionKey(a.sessionKey),
+			)
+		}
 	}
 
 	if a.loginServer == nil {

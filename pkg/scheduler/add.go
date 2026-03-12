@@ -16,3 +16,17 @@ func (d *SchedulerImpl) Add(j Job, deps ...string) (id string, err error) {
 	}
 	return
 }
+
+func (d *SchedulerImpl) AddNamed(name string, j Job, deps ...string) (err error) {
+	err = d.dag.AddVertexByID(name, j)
+	if err != nil {
+		return err
+	}
+
+	for _, dep := range deps {
+		if e := d.dag.AddEdge(dep, name); e != nil {
+			err = errors.Join(err, e)
+		}
+	}
+	return
+}

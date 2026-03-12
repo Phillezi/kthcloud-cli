@@ -11,6 +11,7 @@ import (
 
 type Config struct {
 	DeployAPIBaseURL string
+	DeployAPIToken   string
 
 	KeycloakClientID     string
 	KeycloakClientSecret string
@@ -33,6 +34,9 @@ type Config struct {
 func (cfg *Config) Merge(config Config) {
 	if config.DeployAPIBaseURL != "" {
 		cfg.DeployAPIBaseURL = config.DeployAPIBaseURL
+	}
+	if config.DeployAPIToken != "" {
+		cfg.DeployAPIToken = config.DeployAPIToken
 	}
 
 	if config.KeycloakClientID != "" {
@@ -130,6 +134,7 @@ func WithSessionKey(sessionKey string) Option {
 
 // Use api token based session
 func WithAPITokenSession(token string) Option {
+	// FIXME: usse DeployAPIToken
 	if strings.TrimSpace(token) == "" {
 		return func(_ *Config) {}
 	}

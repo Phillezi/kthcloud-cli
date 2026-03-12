@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/kthcloud/cli/internal/app"
-	"github.com/kthcloud/cli/internal/constants"
 	"github.com/kthcloud/cli/internal/defaults"
 	"github.com/kthcloud/cli/pkg/deploy"
 	"github.com/kthcloud/cli/pkg/logs"
@@ -25,15 +24,7 @@ var logCmd = &cobra.Command{
 		ctx, cancel := signal.NotifyContext(cmd.Context(), os.Interrupt)
 		defer cancel()
 
-		a := app.New(ctx, app.WithKeycloakOptions(
-			viper.GetString(constants.ViperKeycloakClientId),
-			viper.GetString(constants.ViperKeycloakBaseURL),
-			viper.GetString(constants.ViperKeycloakRealm),
-		),
-			app.WithSessionKey(viper.GetString(constants.ViperSessionKey)),
-			app.WithAPITokenSession(viper.GetString(constants.ViperDeployAPIToken)),
-			app.WithLogger(zap.L()),
-		)
+		a := app.FromViper(ctx, zap.L(), *viper.GetViper())
 
 		var seen map[string]struct{} = make(map[string]struct{}, len(args))
 
@@ -76,14 +67,13 @@ var logCmd = &cobra.Command{
 		if err := l.Consume(os.Stderr); err != nil {
 			zap.L().Error("Error consuming logs", zap.Error(err))
 		}
-
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(logCmd)
 
-	//FIME: not used yet
+	// FIME: not used yet
 	logCmd.PersistentFlags().BoolP("follow", "f", true, "Follow")
 
 	viper.BindPFlags(logCmd.PersistentFlags())

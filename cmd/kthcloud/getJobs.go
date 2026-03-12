@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/kthcloud/cli/internal/app"
-	"github.com/kthcloud/cli/internal/constants"
 	"github.com/kthcloud/cli/pkg/deploy"
 	"github.com/kthcloud/cli/pkg/session"
 	"github.com/kthcloud/cli/pkg/ui/renderer"
@@ -27,15 +26,7 @@ var getJobsCmd = &cobra.Command{
 		ctx, cancel := signal.NotifyContext(cmd.Context(), os.Interrupt)
 		defer cancel()
 
-		a := app.New(ctx, app.WithKeycloakOptions(
-			viper.GetString(constants.ViperKeycloakClientId),
-			viper.GetString(constants.ViperKeycloakBaseURL),
-			viper.GetString(constants.ViperKeycloakRealm),
-		),
-			app.WithSessionKey(viper.GetString(constants.ViperSessionKey)),
-			app.WithAPITokenSession(viper.GetString(constants.ViperDeployAPIToken)),
-			app.WithLogger(zap.L()),
-		)
+		a := app.FromViper(ctx, zap.L(), *viper.GetViper())
 
 		params := &deploy.GetV2JobsParams{
 			All: new(viper.GetBool("all")),

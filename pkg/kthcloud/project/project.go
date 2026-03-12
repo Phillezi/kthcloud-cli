@@ -14,3 +14,7 @@ type Service struct {
 	deploy.BodyDeploymentCreate `yaml:",inline" json:",inline"`
 	Dependencies                []string
 }
+
+func (s Service) GetDependencies() []string {
+	return s.Dependencies
+}

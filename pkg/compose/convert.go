@@ -70,16 +70,16 @@ func (ci ConverterImpl) ConvertService(name string, in composev2.ServiceConfig, 
 	if envPorts != nil && envs != nil {
 		out.Envs = new(append(envs, envPorts...))
 	} else if envs != nil {
-		out.Envs = new(envs)
+		out.Envs = &envs
 	} else {
-		out.Envs = new(envPorts)
+		out.Envs = &envPorts
 	}
 
 	volumes, errVol := convertVolumes(in.Volumes, projectName, cwd)
 	if errVol != nil {
 		err = errors.Join(err, errVol)
 	}
-	out.Volumes = new(volumes)
+	out.Volumes = &volumes
 
 	if in.Deploy != nil {
 		if in.Deploy.Resources.Limits != nil {
@@ -94,6 +94,7 @@ func (ci ConverterImpl) ConvertService(name string, in composev2.ServiceConfig, 
 	if len(in.DependsOn) > 0 {
 		out.Dependencies = make([]string, 0, len(in.DependsOn))
 		for k := range in.DependsOn {
+			// todo support serviceStarted vs serviceHealhty?
 			out.Dependencies = append(out.Dependencies, k)
 		}
 	}
@@ -206,6 +207,7 @@ func convertVolumes(in []composev2.ServiceVolumeConfig, projectName string, cwd 
 				volumes = append(volumes, deploy.BodyVolume{Name: fmt.Sprintf("cli-%d", i), ServerPath: filepath.ToSlash(vol.Source), AppPath: filepath.ToSlash(vol.Target)})
 			}
 		}
+		return volumes, nil
 	}
 
 	return nil, nil

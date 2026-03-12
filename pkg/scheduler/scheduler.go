@@ -26,5 +26,6 @@ type Job interface {
 type Scheduler interface {
 	Start() error
 	Add(j Job, deps ...string) (id string, err error)
+	AddNamed(key string, j Job, deps ...string) (err error)
 	Status() <-chan []JobStatus
 }
