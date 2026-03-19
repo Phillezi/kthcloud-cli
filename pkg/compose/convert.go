@@ -52,6 +52,11 @@ func (ci ConverterImpl) ConvertService(name string, in composev2.ServiceConfig, 
 		if in.Image != "" {
 			err = errors.Join(err, ErrBuildAndImageProvided)
 		}
+		if out.Build == nil {
+			out.Build = &project.Build{}
+		}
+		out.Build.ContainerFile = in.Build.Dockerfile
+		out.Build.Context = in.Build.Context
 	}
 
 	if in.Image != "" {

@@ -14,11 +14,11 @@ import (
 	"go.uber.org/zap"
 )
 
-func (app *App) Compose(composeFilePath, projectName string) (*project.Project, error) {
+func (app *App) Compose(composeFilePaths []string, projectName string) (*project.Project, error) {
 	options, err := func() (*cli.ProjectOptions, error) {
-		if composeFilePath != "" {
+		if len(composeFilePaths) > 0 {
 			return cli.NewProjectOptions(
-				[]string{composeFilePath},
+				composeFilePaths,
 				WithDefaultConfigPath,
 				WithEnvFiles(defaults.DefaultComposeDotEnvFileNames...),
 				cli.WithOsEnv,

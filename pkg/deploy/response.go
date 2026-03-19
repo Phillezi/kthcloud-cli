@@ -73,8 +73,7 @@ func newResponseError(resource, stage string, code int, baseErr error, msg strin
 
 func handleGenericResponse(resourceName, stage string, resp any) (any, error) {
 	v := reflect.ValueOf(resp)
-	fmt.Println("handleGenericResponse:", resp)
-	zap.L().Info("handleGenericResponse", zap.Any("response", resp))
+	zap.L().Debug("handleGenericResponse", zap.Any("response", resp))
 	if v.Kind() == reflect.Pointer {
 		v = v.Elem()
 	}

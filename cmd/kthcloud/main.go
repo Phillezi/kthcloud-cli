@@ -8,7 +8,10 @@ import (
 )
 
 func main() {
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	ctx, cancel := signal.NotifyContext(
+		context.Background(),
+		os.Interrupt,
+	)
 	defer cancel()
 
 	if err := rootCmd.ExecuteContext(ctx); err != nil {

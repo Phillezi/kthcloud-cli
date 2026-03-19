@@ -18,12 +18,12 @@ var composeDownCmd = &cobra.Command{
 
 		a := app.FromViper(ctx, zap.L(), *viper.GetViper())
 
-		proj, err := a.Compose("", "")
+		proj, err := a.Compose(viper.GetStringSlice("compose.file"), viper.GetString("compose.projectname"))
 		if err != nil {
 			zap.L().Fatal("Err conv", zap.Error(err))
 		}
 
-		if err := proj.Destroy(ctx); err != nil {
+		if err := proj.Destroy(ctx, a.Deploy()); err != nil {
 			zap.L().Fatal("Err destroy", zap.Error(err))
 		}
 	},
